@@ -53,6 +53,8 @@ public struct Preferences: Codable, Equatable, Sendable {
 	public var autoPaste = true
 	public var restoreClipboard = true
 	public var trailingSpace = true
+	public var sendOnKeyword = true
+	public var sendKeywords = SendKeyword.defaults
 	public var sounds = true
 	public var showPill = true
 	public var language = "es"
@@ -70,6 +72,8 @@ public struct Preferences: Codable, Equatable, Sendable {
 		autoPaste = (try? c.decode(Bool.self, forKey: .autoPaste)) ?? d.autoPaste
 		restoreClipboard = (try? c.decode(Bool.self, forKey: .restoreClipboard)) ?? d.restoreClipboard
 		trailingSpace = (try? c.decode(Bool.self, forKey: .trailingSpace)) ?? d.trailingSpace
+		sendOnKeyword = (try? c.decode(Bool.self, forKey: .sendOnKeyword)) ?? d.sendOnKeyword
+		sendKeywords = (try? c.decode([String].self, forKey: .sendKeywords)) ?? d.sendKeywords
 		sounds = (try? c.decode(Bool.self, forKey: .sounds)) ?? d.sounds
 		showPill = (try? c.decode(Bool.self, forKey: .showPill)) ?? d.showPill
 		language = (try? c.decode(String.self, forKey: .language)) ?? d.language

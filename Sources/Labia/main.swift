@@ -1,4 +1,5 @@
 import Foundation
+import ServiceManagement
 import LabiaCore
 
 let arguments = CommandLine.arguments
@@ -32,6 +33,16 @@ if let i = arguments.firstIndex(of: "--transcribe") {
 
 if let i = arguments.firstIndex(of: "--screenshots"), arguments.count > i + 1 {
 	MainActor.assumeIsolated { Screenshots.render(to: URL(fileURLWithPath: arguments[i + 1])) }
+	exit(0)
+}
+
+if let i = arguments.firstIndex(of: "--login-item"), arguments.count > i + 1 {
+	do {
+		if arguments[i + 1] == "on" { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+	} catch {
+		FileHandle.standardError.write(Data("error: \(error.localizedDescription)\n".utf8))
+	}
+	print(SMAppService.mainApp.status == .enabled ? "abrir al iniciar sesión: activado" : "abrir al iniciar sesión: desactivado")
 	exit(0)
 }
 

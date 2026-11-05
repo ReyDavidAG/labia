@@ -12,16 +12,22 @@ enum Paster {
 	}
 
 	@MainActor
-	static func paste(_ text: String, restore: Bool) {
+	static func paste(_ text: String, restore: Bool, thenReturn: Bool = false) {
+		guard !text.isEmpty else { return pressReturn() }
 		let board = NSPasteboard.general
 		let saved = restore ? snapshot(board) : nil
 		board.clearContents()
 		board.setString(text, forType: .string)
 		board.setData(Data(), forType: transient)
 		let mark = board.changeCount
-		pressCommandV()
-		guard let saved else { return }
+		press(kVK_ANSI_V, flags: .maskCommand)
 		Task { @MainActor in
+			// La terminal descarta el Enter si llega mientras todavía procesa el pegado.
+			if thenReturn {
+				try? await Task.sleep(for: .milliseconds(150))
+				pressReturn()
+			}
+			guard let saved else { return }
 			try? await Task.sleep(for: .milliseconds(600))
 			guard board.changeCount == mark else { return }
 			board.clearContents()
@@ -39,12 +45,15 @@ enum Paster {
 		}
 	}
 
-	private static func pressCommandV() {
+	static func pressReturn() {
+		press(kVK_Return, flags: [])
+	}
+
+	private static func press(_ code: Int, flags: CGEventFlags) {
 		let source = CGEventSource(stateID: .combinedSessionState)
-		let key = CGKeyCode(kVK_ANSI_V)
 		for down in [true, false] {
-			let event = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: down)
-			event?.flags = .maskCommand
+			let event = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(code), keyDown: down)
+			event?.flags = flags
 			event?.post(tap: .cghidEventTap)
 		}
 	}
