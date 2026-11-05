@@ -8,6 +8,7 @@ import Testing
 		#expect(SendKeyword.split("Revisa el build. Claude.", keywords: keys) == ("Revisa el build.", true))
 		#expect(SendKeyword.split("Revisa el build, cloud", keywords: keys) == ("Revisa el build", true))
 		#expect(SendKeyword.split("Sube el PR ¡Clod!", keywords: keys) == ("Sube el PR", true))
+		#expect(SendKeyword.split("ya configuraste la palabra \"Claude\"", keywords: keys) == ("ya configuraste la palabra", true))
 	}
 
 	@Test func keywordAloneSendsWithoutText() {

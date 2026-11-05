@@ -9,7 +9,7 @@ public enum SendKeyword {
 			let match = text.range(of: #"[\p{L}\p{N}]+[^\p{L}\p{N}]*$"#, options: .regularExpression),
 			keys.contains(key(String(text[match])))
 		else { return (text, false) }
-		let rest = text[..<match.lowerBound].replacingOccurrences(of: #"[\s,;:¡¿-]+$"#, with: "", options: .regularExpression)
+		let rest = text[..<match.lowerBound].replacingOccurrences(of: #"[\s,;:¡¿«“"(-]+$"#, with: "", options: .regularExpression)
 		return (rest.trimmingCharacters(in: .whitespacesAndNewlines), true)
 	}
 
