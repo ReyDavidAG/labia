@@ -224,18 +224,23 @@ final class AppModel {
 		if let reason { flash(reason) } else { hide(after: 0) }
 	}
 
-	private func deliver(_ text: String, seconds: Double, app: String?, settings: Preferences) {
-		let output = settings.trailingSpace && !text.hasSuffix("\n") ? text + " " : text
+	private func deliver(_ dictated: String, seconds: Double, app: String?, settings: Preferences) {
 		refreshPermissions()
-		let pasted = settings.autoPaste && accessibilityGranted
-		if pasted {
-			Paster.paste(output, restore: settings.restoreClipboard)
+		let canPaste = settings.autoPaste && accessibilityGranted
+		let (text, send) = settings.sendOnKeyword && canPaste
+			? SendKeyword.split(dictated, keywords: settings.sendKeywords)
+			: (dictated, false)
+		let output = settings.trailingSpace && !send && !text.hasSuffix("\n") ? text + " " : text
+		if canPaste {
+			Paster.paste(output, restore: settings.restoreClipboard, thenReturn: send)
 		} else {
 			Paster.copy(output)
 		}
-		history.add(HistoryEntry(text: text, seconds: seconds, app: app))
-		try? history.save(to: Self.historyURL)
-		show(.done(words: text.split(whereSeparator: \.isWhitespace).count, pasted: pasted))
+		if !text.isEmpty {
+			history.add(HistoryEntry(text: text, seconds: seconds, app: app))
+			try? history.save(to: Self.historyURL)
+		}
+		show(.done(words: text.split(whereSeparator: \.isWhitespace).count, pasted: canPaste))
 		hide(after: 0.9)
 	}
 
