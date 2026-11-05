@@ -30,4 +30,9 @@ if let i = arguments.firstIndex(of: "--transcribe") {
 	exit(0)
 }
 
+if let i = arguments.firstIndex(of: "--screenshots"), arguments.count > i + 1 {
+	MainActor.assumeIsolated { Screenshots.render(to: URL(fileURLWithPath: arguments[i + 1])) }
+	exit(0)
+}
+
 LabiaApp.main()

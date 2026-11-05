@@ -20,7 +20,7 @@ struct PillView: View {
 	}
 }
 
-private struct PillBody: View {
+struct PillBody: View {
 	let pill: Pill
 	let model: AppModel
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -33,9 +33,9 @@ private struct PillBody: View {
 			.frame(height: 44)
 			.background {
 				Capsule().fill(Color(red: 0.08, green: 0.08, blue: 0.1).opacity(0.92))
+					.shadow(color: .black.opacity(0.35), radius: 14, y: 8)
 				Capsule().strokeBorder(.white.opacity(0.08))
 			}
-			.shadow(color: .black.opacity(0.35), radius: 14, y: 8)
 			.keyframeAnimator(initialValue: 0.0, trigger: pill) { view, x in
 				view.offset(x: x)
 			} keyframes: { _ in
@@ -156,6 +156,7 @@ private struct ShimmerText: View {
 					LinearGradient(colors: [.clear, .white, .clear], startPoint: .leading, endPoint: .trailing)
 						.frame(width: 60)
 						.offset(x: CGFloat(phase) * 220 - 110)
+						.frame(maxWidth: .infinity, maxHeight: .infinity)
 						.mask(Text(text))
 						.opacity(reduceMotion ? 0 : 1)
 				}

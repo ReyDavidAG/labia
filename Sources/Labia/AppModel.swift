@@ -69,6 +69,7 @@ final class AppModel {
 		didSet { hotkey.isEnabled = !paused }
 	}
 
+	private var isSample = false
 	private var machine = GestureMachine()
 	private let recorder = Recorder()
 	private let transcriber = Transcriber()
@@ -80,7 +81,19 @@ final class AppModel {
 	private var hideTask: Task<Void, Never>?
 	private var unloadTask: Task<Void, Never>?
 
-	init() {
+	init(sample: Bool = false) {
+		guard !sample else {
+			var sampleSettings = Preferences()
+			sampleSettings.vocabulary += ["useApiQuery", "staleTime"]
+			settings = sampleSettings
+			history = History()
+			modelStatus = .ready
+			micGranted = true
+			accessibilityGranted = true
+			promptTokens = 26
+			isSample = true
+			return
+		}
 		settings = Preferences.load()
 		history = History.load(from: AppModel.historyURL)
 		modelStatus = Transcriber.isDownloaded ? .unloaded : .missing
@@ -126,7 +139,7 @@ final class AppModel {
 
 	var promptCostLabel: String? {
 		guard let promptTokens else { return nil }
-		let ms = Int((Double(promptTokens) * 0.022 * 1000).rounded() / 10) * 10
+		let ms = Int((Double(promptTokens) * 0.025 * 1000 / 10).rounded()) * 10
 		return ms == 0 ? "sin costo extra" : "≈ +\(ms) ms por dictado"
 	}
 
@@ -358,6 +371,7 @@ final class AppModel {
 	// MARK: Permisos y sistema
 
 	func refreshPermissions() {
+		guard !isSample else { return }
 		micGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
 		accessibilityGranted = AXIsProcessTrusted()
 		if accessibilityGranted, !hotkey.isRunning { hotkey.start() }

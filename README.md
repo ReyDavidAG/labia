@@ -7,6 +7,8 @@ Dictado en español para macOS, en cualquier app y sin internet.</p>
 
 <p align="center"><a href="#english">English below</a></p>
 
+<p align="center"><img src="docs/img/hero.png" alt="Un dictado pegado en Claude Code dentro de la terminal, con la cápsula de Labia diciendo Pegado · 20 palabras"></p>
+
 ---
 
 Labia vive en la barra de menú. Mantienes **⌥ derecho**, dices lo que quieres escribir y al soltar el texto aparece donde está el cursor: la terminal, el navegador, Slack, VS Code o un chat con una IA.
@@ -26,6 +28,8 @@ Labia vive en la barra de menú. Mantienes **⌥ derecho**, dices lo que quieres
 
 Una cápsula abajo al centro de la pantalla te dice en qué va: escuchando (con el volumen real del micrófono), transcribiendo, pegado y cuántas palabras.
 
+<p align="center"><img src="docs/img/states.png" alt="Estados de la cápsula: escuchando, manos libres, transcribiendo, pegado, sin voz y cancelado"></p>
+
 ## Instalar
 
 Requiere macOS 14 o posterior y una Mac con Apple Silicon (M1 o más nueva).
@@ -39,6 +43,8 @@ Requiere macOS 14 o posterior y una Mac con Apple Silicon (M1 o más nueva).
    - **Micrófono**, para oírte.
    - **Accesibilidad**, para detectar el atajo en cualquier app y pegar con ⌘V.
    - **Descargar el modelo**: 1.5 GB, una sola vez. La primera carga tarda alrededor de un minuto mientras macOS lo prepara para tu chip.
+
+<p align="center"><img src="docs/img/welcome.png" width="420" alt="Ventana de bienvenida con los tres pasos completos y un cuadro para probar"></p>
 
 ### Compilar desde el código
 
@@ -55,7 +61,7 @@ Los permisos de macOS se amarran a la firma. Con firma ad hoc, cada compilación
 LABIA_SIGN_IDENTITY="Apple Development: Tu Nombre (XXXXXXXXXX)" scripts/bundle.sh
 ```
 
-Para probar el motor sin micrófono: `build/Labia.app/Contents/MacOS/Labia --transcribe audio.wav`.
+Para probar el motor sin micrófono: `build/Labia.app/Contents/MacOS/Labia --transcribe audio.wav`. Las capturas de este README se regeneran con `--screenshots docs/img`.
 
 ## Vocabulario: precisión contra velocidad
 
@@ -63,10 +69,12 @@ Whisper recibe tu lista como contexto antes de cada dictado. En una prueba con 7
 
 | Configuración | Términos mal escritos | Tiempo por frase (M2) |
 |---|---|---|
-| Sin vocabulario | 5 (`de velo`, `Use API Query`, `style time`, `link`, `Aversel`) | ≈ 1.1 s |
-| Con 18 palabras | 0 | ≈ 1.4 s |
+| Sin vocabulario | 5 (`de velo`, `Use API Query`, `style time`, `link`, `Aversel`) | ≈ 1.5 s |
+| Con 19 palabras (~58 tokens) | 0 | ≈ 3 s |
 
-Cada palabra agrega unos milisegundos, así que pon sólo las que te fallan. **Ajustes → Vocabulario** muestra cuánto cuesta tu lista. Además, después de transcribir Labia une las palabras que Whisper separó (`Use API Query` → `useApiQuery`) y corrige mayúsculas de marcas (`vercel` → `Vercel`), siempre que las letras coincidan exactamente.
+Cada token del vocabulario cuesta unos 25 ms, porque Whisper lo procesa antes de empezar a escribir. La lista inicial trae 9 palabras (≈ +0.6 s): agrega sólo las que te fallen. **Ajustes → Vocabulario** muestra cuánto cuesta tu lista. Además, después de transcribir Labia une las palabras que Whisper separó (`Use API Query` → `useApiQuery`) y corrige mayúsculas de marcas (`vercel` → `Vercel`), siempre que las letras coincidan exactamente.
+
+<p align="center"><img src="docs/img/settings-vocabulary.png" width="480" alt="Ajustes de vocabulario con palabras como pull request, Vercel y useApiQuery, y el costo estimado por dictado"> <img src="docs/img/settings-history.png" width="480" alt="Historial con los últimos dictados, la app donde se pegaron y cuántas palabras tenían"></p>
 
 Para lo demás están los **Reemplazos**, que traen `nueva línea` → salto de línea y `punto y coma` → `;`.
 
@@ -106,7 +114,7 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario
 **Labia** is a push-to-talk dictation app for macOS, tuned for Spanish speakers who mix English tech terms. Hold **right ⌥**, speak, and release: the text is pasted wherever your cursor is.
 
 - Fully local. It uses Whisper large-v3-turbo through WhisperKit on the Apple Neural Engine. Audio never leaves your Mac.
-- A custom vocabulary fixes code-switched terms. On an M2 a typical sentence takes about 1.1–1.4 s.
+- A custom vocabulary fixes code-switched terms. On an M2 a sentence takes about 1.5 s, plus ~25 ms per vocabulary token.
 - Double-tap ⌥ for hands-free mode and press esc to cancel. It never presses Enter for you.
 - Requires macOS 14+ on Apple Silicon. Download it from [Releases](../../releases), or build it with `scripts/bundle.sh`. The app is not notarized, so run `xattr -dr com.apple.quarantine /Applications/Labia.app` after installing.
 

@@ -40,8 +40,7 @@ public enum Hotkey: String, Codable, CaseIterable, Sendable, Identifiable {
 
 public struct Preferences: Codable, Equatable, Sendable {
 	public static let defaultVocabulary = [
-		"commit", "push", "pull request", "merge", "develop", "branch", "reviewer", "endpoint",
-		"deploy", "build", "front", "lint", "release", "cron", "GitHub", "Vercel", "Supabase",
+		"develop", "pull request", "deploy", "endpoint", "lint", "cron", "GitHub", "Vercel", "Supabase",
 	]
 	public static let defaultReplacements = [
 		Replacement(from: "nueva línea", to: "\\n"),
