@@ -15,7 +15,7 @@ Labia vive en la barra de menú. Mantienes **⌥ derecho**, dices lo que quieres
 
 - **Local.** Transcribe con [Whisper large-v3-turbo](https://huggingface.co/argmaxinc/whisperkit-coreml) vía [WhisperKit](https://github.com/argmaxinc/argmax-oss-swift) en el Neural Engine de tu Mac. El audio nunca sale de tu equipo ni se guarda en disco.
 - **Entiende tu spanglish.** Le das tu vocabulario (`commit`, `pull request`, `useApiQuery`, `Vercel`) y lo escribe bien, con sus mayúsculas.
-- **No envía nada por ti.** Sólo pega. Tú revisas y das Enter.
+- **Envía sólo si se lo pides.** Termina el dictado diciendo «Claude» y Labia quita la palabra, pega y da Enter. Sin ella, sólo pega y tú revisas. Se apaga o se cambia la palabra en Ajustes.
 
 ## Gestos
 
@@ -115,7 +115,7 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario
 
 - Fully local. It uses Whisper large-v3-turbo through WhisperKit on the Apple Neural Engine. Audio never leaves your Mac.
 - A custom vocabulary fixes code-switched terms. On an M2 a sentence takes about 1.5 s, plus ~25 ms per vocabulary token.
-- Double-tap ⌥ for hands-free mode and press esc to cancel. It never presses Enter for you.
+- Double-tap ⌥ for hands-free mode and press esc to cancel. It presses Enter only when you end the dictation with the send keyword («Claude» by default; change or turn it off in Settings).
 - Requires macOS 14+ on Apple Silicon. Download it from [Releases](../../releases), or build it with `scripts/bundle.sh`. The app is not notarized, so run `xattr -dr com.apple.quarantine /Applications/Labia.app` after installing.
 
 The UI is in Spanish. Set **Ajustes → Modelo → Idioma** to English to dictate in English.

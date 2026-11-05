@@ -1,5 +1,9 @@
 # Cambios
 
+## Sin publicar
+
+- Palabra de envío: terminar el dictado con «Claude» pega el texto y presiona Enter. Configurable en Ajustes › General.
+
 ## 0.1.0 · 2026-11-04
 
 Primera versión.
