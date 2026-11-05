@@ -7,14 +7,14 @@
 | Propuesta | ✅ aprobada |
 | 1. Núcleo puro y pruebas | ✅ 21 pruebas |
 | 2. Transcriber + `--transcribe` | ✅ probado con las 7 grabaciones |
-| 3. Flujo completo | ✅ compila y arranca; falta prueba real con el atajo |
-| 4. Menú, ajustes, bienvenida | ✅ compila; falta revisión visual |
-| 5. Empaque, README, CI, release | ⏳ bundle y README listos; repo y release pendientes |
+| 3. Flujo completo | ✅ probado por el usuario con el atajo real |
+| 4. Menú, ajustes, bienvenida | ✅ revisado con capturas |
+| 5. Empaque, README, CI, release | ✅ v0.1.0 |
 
 ## Hallazgos
 
 - WhisperKit 0.18 (repo `WhisperKit`) devolvía texto vacío con `promptTokens`; `argmax-oss-swift` 1.1.1 lo corrige.
 - Decodificador en GPU: 11 s por frase. Se queda en Neural Engine.
-- Costo del vocabulario: ~22 ms por token. Sin vocabulario 1.1 s; con 18 palabras 1.4 s y 0 errores.
+- Costo del vocabulario: ~25 ms por token (A/B repetido: 1.5 s sin vocabulario, 3.1 s con 19 palabras). La lista inicial bajó a 9 palabras.
 - La primera carga del modelo en una app nueva tarda ~190 s (especialización para el chip); después 3–7 s.
 - `Settings` choca con la escena de SwiftUI: el tipo del núcleo se llama `Preferences`.
