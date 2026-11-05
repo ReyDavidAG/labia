@@ -5,7 +5,7 @@ let arguments = CommandLine.arguments
 
 if let i = arguments.firstIndex(of: "--transcribe") {
 	let files = Array(arguments.dropFirst(i + 1))
-	let settings = Settings.load()
+	let settings = Preferences.load()
 	let semaphore = DispatchSemaphore(value: 0)
 	Task {
 		let transcriber = Transcriber()
