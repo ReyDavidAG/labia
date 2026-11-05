@@ -1,8 +1,9 @@
 # Cambios
 
-## Sin publicar
+## 0.2.0 · 2026-11-05
 
-- Palabra de envío: terminar el dictado con «Claude» pega el texto y presiona Enter. Configurable en Ajustes › General.
+- Palabra de envío: terminar el dictado con «Claude» pega el texto y presiona Enter. Dicha sola envía lo que ya estaba escrito. Configurable en Ajustes › General.
+- `Labia --login-item on|off` activa o quita el arranque al iniciar sesión desde Terminal.
 
 ## 0.1.0 · 2026-11-04
 

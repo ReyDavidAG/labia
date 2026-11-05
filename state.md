@@ -10,7 +10,7 @@
 | 3. Flujo completo | ✅ probado por el usuario con el atajo real |
 | 4. Menú, ajustes, bienvenida | ✅ revisado con capturas |
 | 5. Empaque, README, CI, release | ✅ v0.1.0 |
-| 6. Palabra de envío «Claude» | ✅ aprobada por el usuario con su voz en Claude Code (2026-11-05) |
+| 6. Palabra de envío «Claude» | ✅ v0.2.0 |
 
 ## Hallazgos
 
