@@ -42,8 +42,18 @@ private struct GeneralTab: View {
 				Toggle("Pegar automáticamente", isOn: $model.settings.autoPaste)
 				Toggle("Restaurar el portapapeles después de pegar", isOn: $model.settings.restoreClipboard)
 				Toggle("Agregar un espacio al final", isOn: $model.settings.trailingSpace)
+			}
+			Section {
+				Toggle("Enviar al terminar con una palabra", isOn: $model.settings.sendOnKeyword)
+				TextField("Palabras", text: Binding(
+					get: { model.settings.sendKeywords.joined(separator: ", ") },
+					set: { model.settings.sendKeywords = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
+				))
+				.disabled(!model.settings.sendOnKeyword)
 			} footer: {
-				Text("Labia nunca presiona Enter por ti: revisas y envías tú.")
+				Text(model.settings.sendOnKeyword
+					? "Si la última palabra que dices es una de éstas, Labia la quita, pega el texto y presiona Enter. Dila sola para enviar lo que ya escribiste."
+					: "Labia nunca presiona Enter por ti: revisas y envías tú.")
 			}
 			Section {
 				Toggle("Mostrar la cápsula mientras dictas", isOn: $model.settings.showPill)
