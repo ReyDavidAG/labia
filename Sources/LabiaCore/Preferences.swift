@@ -13,6 +13,22 @@ public enum Hotkey: String, Codable, CaseIterable, Sendable, Identifiable {
 		}
 	}
 
+	public var deviceMask: UInt64 {
+		switch self {
+		case .rightOption: 0x40
+		case .rightCommand: 0x10
+		case .fn: 0x80_0000
+		}
+	}
+
+	public var symbol: String {
+		switch self {
+		case .rightOption: "⌥"
+		case .rightCommand: "⌘"
+		case .fn: "fn"
+		}
+	}
+
 	public var label: String {
 		switch self {
 		case .rightOption: "⌥ derecho"
@@ -22,7 +38,7 @@ public enum Hotkey: String, Codable, CaseIterable, Sendable, Identifiable {
 	}
 }
 
-public struct Settings: Codable, Equatable, Sendable {
+public struct Preferences: Codable, Equatable, Sendable {
 	public static let defaultVocabulary = [
 		"commit", "push", "pull request", "merge", "develop", "branch", "reviewer", "endpoint",
 		"deploy", "build", "front", "lint", "release", "cron", "GitHub", "Vercel", "Supabase",
@@ -37,11 +53,12 @@ public struct Settings: Codable, Equatable, Sendable {
 	public var hotkey: Hotkey = .rightOption
 	public var autoPaste = true
 	public var restoreClipboard = true
+	public var trailingSpace = true
 	public var sounds = true
 	public var showPill = true
 	public var language = "es"
-	public var vocabulary = Settings.defaultVocabulary
-	public var replacements = Settings.defaultReplacements
+	public var vocabulary = Preferences.defaultVocabulary
+	public var replacements = Preferences.defaultReplacements
 	public var unloadAfterMinutes = 30
 	public var maxRecordingSeconds = 300
 
@@ -49,10 +66,11 @@ public struct Settings: Codable, Equatable, Sendable {
 
 	public init(from decoder: Decoder) throws {
 		let c = try decoder.container(keyedBy: CodingKeys.self)
-		let d = Settings()
+		let d = Preferences()
 		hotkey = (try? c.decode(Hotkey.self, forKey: .hotkey)) ?? d.hotkey
 		autoPaste = (try? c.decode(Bool.self, forKey: .autoPaste)) ?? d.autoPaste
 		restoreClipboard = (try? c.decode(Bool.self, forKey: .restoreClipboard)) ?? d.restoreClipboard
+		trailingSpace = (try? c.decode(Bool.self, forKey: .trailingSpace)) ?? d.trailingSpace
 		sounds = (try? c.decode(Bool.self, forKey: .sounds)) ?? d.sounds
 		showPill = (try? c.decode(Bool.self, forKey: .showPill)) ?? d.showPill
 		language = (try? c.decode(String.self, forKey: .language)) ?? d.language
@@ -68,14 +86,14 @@ public struct Settings: Codable, Equatable, Sendable {
 		var out = "Vocabulario:"
 		for w in words {
 			let next = out + (out.hasSuffix(":") ? " " : ", ") + w
-			if next.count > Settings.maxPromptCharacters { break }
+			if next.count > Preferences.maxPromptCharacters { break }
 			out = next
 		}
 		return out + "."
 	}
 
-	public static func load(_ defaults: UserDefaults = .standard, key: String = "settings") -> Settings {
-		guard let data = defaults.data(forKey: key), let s = try? JSONDecoder().decode(Settings.self, from: data) else { return Settings() }
+	public static func load(_ defaults: UserDefaults = .standard, key: String = "settings") -> Preferences {
+		guard let data = defaults.data(forKey: key), let s = try? JSONDecoder().decode(Preferences.self, from: data) else { return Preferences() }
 		return s
 	}
 

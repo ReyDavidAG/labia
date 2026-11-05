@@ -24,7 +24,7 @@ import Testing
 	}
 
 	@Test func spokenNewLineAndPunctuation() {
-		let reps = Settings.defaultReplacements
+		let reps = Preferences.defaultReplacements
 		#expect(TextCleaner.clean("primera nueva línea segunda punto y coma", replacements: reps) == "primera\nsegunda;")
 	}
 
@@ -53,30 +53,30 @@ import Testing
 
 @Suite struct SettingsTests {
 	@Test func promptListsVocabularyWithinLimit() {
-		var s = Settings()
+		var s = Preferences()
 		s.vocabulary = ["commit", " ", "useApiQuery"]
 		#expect(s.prompt == "Vocabulario: commit, useApiQuery.")
 		s.vocabulary = Array(repeating: "palabralarga", count: 200)
-		#expect((s.prompt?.count ?? 0) <= Settings.maxPromptCharacters + 1)
+		#expect((s.prompt?.count ?? 0) <= Preferences.maxPromptCharacters + 1)
 		s.vocabulary = []
 		#expect(s.prompt == nil)
 	}
 
 	@Test func decodingKeepsDefaultsForMissingKeys() throws {
-		let s = try JSONDecoder().decode(Settings.self, from: Data(#"{"hotkey":"fn","sounds":false}"#.utf8))
+		let s = try JSONDecoder().decode(Preferences.self, from: Data(#"{"hotkey":"fn","sounds":false}"#.utf8))
 		#expect(s.hotkey == .fn)
 		#expect(!s.sounds)
 		#expect(s.unloadAfterMinutes == 30)
-		#expect(s.vocabulary == Settings.defaultVocabulary)
+		#expect(s.vocabulary == Preferences.defaultVocabulary)
 	}
 
 	@Test func roundTripsThroughDefaults() throws {
 		let defaults = try #require(UserDefaults(suiteName: "labia.tests.\(UUID())"))
-		var s = Settings()
+		var s = Preferences()
 		s.hotkey = .rightCommand
 		s.unloadAfterMinutes = 0
 		s.save(defaults)
-		let back = Settings.load(defaults)
+		let back = Preferences.load(defaults)
 		#expect(back.hotkey == .rightCommand)
 		#expect(back.unloadAfterMinutes == 0)
 	}
