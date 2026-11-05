@@ -61,7 +61,7 @@ Los permisos de macOS se amarran a la firma. Con firma ad hoc, cada compilación
 LABIA_SIGN_IDENTITY="Apple Development: Tu Nombre (XXXXXXXXXX)" scripts/bundle.sh
 ```
 
-Para probar el motor sin micrófono: `build/Labia.app/Contents/MacOS/Labia --transcribe audio.wav`. Las capturas de este README se regeneran con `--screenshots docs/img`.
+Para probar el motor sin micrófono: `build/Labia.app/Contents/MacOS/Labia --transcribe audio.wav`. Las capturas de este README se regeneran con `--screenshots docs/img`. Para activar o quitar el arranque al iniciar sesión desde Terminal: `/Applications/Labia.app/Contents/MacOS/Labia --login-item on` (u `off`).
 
 ## Vocabulario: precisión contra velocidad
 
