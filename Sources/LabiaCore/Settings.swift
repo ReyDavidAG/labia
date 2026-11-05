@@ -24,9 +24,8 @@ public enum Hotkey: String, Codable, CaseIterable, Sendable, Identifiable {
 
 public struct Settings: Codable, Equatable, Sendable {
 	public static let defaultVocabulary = [
-		"commit", "push", "pull request", "merge", "develop", "branch", "reviewer",
-		"endpoint", "hook", "build", "front", "backend", "lint", "release", "deploy",
-		"Supabase", "Vercel", "GitHub", "Claude", "workspace", "repositorio", "cron", "RLS",
+		"commit", "push", "pull request", "merge", "develop", "branch", "reviewer", "endpoint",
+		"deploy", "build", "front", "lint", "release", "cron", "GitHub", "Vercel", "Supabase",
 	]
 	public static let defaultReplacements = [
 		Replacement(from: "nueva línea", to: "\\n"),

@@ -33,6 +33,19 @@ import Testing
 		#expect(TextCleaner.clean("el precio", replacements: reps) == "el $1 USD")
 	}
 
+	@Test func vocabularyJoinsSplitTermsAndFixesBrandCase() {
+		let vocab = ["useApiQuery", "staleTime", "Vercel", "pull request", "front"]
+		#expect(TextCleaner.clean("Usa el hook Use API Query con el stale time.", vocabulary: vocab) == "Usa el hook useApiQuery con el staleTime.")
+		#expect(TextCleaner.clean("sube el release a vercel", vocabulary: vocab) == "sube el release a Vercel")
+		#expect(TextCleaner.clean("Revisa el Pull Request", vocabulary: vocab) == "Revisa el pull request")
+	}
+
+	@Test func vocabularyNeverTouchesLowercaseWordsOrPunctuatedSpans() {
+		let vocab = ["front", "staleTime"]
+		#expect(TextCleaner.clean("Front primero.", vocabulary: vocab) == "Front primero.")
+		#expect(TextCleaner.clean("stale. Time", vocabulary: vocab) == "stale. Time")
+	}
+
 	@Test func emptyReplacementIsIgnored() {
 		#expect(TextCleaner.clean("hola", replacements: [Replacement(from: " ", to: "x")]) == "hola")
 	}
