@@ -84,3 +84,9 @@ Cuando el usuario corra los comandos de arriba: `.venv/bin/python -m labia`, dic
 - Al soltar: pasada cuidadosa sobre TODA la grabación con VAD de Silero → sin voz no escribe nada (adiós «Gracias.» / «Suscríbete al canal»).
 - Pendiente: `hotwords` con el vocabulario (equivalente a `contextualStrings`); medir costo de las pasadas cuidadosas con grabaciones reales.
 - Teclado: Labia toma los teclados (evdev grab) y reenvía todo menos Alt derecho solo, para que el pegado funcione mientras se mantiene. El bucle de teclas ya no espera a Whisper.
+
+### Cápsula y release (2026-11-08)
+
+- `labia/pill.py`: cápsula GTK 4 + gtk4-layer-shell (proceso aparte, Python del sistema, LD_PRELOAD), copia de la de macOS. Probada por el usuario: funciona.
+- `NON_UNIQUE`: sin eso, una segunda cápsula con el mismo application_id se cierra sola.
+- Release 0.3.0 (Linux) local: sin push porque no hay `gh` ni llave SSH en este equipo.
