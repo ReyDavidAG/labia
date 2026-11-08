@@ -1,6 +1,6 @@
 # Labia Windows · plan
 
-Versión de Labia para Windows 11, en la misma laptop que la de Linux (MSI Cyborg 15 A12VF: i7 de 12.ª gen, RTX 4060 Laptop de 8 GB, micrófono interno que en Windows **sí** funciona). La meta es la misma experiencia que en Linux 0.3.0: escritura en tiempo real, correcciones cada 3 s y la cápsula flotante de macOS.
+Versión de Labia para Windows 11, en la misma laptop que la de Linux (MSI Cyborg 15 A12VF: i7 de 12.ª gen, RTX 4060 Laptop de 8 GB, micrófono interno que en Windows funcionaba; desde el 2026-11-01 falla el Intel SST, ver `windows/state.md`). La meta es la misma experiencia que en Linux 0.3.0: escritura en tiempo real, correcciones cada 3 s y la cápsula flotante de macOS.
 
 ## Para retomar en una sesión nueva
 
