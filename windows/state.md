@@ -25,7 +25,7 @@ Sigue la «Lista de pruebas» de `windows/README.md` en orden. Lo más delicado 
 
 ## Dónde quedó todo (2026-11-08)
 
-- `main` = v0.3.0: primera versión de Linux. Tags: v0.1.0, v0.2.0, v0.3.0. El release en GitHub no se creó (falta hacerlo a mano o con `gh release create v0.3.0`).
+- `main` = v0.3.0: primera versión de Linux. Tags: v0.1.0, v0.2.0, v0.3.0. Release en GitHub creado (no marcado como «Latest», para que la 0.2.0 siga siendo la descarga de macOS).
 - `develop` = `main` + el plan de Windows.
 - `feature/windows` = esta implementación.
 - `feature/mac-long-audio`: arreglo de dictados largos en macOS, sin probar (ver «Pendientes» en `plan.md`).
