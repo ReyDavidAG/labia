@@ -7,6 +7,12 @@ import sys
 
 def _preload_cuda_libs():
     # pip's nvidia-* wheels are not on the loader path; CTranslate2 dlopens them by soname.
+    if sys.platform == "win32":
+        for base in sys.path:
+            for d in glob.glob(os.path.join(base, "nvidia", "*", "bin")):
+                os.add_dll_directory(d)
+                os.environ["PATH"] = d + os.pathsep + os.environ["PATH"]  # some DLLs load their siblings via PATH
+        return
     if sys.platform != "linux":
         return
     for pattern in ("nvidia/cublas/lib/libcublas*.so.*", "nvidia/cudnn/lib/libcudnn*.so.*"):
