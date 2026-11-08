@@ -10,13 +10,14 @@ Regla: todo vive en `linux/`. No se toca nada de `Sources/`, `Tests/`, `Package.
 |---|---|---|
 | Lenguaje | Python 3, venv en `linux/.venv` | faster-whisper y CUDA sin compilar nada |
 | Motor | faster-whisper `large-v3-turbo`, CUDA float16 (CPU int8 de respaldo) | Mismo modelo que macOS; ya probado en la GPU |
-| Streaming | LocalAgreement-2 (whisper_streaming): una palabra se escribe cuando dos pasadas seguidas coinciden | Evita escribir y borrar a cada rato |
-| Paso | Pasada cada 0.5 s; la ventana de audio se recorta a 15 s ya confirmados | Latencia baja sin que Whisper procese audio viejo |
+| Streaming | LocalAgreement: una palabra se escribe cuando la pasada nueva coincide con alguna de las dos anteriores (sin puntuación ni mayúsculas) | Whisper suelta pasadas basura de vez en cuando; contra una sola pasada se perdían palabras |
+| Prompt | Ninguno en las pasadas; el vocabulario se aplica sobre el texto (`core.clean`) | Con prompt, Whisper entraba en bucle en audio corto: 32 errores contra 6 sin él |
+| Paso | Pasada cada 0.5 s; la ventana se recorta cuando pasa de 10 s | La pasada cuesta ~0.5 s sin importar la ventana (Whisper rellena a 30 s); 10 s da el peor caso más bajo |
 | Última palabra | Se retiene hasta el final | La limpieza o la palabra de envío pueden cambiarla |
 | Correcciones | Diff contra lo ya escrito: retrocesos + texto nuevo | Ya escrito en pantalla no se puede "reemplazar" de otra forma |
 | Núcleo | `core.py` es port de `LabiaCore` con las mismas pruebas | Mismo comportamiento que macOS |
-| Escribir texto | Por decidir en fase 3: `org_kde_kwin_fake_input` (KWin lo expone) o portapapeles (`ext_data_control`) + Ctrl+V | Acentos y ñ deben salir bien en Konsole, VS Code, Brave y Firefox |
-| Atajo | evdev (ya instalado) leyendo el teclado; ⌥ derecho igual que macOS | Wayland no deja leer teclas globales de otra forma |
+| Escribir texto | Teclas por uinput (permiso `uaccess` ya existe); texto por `wl-copy --sensitive` en clipboard y primary + Shift+Insert | Acentos con cualquier distribución; Shift+Insert pega en terminales (primary) y en navegadores/VS Code (clipboard); Klipper ignora lo sensible |
+| Atajo | evdev leyendo los teclados (grupo `input`); Alt derecho igual que macOS. Esc no se traga: también llega a la app | Wayland no deja leer teclas globales de otra forma; tragar Esc exigiría agarrar el teclado entero |
 | Micrófono | sounddevice, 16 kHz mono | Ya instalado |
 
 ## Módulos (`linux/labia/`)
@@ -25,7 +26,8 @@ Regla: todo vive en `linux/`. No se toca nada de `Sources/`, `Tests/`, `Package.
 - `stream.py`: `LocalAgreement`, `diff`, `Session` (lógica pura; el modelo se pasa desde fuera).
 - `engine.py`: carga del modelo y precarga de las libs CUDA de pip.
 - `simulate.py`: pasa un WAV como si fuera en vivo e imprime cada pasada.
-- Por hacer: `typer.py` (escribir en la app activa), `hotkey.py`, `recorder.py`, `__main__.py`.
+- `typer.py`: escribe en la app activa. `hotkey.py`: atajo con evdev. `app.py`: bucle en vivo (micrófono con sounddevice + hilo de dictado). `__main__.py`: `python -m labia [--simulate wav]`.
+- `labia.service`: servicio de systemd de usuario.
 
 ## Fases
 

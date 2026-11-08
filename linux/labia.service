@@ -1,0 +1,12 @@
+[Unit]
+Description=Labia: dictado en español en tiempo real
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+WorkingDirectory=%h/labia/linux
+ExecStart=%h/labia/linux/.venv/bin/python -m labia
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target
