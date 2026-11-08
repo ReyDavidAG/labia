@@ -1,8 +1,8 @@
 # Labia para Windows
 
-> **Estado: escrito, sin probar.** El código está en la rama `feature/windows` y falta probarlo en una máquina con Windows. Ver `windows/state.md`.
+Probado en Windows 11 con una MSI Cyborg 15 A12VF (RTX 4060 Laptop). Es la misma app que en Linux: un solo paquete de Python en `linux/labia/` que elige los módulos según la plataforma. Escribe en tiempo real mientras hablas, se corrige cada 3 s y muestra la cápsula flotante. Los gestos son los mismos: mantener AltGr, doble toque para manos libres, Esc para cancelar y terminar con «Claude» para enviar.
 
-Es la misma app que en Linux: un solo paquete de Python en `linux/labia/` que elige los módulos según la plataforma. Escribe en tiempo real mientras hablas, se corrige cada 3 s y muestra la cápsula flotante. Los gestos son los mismos (mantener AltGr, doble toque, Esc, terminar con «Claude»).
+<p align="center"><img src="../docs/img/windows-states.png" alt="La cápsula de Labia en Windows: escuchando con el volumen del micrófono, manos libres, transcribiendo, pegado con 18 palabras, sin voz y cancelado"></p>
 
 | Pieza | Linux | Windows |
 |---|---|---|
@@ -11,38 +11,39 @@ Es la misma app que en Linux: un solo paquete de Python en `linux/labia/` que el
 | Cápsula | `pill.py`: GTK 4 + layer-shell | `pill_windows.py`: tkinter + estilos Win32 |
 | Todo lo demás | `core.py`, `stream.py`, `engine.py`, `app.py` | igual |
 
-## Instalar y probar
+## Instalar
 
-Requiere Python 3.12 o posterior de python.org (trae tkinter) y una GPU NVIDIA con su driver al día.
+Requiere una GPU NVIDIA con su driver al día (sin GPU funciona en CPU, pero más lento), Git y Python 3.12 de python.org, que trae tkinter. El Python de la Microsoft Store no sirve.
 
 ```powershell
+winget install Git.Git Python.Python.3.12
 git clone https://github.com/ReyDavidAG/labia.git
-cd labia
-git checkout feature/windows
-cd linux
-py -m venv .venv
-.venv\Scripts\pip install -r requirements.txt
+cd labia\linux
+py -3.12 -m venv .venv
+.venv\Scripts\pip install -r requirements.txt pytest
 .venv\Scripts\python -m pytest -q
 .venv\Scripts\python -m labia          # la primera vez baja el modelo (1.6 GB)
 ```
+
+Cuando dice `listo`, mantén **AltGr** (Alt derecho) en cualquier campo de texto y habla.
 
 Para que arranque al iniciar sesión, sin ventana de consola: crea un acceso directo en `shell:startup` con destino `<ruta>\labia\linux\.venv\Scripts\pythonw.exe -m labia` e «Iniciar en» `<ruta>\labia\linux`.
 
 Los ajustes van en `%APPDATA%\Labia\settings.json` (las mismas claves que en Linux) y el historial en `%APPDATA%\Labia\history.json`.
 
-## Lista de pruebas
+## Cómo escribe
 
-1. `pytest` pasa.
-2. Al arrancar dice `listo` y usa la GPU. Si CTranslate2 no encuentra `cublas64_12.dll` o `cudnn*.dll`, revisa `engine._preload_cuda_libs`.
-3. Mantener AltGr y hablar en Notepad: el texto **aparece mientras hablas**, con acentos y ñ.
-4. AltGr+Q sigue escribiendo **@**, y AltGr solo no deja Ctrl ni Alt pegados (prueba Ctrl+C y Alt+Tab justo después de dictar).
-5. Lo mismo en VS Code, Brave y Windows Terminal. La palabra «Claude» al final da Enter.
-6. La cápsula sale abajo al centro del monitor donde está el mouse, no le quita el foco a la app y deja pasar los clics. Se ve nítida con escala de 125 % y 150 %.
-7. Después de dictar, Win+V no muestra los pedazos dictados y el portapapeles anterior regresa.
-8. Un dictado de más de 1 minuto sale completo.
+Las palabras se pegan con el portapapeles y Ctrl+V, y las correcciones borran con Retroceso. Tres detalles evitan que se pierda texto:
 
-## Puntos que hay que verificar
+- **Espera a que la app lea cada pegado.** Una corrección larga puede mandar cientos de retrocesos, y la app llega tarde al Ctrl+V. Labia usa el render diferido del portapapeles: Windows le avisa en el momento en que la app lee el texto, y hasta entonces no cambia el portapapeles ni suelta Ctrl.
+- **Pega en pedazos de 400 caracteres**, para que Claude Code no colapse un dictado largo en «[Pasted text]».
+- **Los espacios del final los escribe con teclas**, porque Windows Terminal los recorta al pegar.
 
-- **AltGr.** Con distribución Español/Latinoamérica, Windows manda un Ctrl izquierdo falso (scan code `0x21D`) junto con AltGr. El gancho lo trata igual que AltGr: lo traga o lo deja pasar junto con él. Si se queda Ctrl «pegado», revisa `hotkey_windows._hook_thread`.
-- **Apps como administrador.** Windows no deja que una app normal mande teclas a una que corre como administrador (UIPI). Ahí no se escribe nada a menos que Labia también corra como administrador.
-- **Portapapeles.** Solo se restaura texto. Si antes de dictar había una imagen copiada, se pierde.
+Al terminar regresa lo que tenías en el portapapeles. Lo que pega va marcado para que el historial de Win+V y el portapapeles en la nube lo ignoren.
+
+## Problemas comunes
+
+- **No hace nada.** Revisa que la consola diga `listo`. Si el micrófono no capta nada, cámbialo en Configuración → Sistema → Sonido → Entrada: Labia usa el predeterminado.
+- **No escribe en una app.** Windows no deja que una app normal mande teclas a una que corre como administrador. Ahí sólo funciona si Labia también corre como administrador.
+- **Una imagen copiada desaparece.** Sólo se restaura el texto del portapapeles.
+- **Avisa que no puede crear enlaces simbólicos al bajar el modelo.** Es sólo una advertencia de Hugging Face; el modelo se baja igual.
