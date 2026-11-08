@@ -3,7 +3,7 @@
 <h1 align="center">Labia</h1>
 
 <p align="center"><b>Mantén ⌥ y habla. Suelta y se pega.</b><br>
-Dictado en español para macOS, en cualquier app y sin internet.</p>
+Dictado en español para macOS y Linux, en cualquier app y sin internet.</p>
 
 <p align="center"><a href="#english">English below</a></p>
 
@@ -63,6 +63,25 @@ LABIA_SIGN_IDENTITY="Apple Development: Tu Nombre (XXXXXXXXXX)" scripts/bundle.s
 
 Para probar el motor sin micrófono: `build/Labia.app/Contents/MacOS/Labia --transcribe audio.wav`. Las capturas de este README se regeneran con `--screenshots docs/img`. Para activar o quitar el arranque al iniciar sesión desde Terminal: `/Applications/Labia.app/Contents/MacOS/Labia --login-item on` (u `off`).
 
+## Linux
+
+Hay una versión para Linux en [`linux/`](linux/README.md), probada en KDE Plasma 6 (Wayland) con GPU NVIDIA. Usa los mismos gestos y la misma cápsula, y además **escribe en tiempo real**: el texto aparece mientras hablas y Labia lo va corrigiendo.
+
+<p align="center"><img src="docs/img/linux-states.png" alt="La cápsula de Labia en Linux: escuchando, manos libres, transcribiendo, pegado, sin voz y cancelado"></p>
+
+- **Borrador y corrección, como el `SpeechAnalyzer` de Apple.** Cada 0.5 s escribe las palabras que dos pasadas de Whisper confirman. Cada 3 s, una pasada más cuidadosa (beam 5 con detector de voz) reescribe lo ya escrito si encuentra algo mejor.
+- **Sin voz no escribe nada.** La pasada final cubre toda la grabación con detector de voz, así que el silencio ya no se convierte en «Gracias.».
+- **AltGr sigue funcionando.** Alt derecho solo sirve para dictar, y combinado con otra tecla llega normal a la app.
+- **faster-whisper en CUDA.** large-v3-turbo en float16 sobre la GPU, o en CPU si no hay una.
+
+```sh
+sudo pacman -S --needed wl-clipboard portaudio gtk4-layer-shell python-gobject
+cd linux && python -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python -m labia
+```
+
+La guía completa, con el arranque como servicio, está en [`linux/README.md`](linux/README.md).
+
 ## Vocabulario: precisión contra velocidad
 
 Whisper recibe tu lista como contexto antes de cada dictado. En una prueba con 7 frases de desarrollo dichas en español:
@@ -117,5 +136,6 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario
 - A custom vocabulary fixes code-switched terms. On an M2 a sentence takes about 1.5 s, plus ~25 ms per vocabulary token.
 - Double-tap ⌥ for hands-free mode and press esc to cancel. It presses Enter only when you end the dictation with the send keyword («Claude» by default; change or turn it off in Settings).
 - Requires macOS 14+ on Apple Silicon. Download it from [Releases](../../releases), or build it with `scripts/bundle.sh`. The app is not notarized, so run `xattr -dr com.apple.quarantine /Applications/Labia.app` after installing.
+- **Linux** (KDE Plasma on Wayland, NVIDIA GPU): see [`linux/`](linux/README.md). It types in real time while you speak and corrects itself every few seconds with a careful Whisper pass, like Apple's volatile and final results. The final pass covers the whole recording with VAD, so silence types nothing.
 
 The UI is in Spanish. Set **Ajustes → Modelo → Idioma** to English to dictate in English.
