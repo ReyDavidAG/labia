@@ -1,8 +1,6 @@
-from evdev import ecodes as e
+from labia.core import Passthrough
 
-from labia.hotkey import Passthrough
-
-ALT, Q = e.KEY_RIGHTALT, e.KEY_Q
+ALT, Q = 100, 16  # any two key codes
 
 
 def test_hotkey_alone_never_reaches_apps():
