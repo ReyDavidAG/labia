@@ -18,6 +18,14 @@ def test_agreement_commits_only_what_two_passes_share():
     assert a.text == " Hola mundo cómo estás?"
 
 
+def test_agreement_survives_one_garbage_pass():
+    a = LocalAgreement()
+    a.update(words(" familia", " Parra."))
+    a.update([(0.0, 0.9, " Parlo")])  # Whisper's occasional bad pass
+    a.update(words(" familia", " Parra", " Su"))
+    assert a.text == " familia Parra"
+
+
 def test_agreement_drops_repeated_overlap_after_trim():
     a = LocalAgreement()
     a.update(words(" uno", " dos")); a.update(words(" uno", " dos"))
@@ -70,3 +78,17 @@ def test_session_cleaning_can_retract():
     s.step(); s.step()
     back, add, send = s.finish()
     assert s.typed == "a develop ya " and not send
+
+
+def test_hotkey_to_gesture():
+    from evdev import ecodes as e
+    from labia import core
+    from labia.hotkey import to_gesture
+
+    h = e.KEY_RIGHTALT
+    assert to_gesture(h, 1, h) == core.KEY_DOWN
+    assert to_gesture(h, 0, h) == core.KEY_UP
+    assert to_gesture(h, 2, h) is None  # auto-repeat
+    assert to_gesture(e.KEY_ESC, 1, h) == core.ESCAPE
+    assert to_gesture(e.KEY_A, 1, h) == core.OTHER_KEY
+    assert to_gesture(e.KEY_A, 0, h) is None
