@@ -29,28 +29,6 @@ def to_gesture(code, value, hotkey):
     return None
 
 
-class Passthrough:
-    """Decide which events reach the apps: the hotkey only if it turns into a chord."""
-
-    def __init__(self, hotkey):
-        self.hotkey, self.held, self.forwarded = hotkey, False, False
-
-    def filter(self, code, value):
-        """Return the (code, value) key events to re-emit for one incoming key event."""
-        if code == self.hotkey:
-            if value == 1:
-                self.held, self.forwarded = True, False
-                return []
-            out = [(code, value)] if self.forwarded else []
-            if value == 0:
-                self.held = self.forwarded = False
-            return out
-        if value == 1 and self.held and not self.forwarded:
-            self.forwarded = True
-            return [(self.hotkey, 1), (code, value)]
-        return [(code, value)]
-
-
 def _grab(dev):
     while dev.active_keys():  # grabbing with a key down (Enter that started us) leaves it stuck in the compositor
         time.sleep(0.05)
@@ -62,7 +40,7 @@ def _grab(dev):
 def events(hotkey_name, tick=0.1):
     """Yield (gesture event, time) forever; TICK every `tick` seconds of silence."""
     hotkey = e.ecodes[hotkey_name]
-    devs = {d.fd: (d, _grab(d), Passthrough(hotkey)) for d in keyboards()}
+    devs = {d.fd: (d, _grab(d), core.Passthrough(hotkey)) for d in keyboards()}
     if not devs:
         raise SystemExit("No keyboard readable. Add yourself to the `input` group (see linux/README.md).")
     # ponytail: keyboards plugged in after start are not seen; restart labia (or add udev monitoring)
