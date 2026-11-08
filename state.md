@@ -1,6 +1,6 @@
 # Labia · state
 
-Última actualización: 2026-11-05
+Última actualización: 2026-11-08
 
 | Fase | Estado |
 |---|---|
@@ -11,6 +11,7 @@
 | 4. Menú, ajustes, bienvenida | ✅ revisado con capturas |
 | 5. Empaque, README, CI, release | ✅ v0.1.0 |
 | 6. Palabra de envío «Claude» | ✅ v0.2.0 |
+| 7. Versión Linux (`linux/`, ver `linux/state.md`) | ✅ v0.3.0 |
 
 ## Hallazgos
 
