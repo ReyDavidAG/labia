@@ -1,5 +1,15 @@
 # Cambios
 
+## 0.3.0 · 2026-11-08
+
+Primera versión para Linux, en [`linux/`](linux/README.md) (KDE Plasma en Wayland, GPU NVIDIA).
+
+- Escribe en tiempo real: las palabras aparecen mientras hablas.
+- Se corrige solo: cada 3 s, una pasada cuidadosa reescribe lo que ya escribió.
+- La pasada final cubre toda la grabación con detector de voz. Sin voz no escribe nada.
+- La cápsula flotante de macOS, con el volumen real del micrófono y los mismos estados.
+- Alt derecho solo sirve para dictar, y AltGr con otra tecla sigue funcionando.
+
 ## 0.2.0 · 2026-11-05
 
 - Palabra de envío: terminar el dictado con «Claude» pega el texto y presiona Enter. Dicha sola envía lo que ya estaba escrito. Configurable en Ajustes › General.
