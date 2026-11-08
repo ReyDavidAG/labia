@@ -66,6 +66,32 @@ class GestureMachine:
         self.phase = IDLE
 
 
+class Passthrough:
+    """Which key events reach the apps: the hotkey only if it turns into a chord (AltGr+Q = @).
+
+    Held alone, apps would see it as a modifier: Right Alt + our paste shortcut is not a paste.
+    Codes are whatever the platform uses (evdev codes, Windows virtual keys).
+    """
+
+    def __init__(self, hotkey):
+        self.hotkey, self.held, self.forwarded = hotkey, False, False
+
+    def filter(self, code, value):
+        """Return the (code, value) key events to re-emit for one incoming event. value: 1 down, 0 up, 2 repeat."""
+        if code == self.hotkey:
+            if value == 1:
+                self.held, self.forwarded = True, False
+                return []
+            out = [(code, value)] if self.forwarded else []
+            if value == 0:
+                self.held = self.forwarded = False
+            return out
+        if value == 1 and self.held and not self.forwarded:
+            self.forwarded = True
+            return [(self.hotkey, 1), (code, value)]
+        return [(code, value)]
+
+
 # --- SendKeyword ----------------------------------------------------------
 
 SEND_DEFAULTS = ["Claude", "cloud", "clod"]
@@ -188,8 +214,11 @@ def tidy(text):
 
 # --- Preferences ----------------------------------------------------------
 
-CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "labia"
-DATA_DIR = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "labia"
+if os.name == "nt":
+    CONFIG_DIR = DATA_DIR = Path(os.environ.get("APPDATA", Path.home() / "AppData/Roaming")) / "Labia"
+else:
+    CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "labia"
+    DATA_DIR = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "labia"
 MAX_PROMPT_CHARS = 600
 
 

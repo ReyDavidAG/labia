@@ -79,7 +79,9 @@ def test_session_cleaning_can_retract():
 
 
 def test_hotkey_to_gesture():
-    from evdev import ecodes as e
+    import pytest
+
+    e = pytest.importorskip("evdev").ecodes  # Linux only
     from labia import core
     from labia.hotkey import to_gesture
 

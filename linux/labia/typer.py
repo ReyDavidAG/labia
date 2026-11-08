@@ -13,6 +13,10 @@ from evdev import ecodes as e
 
 KEYS = [e.KEY_BACKSPACE, e.KEY_ENTER, e.KEY_LEFTSHIFT, e.KEY_INSERT]
 PASTE_SETTLE = 0.12  # the app reads the clipboard asynchronously after Shift+Insert; don't change it before
+# The last paste can be read late (a terminal still busy with a long correction); restoring the clipboard
+# before then pastes the user's old clipboard over the dictation. Same wait as macOS. Windows knows the exact
+# moment (delayed rendering); wl-copy can't tell us, and --paste-once would be used up by Klipper.
+RESTORE_DELAY = 0.6
 
 
 def _copy(text, primary=False):
@@ -61,5 +65,6 @@ class Typer:
 
     def end(self):
         if self.saved:
+            time.sleep(RESTORE_DELAY)
             subprocess.run(["wl-copy"], input=self.saved)
         self.saved = None
