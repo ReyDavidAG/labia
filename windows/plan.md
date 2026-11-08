@@ -4,10 +4,10 @@ Versión de Labia para Windows 11, en la misma laptop que la de Linux (MSI Cybor
 
 ## Para retomar en una sesión nueva
 
-1. `git clone https://github.com/ReyDavidAG/labia.git && cd labia && git checkout develop`
+1. `git clone https://github.com/ReyDavidAG/labia.git && cd labia && git checkout feature/windows` (el código ya está escrito; falta probarlo)
 2. Lee, en este orden: `state.md` (raíz, macOS), `linux/plan.md`, `linux/state.md`, `linux/README.md`, este archivo y `windows/state.md`.
 3. Las reglas del repo están en `CONTRIBUTING.md`: ramas `main`/`develop`/`feature/*`, commits de una línea en inglés y en imperativo, interfaz en español y código en inglés.
-4. Empieza en una rama `feature/windows` que salga de `develop`.
+4. Sigue la «Lista de pruebas» de `windows/README.md`. Las decisiones que se tomaron al escribir el código están en `windows/state.md`.
 
 ## Punto de partida: reutilizar el paquete de Linux
 
@@ -22,7 +22,7 @@ Versión de Labia para Windows 11, en la misma laptop que la de Linux (MSI Cybor
 | `hotkey.py` (evdev), `typer.py` (uinput + wl-copy), `pill.py` (GTK + layer-shell) | No. Hay que escribir la versión de Windows |
 | `app.py` | Sí, si escoge los módulos de plataforma según `sys.platform` |
 
-**Decisión para tomar al empezar:** mover `linux/` a una carpeta común (por ejemplo `python/`, con `git mv` para conservar el historial) y poner los módulos de cada plataforma como `hotkey_linux.py` / `hotkey_windows.py`. La otra opción es copiar el paquete a `windows/`, pero entonces habría dos núcleos que mantener. Recomiendo la carpeta común.
+**Decisión (2026-11-08): por ahora no se mueve `linux/`, ver `windows/state.md`.** La opción original era mover `linux/` a una carpeta común (por ejemplo `python/`, con `git mv` para conservar el historial) y poner los módulos de cada plataforma como `hotkey_linux.py` / `hotkey_windows.py`. La otra opción es copiar el paquete a `windows/`, pero entonces habría dos núcleos que mantener. Recomiendo la carpeta común.
 
 ## Piezas propias de Windows
 
