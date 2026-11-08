@@ -11,34 +11,54 @@ from .simulate import STEP
 from .stream import SAMPLE_RATE, Session
 
 
-def _banner():
-    """Show a 'recording' notification; returns a function that closes it."""
-    # ponytail: KDE notification, not a floating pill; layer-shell overlay if the popup position bothers
-    import subprocess
+class PillClient:
+    """Talks to pill.py, a separate GTK process under the system Python. Silent no-op if it can't run."""
 
-    try:
-        nid = subprocess.run(["notify-send", "--print-id", "--expire-time=0", "--urgency=low",
-                              "--hint=int:transient:1", "--app-name=Labia", "🎙 Grabando…"],
-                             capture_output=True, text=True, timeout=2).stdout.strip()
-    except (OSError, subprocess.TimeoutExpired):
-        return lambda: None
-    return lambda: subprocess.run(
-        ["gdbus", "call", "--session", "--dest", "org.freedesktop.Notifications",
-         "--object-path", "/org/freedesktop/Notifications",
-         "--method", "org.freedesktop.Notifications.CloseNotification", nid],
-        capture_output=True) if nid.isdigit() else None
+    def __init__(self):
+        import ctypes.util
+        import os
+        import subprocess
+        from pathlib import Path
+
+        self.proc, self.lock = None, threading.Lock()
+        lib = ctypes.util.find_library("gtk4-layer-shell")
+        if not lib:
+            print("sin cápsula: instala gtk4-layer-shell (sudo pacman -S gtk4-layer-shell)")
+            return
+        # gtk4-layer-shell must load before libwayland-client, hence the preload.
+        self.proc = subprocess.Popen(["/usr/bin/python3", str(Path(__file__).with_name("pill.py"))],
+                                     stdin=subprocess.PIPE, text=True, env={**os.environ, "LD_PRELOAD": lib})
+
+    def send(self, **msg):
+        import json
+
+        with self.lock:
+            if not self.proc:
+                return
+            try:
+                self.proc.stdin.write(json.dumps(msg) + "\n")
+                self.proc.stdin.flush()
+            except (BrokenPipeError, ValueError):
+                self.proc = None
+
+
+def level(chunk):
+    """Mic chunk -> 0..1 for the waveform, same curve as the macOS Recorder."""
+    rms = float(np.sqrt(np.mean(chunk * chunk))) if len(chunk) else 0.0
+    return 0.0 if rms <= 0 else min(1.0, max(0.0, (20 * np.log10(rms) + 52) / 38))
 
 
 class Dictation(threading.Thread):
     """One dictation: record, transcribe every STEP seconds, type as words get confirmed."""
 
-    def __init__(self, transcribe, prefs, typer, after=None):
+    def __init__(self, transcribe, prefs, typer, pill, after=None):
         super().__init__(daemon=True)
+        self.pill = pill
         self.after = after  # previous dictation, maybe still on its last pass: let it finish typing first
         self.session = Session(transcribe, prefs)
         self.prefs, self.typer = prefs, typer
         self.audio = queue.Queue()
-        self.outcome = None  # "finish" or "cancel", set by the hotkey thread
+        self.outcome = None  # "finish", "cancel", "short" or "chord", set by the hotkey thread
         self.done = threading.Event()
 
     def stop(self, outcome):
@@ -55,13 +75,15 @@ class Dictation(threading.Thread):
 
     def run(self):
         s, t0 = self.session, time.monotonic()
-        stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32",
-                                callback=lambda data, *_: self.audio.put(data[:, 0].copy()))
+        def on_audio(data, *_):
+            self.audio.put(data[:, 0].copy())
+            self.pill.send(level=level(data[:, 0]))
+
+        stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32", blocksize=800, callback=on_audio)
         stream.start()  # record from the keypress, even while the previous dictation finishes
         if self.after:
             self.after.join()
         self.typer.begin()
-        close_banner = _banner()
         try:
             while not self.done.wait(STEP):
                 if time.monotonic() - t0 > self.prefs.max_recording_seconds:
@@ -71,10 +93,12 @@ class Dictation(threading.Thread):
                     self.typer.apply(*s.step())
             stream.close()
             self._drain()
-            if self.outcome == "cancel" or s.samples < SAMPLE_RATE * 0.3:
+            if self.outcome in ("cancel", "short", "chord") or s.samples < SAMPLE_RATE * 0.3:
                 self.typer.apply(len(s.typed), "")
+                self.pill.send(state={"cancel": "cancelled", "chord": "hide"}.get(self.outcome, "short"))
                 print("cancelada")
                 return
+            self.pill.send(state="transcribing")
             back, add, send = s.finish()
             if self.prefs.auto_type:
                 self.typer.apply(back, add)
@@ -83,10 +107,15 @@ class Dictation(threading.Thread):
             text = s.typed.strip()
             if text:
                 core.add_history(text, s.samples / SAMPLE_RATE)
+                self.pill.send(state="done", words=len(text.split()))
+            else:
+                self.pill.send(state="silent")
             print(f"{s.samples / SAMPLE_RATE:.1f}s: {text!r}{' ⏎' if send else ''}")
+        except Exception as err:
+            self.pill.send(state="failed", text=str(err)[:60])
+            raise
         finally:
             stream.close()  # no-op if already closed
-            close_banner()
             self.typer.end()
 
 
@@ -97,15 +126,18 @@ def run():
     print("cargando modelo…")
     transcribe = engine.transcriber(engine.load(prefs.model), prefs.language)
     typer = Typer()
+    pill = PillClient()
     gestures, current = core.GestureMachine(), None
     print(f"listo: mantén {prefs.hotkey} y habla (doble toque = manos libres, esc cancela)")
     for event, t in hotkey.events(prefs.hotkey):
         action = gestures.handle(event, t)
         if action == core.START:
-            current = Dictation(transcribe, prefs, typer, after=current)
+            pill.send(state="listening")
+            current = Dictation(transcribe, prefs, typer, pill, after=current)
             current.start()
         elif action == core.LOCK:
+            pill.send(state="locked")
             print("manos libres")
         elif action in (core.STOP, core.CANCEL, core.TOO_SHORT, core.CHORD) and current:
-            current.stop("finish" if action == core.STOP else "cancel")
+            current.stop({core.STOP: "finish", core.CANCEL: "cancel", core.TOO_SHORT: "short"}.get(action, "chord"))
             # no join: this loop also forwards the keyboard, it must never wait on Whisper
