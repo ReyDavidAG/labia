@@ -14,8 +14,6 @@ def test_agreement_commits_only_what_two_passes_share():
     assert [w[2] for w in a.update(words(" Hola", " mundo", " cómo"))] == [" Hola"]
     assert [w[2] for w in a.update(words(" Hola", " mundo", " cómo", " estás"))] == [" mundo", " cómo"]
     assert a.text == " Hola mundo cómo"
-    a.finish(words(" Hola", " mundo", " cómo", " estás?"))
-    assert a.text == " Hola mundo cómo estás?"
 
 
 def test_agreement_survives_one_garbage_pass():
@@ -45,7 +43,7 @@ def test_diff_and_hold():
 def fake_model(passes):
     """Returns each scripted hypothesis in turn (times relative to the buffer)."""
     it = iter(passes)
-    return lambda samples, prompt: next(it)
+    return lambda samples, prompt, **careful: next(it)
 
 
 def test_session_types_progressively_and_sends_on_keyword():
@@ -92,3 +90,30 @@ def test_hotkey_to_gesture():
     assert to_gesture(e.KEY_ESC, 1, h) == core.ESCAPE
     assert to_gesture(e.KEY_A, 1, h) == core.OTHER_KEY
     assert to_gesture(e.KEY_A, 0, h) is None
+
+
+def test_careful_pass_corrects_typed_words():
+    draft = words(" Abre", " el", " pul", " request", " ya")
+    passes = [draft, draft, words(" Abre", " el", " pull", " request", " ya"), words(" Abre", " el", " pull", " request", " ya.")]
+    s = Session(fake_model(passes), Preferences(vocabulary=[], send_on_keyword=False))
+    s.feed(np.zeros(16000, np.float32))
+    s.step(); s.step()
+    assert s.typed == "Abre el pul request"
+    s.feed(np.zeros(3 * 16000, np.float32))
+    s.step()  # 3 s of new audio: careful pass
+    assert s.typed == "Abre el pull request"
+    s.finish()
+    assert s.typed == "Abre el pull request ya. "
+
+
+def test_careful_pass_ignores_garbage_and_final_pass_drops_silence():
+    draft = words(" Uno", " dos", " tres", " cuatro")
+    passes = [draft, draft, words(" Gracias."), []]
+    s = Session(fake_model(passes), Preferences(vocabulary=[], send_on_keyword=False))
+    s.feed(np.zeros(16000, np.float32))
+    s.step(); s.step()
+    s.feed(np.zeros(3 * 16000, np.float32))
+    s.step()
+    assert s.typed == "Uno dos tres"  # one-word pass did not wipe the draft
+    back, add, _ = s.finish()  # VAD found no speech
+    assert s.typed == "" and back == len("Uno dos tres")
