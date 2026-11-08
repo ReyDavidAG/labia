@@ -29,18 +29,18 @@ def load(model="large-v3-turbo"):
 
 
 def transcriber(model, language="es"):
-    """Returns transcribe(samples, prompt) -> [(start, end, text)] for stream.Session."""
+    """Returns transcribe(samples, prompt, beam, vad) -> [(start, end, text)] for stream.Session."""
 
-    def transcribe(samples, prompt):
+    def transcribe(samples, prompt, beam=1, vad=False):
         segments, _ = model.transcribe(
             samples,
             language=language,
             initial_prompt=prompt,
-            beam_size=1,
+            beam_size=beam,
             temperature=0,
             word_timestamps=True,
             condition_on_previous_text=False,
-            vad_filter=False,
+            vad_filter=vad,  # Silero VAD: no speech in, no text out (no «Gracias.» on silence)
         )
         return [(w.start, w.end, w.word) for s in segments for w in (s.words or [])]
 

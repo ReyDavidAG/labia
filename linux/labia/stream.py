@@ -6,6 +6,8 @@ from . import core
 
 SAMPLE_RATE = 16_000
 TRIM_SECONDS = 10  # keep Whisper's window short: cut audio already committed once the buffer passes this
+REFINE_SECONDS = 3  # every this much new audio, a careful pass (beam 5 + VAD) rewrites what is already typed
+GARBAGE_RATIO = 0.6  # a refine pass with fewer words than this share of what it replaces is a bad pass: ignore it
 
 
 def _norm(word):
@@ -52,13 +54,6 @@ class LocalAgreement:
         self.recent = (self.recent + [words])[-2:]
         return best
 
-    def finish(self, words):
-        """Last pass: commit everything it heard."""
-        new = self._fresh(words)
-        self.committed += new
-        self.recent = []
-        return new
-
     @property
     def text(self):
         return "".join(w[2] for w in self.committed)
@@ -81,19 +76,26 @@ def hold_last_word(text):
 
 
 class Session:
-    """One dictation. `transcribe(samples, prompt) -> [(start, end, text)]` with times relative to samples."""
+    """One dictation. `transcribe(samples, prompt, beam=, vad=) -> [(start, end, text)]`, times relative to samples.
+
+    Like Apple's SpeechTranscriber: fast passes type a draft, careful passes replace it for the same audio,
+    and audio trimmed out of the window is final. On release, one careful pass over the whole recording.
+    """
 
     def __init__(self, transcribe, prefs):
         self.transcribe = transcribe
         self.prefs = prefs
         self.agreement = LocalAgreement()
-        self.audio = []  # float32 chunks
+        self.audio = []  # float32 chunks of the current window
+        self.full = []  # every chunk, for the final pass
+        self.refined_at = 0  # self.samples at the last careful pass
         self.samples = 0  # total samples received
         self.offset = 0  # samples already trimmed from the front
         self.typed = ""  # what is on screen right now
 
     def feed(self, chunk):
         self.audio.append(chunk)
+        self.full.append(chunk)
         self.samples += len(chunk)
 
     def _buffer(self):
@@ -103,11 +105,24 @@ class Session:
         self.audio = [buf]
         return buf
 
-    def _hypothesis(self):
+    def _hypothesis(self, **careful):
         buf = self._buffer()
         start = self.offset / SAMPLE_RATE
         # No prompt: on short buffers it makes Whisper loop and drop words (measured 2026-11-08, see state.md).
-        return [(s + start, e + start, t) for s, e, t in self.transcribe(buf, None)]
+        return [(s + start, e + start, t) for s, e, t in self.transcribe(buf, None, **careful)]
+
+    def _refine(self):
+        """Careful pass over the window: replace the committed words it covers (the micro-correction)."""
+        start = self.offset / SAMPLE_RATE
+        old = self.agreement.committed
+        frozen = [w for w in old if w[0] < start]  # trimmed out of the window: final
+        window = old[len(frozen):]
+        if not window:
+            return
+        limit = window[-1][0] + 0.15  # up to the last committed word; the rest is still a draft
+        new = [w for w in self._hypothesis(beam=5, vad=True) if w[0] <= limit]
+        if len(new) >= GARBAGE_RATIO * len(window):
+            self.agreement.committed = frozen + new
 
     def _trim(self):
         buf = self._buffer()
@@ -124,15 +139,22 @@ class Session:
 
     def step(self):
         """Mid-dictation pass. Returns (backspaces, text) to apply on screen."""
-        self.agreement.update(self._hypothesis())
+        if self.samples - self.refined_at >= REFINE_SECONDS * SAMPLE_RATE and self.agreement.committed:
+            self.refined_at = self.samples
+            self._refine()
+        else:
+            self.agreement.update(self._hypothesis())
         self._trim()
         target = hold_last_word(self._clean(self.agreement.text))
         return self._apply(target)
 
     def finish(self):
-        """Final pass. Returns (backspaces, text, send)."""
-        self.agreement.finish(self._hypothesis())
-        text, send = self._clean(self.agreement.text), False
+        """Final pass over the whole recording, careful. Returns (backspaces, text, send)."""
+        import numpy as np
+
+        full = np.concatenate(self.full) if self.full else np.zeros(0, np.float32)
+        raw = "".join(t for _, _, t in self.transcribe(full, None, beam=5, vad=True))
+        text, send = self._clean(raw), False
         if self.prefs.send_on_keyword:
             text, send = core.split_send(text, self.prefs.send_keywords)
         if text and self.prefs.trailing_space and not send and not text.endswith("\n"):
