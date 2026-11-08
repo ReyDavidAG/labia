@@ -107,7 +107,7 @@ Para lo demás están los **Reemplazos**, que traen `nueva línea` → salto de 
 ## Cómo funciona
 
 ```
-CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario
+CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario (cortado en pausas si pasa de 30 s)
   → limpieza (alucinaciones de silencio, vocabulario, reemplazos)
   → portapapeles + ⌘V simulado → restaurar portapapeles → historial
 ```
@@ -119,6 +119,7 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario
 
 - **No hace nada al mantener ⌥.** Revisa Ajustes del Sistema → Privacidad y seguridad → Accesibilidad. Si actualizaste la app y Labia ya aparece activado, quítalo con `−` y vuelve a agregarlo.
 - **Escribe "No te oí".** El micrófono no captó voz. Revisa la entrada en Ajustes del Sistema → Sonido.
+- **Un dictado largo sale incompleto.** Desde la 0.3.1, los dictados de más de 30 s se cortan en las pausas y cada tramo se transcribe aparte (máximo 5 min). Si aun así falta texto, habla con pausas cortas entre ideas.
 - **El primer dictado del día tarda.** El modelo se libera de la memoria tras 30 minutos sin uso. Puedes cambiarlo en Ajustes → Modelo.
 - **fn abre los emojis.** macOS usa esa tecla. Elige ⌥ o ⌘ derecho, o cambia en Ajustes del Sistema → Teclado qué hace la tecla 🌐.
 

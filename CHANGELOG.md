@@ -1,5 +1,9 @@
 # Cambios
 
+## 0.3.1 · sin publicar
+
+- macOS: los dictados de más de 30 s se cortan en las pausas y cada tramo se transcribe por separado. Antes, en dictados de más de un minuto sólo llegaban las primeras frases.
+
 ## 0.3.0 · 2026-11-08
 
 Primera versión para Linux, en [`linux/`](linux/README.md) (KDE Plasma en Wayland, GPU NVIDIA).

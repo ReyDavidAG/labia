@@ -54,6 +54,10 @@ actor Transcriber {
 		try await load()
 		guard let kit else { return "" }
 		var options = DecodingOptions(task: .transcribe, language: language, temperature: 0, usePrefillPrompt: true, skipSpecialTokens: true)
+		// Más de 30 s: cortar en las pausas y transcribir cada tramo por separado. Sin esto WhisperKit avanza
+		// ventana por ventana guiado por los timestamps, y una ventana mala (el prompt la hace repetir o cortar)
+		// se salta el resto: en dictados de más de un minuto sólo llegaban las primeras frases.
+		options.chunkingStrategy = .vad
 		if let prompt, let tokenizer = kit.tokenizer {
 			options.promptTokens = tokenizer.encode(text: " " + prompt).filter { $0 < tokenizer.specialTokens.specialTokenBegin }
 		}
