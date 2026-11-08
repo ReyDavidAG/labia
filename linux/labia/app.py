@@ -11,11 +11,30 @@ from .simulate import STEP
 from .stream import SAMPLE_RATE, Session
 
 
+def _banner():
+    """Show a 'recording' notification; returns a function that closes it."""
+    # ponytail: KDE notification, not a floating pill; layer-shell overlay if the popup position bothers
+    import subprocess
+
+    try:
+        nid = subprocess.run(["notify-send", "--print-id", "--expire-time=0", "--urgency=low",
+                              "--hint=int:transient:1", "--app-name=Labia", "🎙 Grabando…"],
+                             capture_output=True, text=True, timeout=2).stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        return lambda: None
+    return lambda: subprocess.run(
+        ["gdbus", "call", "--session", "--dest", "org.freedesktop.Notifications",
+         "--object-path", "/org/freedesktop/Notifications",
+         "--method", "org.freedesktop.Notifications.CloseNotification", nid],
+        capture_output=True) if nid.isdigit() else None
+
+
 class Dictation(threading.Thread):
     """One dictation: record, transcribe every STEP seconds, type as words get confirmed."""
 
-    def __init__(self, transcribe, prefs, typer):
+    def __init__(self, transcribe, prefs, typer, after=None):
         super().__init__(daemon=True)
+        self.after = after  # previous dictation, maybe still on its last pass: let it finish typing first
         self.session = Session(transcribe, prefs)
         self.prefs, self.typer = prefs, typer
         self.audio = queue.Queue()
@@ -38,15 +57,19 @@ class Dictation(threading.Thread):
         s, t0 = self.session, time.monotonic()
         stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32",
                                 callback=lambda data, *_: self.audio.put(data[:, 0].copy()))
+        stream.start()  # record from the keypress, even while the previous dictation finishes
+        if self.after:
+            self.after.join()
         self.typer.begin()
+        close_banner = _banner()
         try:
-            with stream:
-                while not self.done.wait(STEP):
-                    if time.monotonic() - t0 > self.prefs.max_recording_seconds:
-                        self.outcome = "finish"
-                        break
-                    if self._drain() and self.prefs.auto_type:
-                        self.typer.apply(*s.step())
+            while not self.done.wait(STEP):
+                if time.monotonic() - t0 > self.prefs.max_recording_seconds:
+                    self.outcome = "finish"
+                    break
+                if self._drain() and self.prefs.auto_type:
+                    self.typer.apply(*s.step())
+            stream.close()
             self._drain()
             if self.outcome == "cancel" or s.samples < SAMPLE_RATE * 0.3:
                 self.typer.apply(len(s.typed), "")
@@ -62,6 +85,8 @@ class Dictation(threading.Thread):
                 core.add_history(text, s.samples / SAMPLE_RATE)
             print(f"{s.samples / SAMPLE_RATE:.1f}s: {text!r}{' ⏎' if send else ''}")
         finally:
+            stream.close()  # no-op if already closed
+            close_banner()
             self.typer.end()
 
 
@@ -77,11 +102,10 @@ def run():
     for event, t in hotkey.events(prefs.hotkey):
         action = gestures.handle(event, t)
         if action == core.START:
-            current = Dictation(transcribe, prefs, typer)
+            current = Dictation(transcribe, prefs, typer, after=current)
             current.start()
         elif action == core.LOCK:
             print("manos libres")
         elif action in (core.STOP, core.CANCEL, core.TOO_SHORT, core.CHORD) and current:
             current.stop("finish" if action == core.STOP else "cancel")
-            current.join()  # ponytail: hotkeys are ignored while the last pass runs (~0.5 s)
-            current = None
+            # no join: this loop also forwards the keyboard, it must never wait on Whisper
