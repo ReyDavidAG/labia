@@ -1,5 +1,14 @@
 # Cambios
 
+## 0.4.0 · 2026-11-08
+
+Primera versión para Windows 11, en [`windows/`](windows/README.md): el mismo paquete de Python de Linux con atajo, escritura y cápsula propios de Windows.
+
+- Escribe en tiempo real y se corrige sola, como en Linux.
+- Se dicta manteniendo AltGr (Alt derecho), con un gancho de teclado de bajo nivel.
+- La cápsula flotante no quita el foco y deja pasar los clics.
+- Corregido: en un dictado largo, la corrección final podía borrar lo escrito y pegar el portapapeles anterior. Windows ahora espera a que la app lea cada pegado; macOS restaura el portapapeles y da Enter cuando la app ya leyó; Linux espera 0.6 s antes de restaurar.
+
 ## 0.3.0 · 2026-11-08
 
 Primera versión para Linux, en [`linux/`](linux/README.md) (KDE Plasma en Wayland, GPU NVIDIA).
