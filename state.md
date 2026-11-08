@@ -12,6 +12,7 @@
 | 5. Empaque, README, CI, release | ✅ v0.1.0 |
 | 6. Palabra de envío «Claude» | ✅ v0.2.0 |
 | 7. Versión Linux (`linux/`, ver `linux/state.md`) | ✅ v0.3.0 |
+| 8. Versión Windows (`windows/`, ver `windows/state.md`) | ✅ v0.4.0 |
 
 ## Hallazgos
 
