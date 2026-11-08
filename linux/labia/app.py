@@ -1,18 +1,27 @@
 """The live loop: hotkey thread drives the GestureMachine, a worker thread streams mic audio into a Session."""
 import queue
+import sys
 import threading
 import time
 
 import numpy as np
 import sounddevice as sd
 
-from . import core, engine, hotkey
+from . import core, engine
+
+if sys.platform == "win32":
+    from . import hotkey_windows as hotkey
+else:
+    from . import hotkey
 from .simulate import STEP
 from .stream import SAMPLE_RATE, Session
 
 
 class PillClient:
-    """Talks to pill.py, a separate GTK process under the system Python. Silent no-op if it can't run."""
+    """Talks to the pill, a separate process: pill.py (GTK, system Python) or pill_windows.py (tkinter).
+
+    Silent no-op if it can't run.
+    """
 
     def __init__(self):
         import ctypes.util
@@ -21,6 +30,11 @@ class PillClient:
         from pathlib import Path
 
         self.proc, self.lock = None, threading.Lock()
+        if sys.platform == "win32":
+            self.proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("pill_windows.py"))],
+                                         stdin=subprocess.PIPE, text=True, encoding="utf-8",
+                                         creationflags=subprocess.CREATE_NO_WINDOW)
+            return
         lib = ctypes.util.find_library("gtk4-layer-shell")
         if not lib:
             print("sin cápsula: instala gtk4-layer-shell (sudo pacman -S gtk4-layer-shell)")
@@ -120,7 +134,10 @@ class Dictation(threading.Thread):
 
 
 def run():
-    from .typer import Typer  # needs uinput and wl-copy; keep --simulate usable without them
+    if sys.platform == "win32":
+        from .typer_windows import Typer
+    else:
+        from .typer import Typer  # needs uinput and wl-copy; keep --simulate usable without them
 
     prefs = core.Preferences.load()
     print("cargando modelo…")
