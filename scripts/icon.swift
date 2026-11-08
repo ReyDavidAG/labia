@@ -1,24 +1,65 @@
 import AppKit
 
+// «Dicho y escrito» (propuesta/logos.html, concepto 2): un globo con la voz que termina en el cursor de texto.
+// Se dibuja en las coordenadas de propuesta/img/concepto-2-dicho-y-escrito.svg (512 × 512, y hacia abajo).
+
 let out = CommandLine.arguments[1]
 let size: CGFloat = 1024
+let inset: CGFloat = 100
+let tile = size - inset * 2
 let image = NSImage(size: NSSize(width: size, height: size))
 image.lockFocus()
-let inset: CGFloat = 100
-let tile = NSRect(x: inset, y: inset, width: size - inset * 2, height: size - inset * 2)
-NSGraphicsContext.current?.cgContext.setShadow(offset: CGSize(width: 0, height: -12), blur: 28, color: NSColor.black.withAlphaComponent(0.3).cgColor)
-let path = NSBezierPath(roundedRect: tile, xRadius: 185, yRadius: 185)
-NSGradient(colors: [NSColor(red: 0.13, green: 0.15, blue: 0.2, alpha: 1), NSColor(red: 0.05, green: 0.06, blue: 0.08, alpha: 1)])!.draw(in: path, angle: -90)
-NSGraphicsContext.current?.cgContext.setShadow(offset: .zero, blur: 0, color: nil)
-let heights: [CGFloat] = [0.3, 0.54, 0.74, 0.46, 0.24]
-let barWidth: CGFloat = 64, gap: CGFloat = 40
-let total = CGFloat(heights.count) * barWidth + CGFloat(heights.count - 1) * gap
-for (i, h) in heights.enumerated() {
-	let height = tile.height * h
-	let rect = NSRect(x: tile.midX - total / 2 + CGFloat(i) * (barWidth + gap), y: tile.midY - height / 2, width: barWidth, height: height)
-	(i == 2 ? NSColor(red: 0.5, green: 0.59, blue: 1, alpha: 1) : NSColor(white: 0.96, alpha: 1)).setFill()
-	NSBezierPath(roundedRect: rect, xRadius: barWidth / 2, yRadius: barWidth / 2).fill()
+let ctx = NSGraphicsContext.current!.cgContext
+
+func rgb(_ hex: Int) -> NSColor {
+	NSColor(red: CGFloat(hex >> 16 & 0xff) / 255, green: CGFloat(hex >> 8 & 0xff) / 255, blue: CGFloat(hex & 0xff) / 255, alpha: 1)
 }
+
+func pill(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat, _ r: CGFloat) -> NSBezierPath {
+	NSBezierPath(roundedRect: NSRect(x: x, y: y, width: w, height: h), xRadius: r, yRadius: r)
+}
+
+// Del espacio del SVG al azulejo de 824 px centrado, con y hacia abajo como en el SVG.
+ctx.translateBy(x: inset, y: size - inset)
+ctx.scaleBy(x: tile / 512, y: -tile / 512)
+
+let background = pill(0, 0, 512, 512, 112)
+ctx.saveGState()
+// La sombra va en coordenadas del dispositivo (y hacia arriba): no la voltea la transformación.
+ctx.setShadow(offset: CGSize(width: 0, height: -12), blur: 28, color: NSColor.black.withAlphaComponent(0.3).cgColor)
+rgb(0x3b1fd1).setFill()
+background.fill()
+ctx.restoreGState()
+ctx.saveGState()
+background.addClip()
+let gradient = CGGradient(colorsSpace: nil, colors: [rgb(0x7b5cff).cgColor, rgb(0x3b1fd1).cgColor] as CFArray, locations: [0, 1])!
+ctx.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: 512, y: 512), options: [])
+ctx.restoreGState()
+
+let bubble = NSBezierPath()
+bubble.move(to: NSPoint(x: 176, y: 136))
+bubble.line(to: NSPoint(x: 336, y: 136))
+bubble.appendArc(from: NSPoint(x: 408, y: 136), to: NSPoint(x: 408, y: 208), radius: 72)
+bubble.line(to: NSPoint(x: 408, y: 272))
+bubble.appendArc(from: NSPoint(x: 408, y: 344), to: NSPoint(x: 336, y: 344), radius: 72)
+bubble.line(to: NSPoint(x: 236, y: 344))
+bubble.line(to: NSPoint(x: 148, y: 404))
+bubble.line(to: NSPoint(x: 176, y: 344))
+bubble.appendArc(from: NSPoint(x: 104, y: 344), to: NSPoint(x: 104, y: 272), radius: 72)
+bubble.line(to: NSPoint(x: 104, y: 208))
+bubble.appendArc(from: NSPoint(x: 104, y: 136), to: NSPoint(x: 176, y: 136), radius: 72)
+bubble.close()
+rgb(0xd4ff3a).setFill()
+bubble.fill()
+
+rgb(0x24106b).setFill()
+for path in [
+	pill(163, 218, 18, 44, 9), pill(195, 192, 18, 96, 9), pill(227, 208, 18, 64, 9), // la voz
+	pill(308, 178, 16, 124, 4), pill(284, 172, 64, 16, 8), pill(284, 292, 64, 16, 8), // el cursor
+] {
+	path.fill()
+}
+
 image.unlockFocus()
 let rep = NSBitmapImageRep(data: image.tiffRepresentation!)!
 try! rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: out))
