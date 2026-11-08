@@ -2,7 +2,7 @@
 
 <h1 align="center">Labia</h1>
 
-<p align="center"><b>Mantén ⌥ y habla. Suelta y se pega.</b><br>
+<p align="center"><b>Lo dices y se escribe donde está tu cursor.</b><br>
 Dictado en español para macOS, Linux y Windows, en cualquier app y sin internet.</p>
 
 <p align="center"><a href="#english">English below</a></p>
