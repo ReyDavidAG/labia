@@ -17,7 +17,7 @@ import Testing
 	/// Una pasada con la hipótesis dada, como `Session.step` de Python con el modelo de mentira.
 	@discardableResult
 	func step(_ s: LiveSession, _ hypothesis: [Word], screen: inout String) -> PassKind {
-		let kind = s.nextPass().kind
+		guard let kind = s.nextPass()?.kind else { return .draft }
 		let (back, add) = s.absorb(hypothesis, kind: kind)
 		screen = String(screen.dropLast(back)) + add
 		return kind
@@ -124,7 +124,7 @@ import Testing
 		let hypothesis = words(" uno", " dos", " tres")
 		step(s, hypothesis, screen: &screen)
 		step(s, hypothesis, screen: &screen)
-		#expect(s.nextPass().audio.count < 11 * LiveSession.sampleRate)
+		#expect(s.nextPass()!.audio.count < 11 * LiveSession.sampleRate)
 		#expect(screen == "uno dos")
 	}
 
@@ -148,5 +148,26 @@ import Testing
 		s.feed(second + second + second)
 		step(s, words(" revisa", " el", " build", " ya"), screen: &screen)
 		#expect(screen == "Revisa el build")
+	}
+
+	@Test func silenceAfterAnUnchangedPassSkipsThePass() {
+		let s = LiveSession(preferences: preferences())
+		let voice = [Float](repeating: 0.1, count: LiveSession.sampleRate)
+		s.feed(voice)
+		var screen = ""
+		step(s, words(" hola", " mundo", " ya"), screen: &screen)
+		step(s, words(" hola", " mundo", " ya"), screen: &screen)
+		#expect(screen == "hola mundo")
+		s.feed(second)
+		#expect(s.nextPass() != nil)
+		_ = s.absorb(words(" hola", " mundo", " ya", " va"), kind: .draft)
+		s.feed(second)
+		#expect(s.nextPass() != nil, "«va» falta por confirmar")
+		_ = s.absorb(words(" hola", " mundo", " ya", " va"), kind: .draft)
+		_ = s.absorb(words(" hola", " mundo", " ya", " va"), kind: .draft)
+		s.feed(second)
+		#expect(s.nextPass() == nil)
+		s.feed(voice)
+		#expect(s.nextPass() != nil)
 	}
 }

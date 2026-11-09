@@ -34,8 +34,7 @@ final class LiveDictation {
 			saved = settings.restoreClipboard ? Paster.snapshot() : nil
 			while listening {
 				let started = ContinuousClock.now
-				if pull() > 0 {
-					let (audio, kind) = session.nextPass()
+				if pull() > 0, let (audio, kind) = session.nextPass() {
 					if let words = try? await transcriber.words(audio, kind: kind, language: settings.language) {
 						let (back, text) = session.absorb(words, kind: kind)
 						await type(back, text)

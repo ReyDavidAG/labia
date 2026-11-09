@@ -42,7 +42,7 @@ enum SettingsTab: Hashable {
 final class AppModel {
 	static let historyURL = Transcriber.base.appending(path: "history.json")
 	static let waveformBars = 24
-	static let silenceRMS: Float = 0.004
+	static let silenceRMS = LiveSession.silenceRMS
 
 	var settings: Preferences {
 		didSet {
