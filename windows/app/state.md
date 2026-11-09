@@ -11,6 +11,15 @@
 | 5. Ventana de ajustes | ✅ cinco pestañas revisadas con capturas; guardar y «¿guardar cambios?» probados |
 | 6. `.ico`, accesos directos, `install.ps1` | ✅ instalado en esta laptop: menú Inicio e inicio de sesión |
 | 7. README, CHANGELOG | ✅ `windows/README.md` (sección «Usarla»), `docs/img/windows-settings.png` |
+| 8. Instalador de un comando (`windows/setup.ps1`) | ✅ instalar, actualizar y desinstalar probados en una carpeta aparte desde `develop` |
+
+## Instalador de un comando
+
+- `irm … -OutFile $env:TEMP\labia-setup.ps1; powershell -ExecutionPolicy Bypass -File …`: se baja a un archivo y se corre con `-File`. `irm | iex` no sirve: PowerShell 5.1 necesita el BOM para leer los acentos de un `.ps1`, y con BOM `Invoke-Expression` falla en la primera línea.
+- El README apunta a `main`: funciona en cuanto esta versión llegue a `main`. Antes, agregar `-Rama develop`.
+- Instalación nueva: 93 s con las dependencias y el modelo ya en caché.
+- Actualizar respeta «Abrir al iniciar sesión»: sólo una instalación nueva lo activa; `-SinInicio` lo quita.
+- `-Desinstalar` sólo borra la carpeta si contiene `linux\labia\app.py`, y nunca `%APPDATA%\Labia`.
 
 Pruebas: 26 pasan, 1 saltada (la de evdev). `python -m pytest -q` en `linux/`.
 

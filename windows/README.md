@@ -13,7 +13,32 @@ Probado en Windows 11 con una MSI Cyborg 15 A12VF (RTX 4060 Laptop). Es la misma
 
 ## Instalar
 
-Requiere una GPU NVIDIA con su driver al día (sin GPU funciona en CPU, pero más lento), Git y Python 3.12 de python.org, que trae tkinter. El Python de la Microsoft Store no sirve.
+Requiere Windows 10 u 11 y, de preferencia, una GPU NVIDIA con su driver al día (sin GPU funciona en el procesador, pero más lento). Pega esto en PowerShell; no hace falta abrirlo como administrador:
+
+```powershell
+irm https://raw.githubusercontent.com/ReyDavidAG/labia/main/windows/setup.ps1 -OutFile $env:TEMP\labia-setup.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\labia-setup.ps1
+```
+
+[`setup.ps1`](setup.ps1) hace todo y dice en qué paso va:
+
+1. Instala Git y Python 3.12 con `winget` si faltan.
+2. Baja Labia a `%LOCALAPPDATA%\Programs\Labia`.
+3. Crea su entorno de Python e instala las dependencias (~2.5 GB la primera vez, por CUDA).
+4. Baja el modelo de Whisper (1.6 GB, una sola vez).
+5. La pone en el menú Inicio, la abre al iniciar sesión y la abre.
+
+| Al final del comando | Qué cambia |
+|---|---|
+| `-SinInicio` | No la abre al iniciar sesión (se cambia después en Ajustes → General) |
+| `-Rama develop` | Instala la versión en desarrollo |
+| `-Destino D:\Apps\Labia` | Otra carpeta |
+| `-Desinstalar` | Cierra Labia y borra sus accesos directos y su carpeta. Tus ajustes e historial se quedan en `%APPDATA%\Labia` |
+
+Correrlo otra vez **actualiza** Labia: la cierra, baja lo nuevo y la vuelve a abrir, sin tocar tus ajustes.
+
+### A mano (para desarrollar)
+
+Git y Python 3.12 de python.org, que trae tkinter. El Python de la Microsoft Store no sirve.
 
 ```powershell
 winget install Git.Git Python.Python.3.12

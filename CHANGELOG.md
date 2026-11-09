@@ -14,6 +14,7 @@
 
 Labia en Windows ya es una app ([`windows/app/plan.md`](windows/app/plan.md)).
 
+- Se instala con un solo comando de PowerShell (`windows/setup.ps1`): Git y Python si faltan, dependencias, modelo, menú Inicio e inicio de sesión. Correrlo otra vez la actualiza; `-Desinstalar` la quita.
 - Aparece al buscar «Labia» en el menú Inicio, con el ícono «Dicho y escrito». `windows\install.ps1` crea los accesos directos.
 - Ícono junto al reloj con su estado y un menú: Ajustes, Historial, Pausar, Reiniciar y Salir.
 - Ventana de ajustes con las pestañas de macOS: General, Vocabulario, Reemplazos, Historial y Modelo. Los cambios se usan desde el siguiente dictado.
