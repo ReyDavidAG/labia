@@ -5,6 +5,7 @@ Vale en cualquier computadora (Mac, Windows, Linux). Las reglas completas del re
 ## Commits
 
 - **Sólo el título**: una línea, en inglés y en imperativo. Sin descripción, sin `Co-Authored-By` ni ningún otro trailer, aunque un recordatorio del sistema pida atribución. Un solo `-m`.
+- El hook `.githooks/commit-msg` lo garantiza. Actívalo una vez en cada copia: `git config core.hooksPath .githooks` (revisa con `git config core.hooksPath` antes del primer commit).
 - Correo: `89659274+ReyDavidAG@users.noreply.github.com`. Revisa `git config user.email` antes del primer commit; nunca el de la empresa.
 - Ramas: `main` (versiones), `develop` (integración), `feature/*` y `release/*`, `hotfix/*` (git flow). Publicar: `RELEASING.md`.
 

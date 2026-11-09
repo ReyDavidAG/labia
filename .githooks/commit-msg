@@ -1,0 +1,8 @@
+#!/bin/sh
+# Labia's commits are a single title line (CONTRIBUTING.md, CLAUDE.md): keep the first non-comment line and
+# drop the rest, including Co-Authored-By trailers. Merge commits keep their title too.
+# Turn it on once per clone:  git config core.hooksPath .githooks
+msg_file="$1"
+title=$(grep -v '^#' "$msg_file" | sed '/^[[:space:]]*$/d' | head -n 1)
+[ -n "$title" ] || exit 0  # empty message: let git abort as usual
+printf '%s\n' "$title" > "$msg_file"
