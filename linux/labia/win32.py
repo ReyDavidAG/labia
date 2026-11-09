@@ -56,6 +56,24 @@ def tap(vk, *mods):
     send_keys([(m, True) for m in mods] + [(vk, True), (vk, False)] + [(m, False) for m in reversed(mods)])
 
 
+# --- single instance -------------------------------------------------------------
+
+ERROR_ALREADY_EXISTS = 183
+kernel32.CreateMutexW.argtypes, kernel32.CreateMutexW.restype = [w.LPVOID, w.BOOL, w.LPCWSTR], w.HANDLE
+_instance_mutex = None  # held until the process exits; Windows frees it even on a crash or kill
+
+
+def claim_single_instance(name="Local\\Labia"):
+    """True if no other Labia runs in this session.
+
+    Two copies both hook the keyboard: the newer one swallows AltGr, so the older one can miss the key-up
+    and stay recording with no way to stop it.
+    """
+    global _instance_mutex
+    _instance_mutex = kernel32.CreateMutexW(None, False, name)
+    return bool(_instance_mutex) and ctypes.get_last_error() != ERROR_ALREADY_EXISTS
+
+
 # --- clipboard -----------------------------------------------------------------
 
 CF_UNICODETEXT, GMEM_MOVEABLE = 13, 0x2

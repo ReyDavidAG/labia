@@ -88,17 +88,21 @@ class Dictation(threading.Thread):
         return sum(map(len, chunks))
 
     def run(self):
-        s, t0 = self.session, time.monotonic()
+        s, t0, stream, began = self.session, time.monotonic(), None, False
         def on_audio(data, *_):
             self.audio.put(data[:, 0].copy())
             self.pill.send(level=level(data[:, 0]))
 
-        stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32", blocksize=800, callback=on_audio)
-        stream.start()  # record from the keypress, even while the previous dictation finishes
-        if self.after:
-            self.after.join()
-        self.typer.begin()
         try:
+            # Inside the try: if the mic can't open (unplugged, busy), the pill must say so instead of
+            # staying on «listening» forever.
+            stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32", blocksize=800,
+                                    callback=on_audio)
+            stream.start()  # record from the keypress, even while the previous dictation finishes
+            if self.after:
+                self.after.join()
+            self.typer.begin()
+            began = True
             while not self.done.wait(STEP):
                 if time.monotonic() - t0 > self.prefs.max_recording_seconds:
                     self.outcome = "finish"
@@ -129,13 +133,19 @@ class Dictation(threading.Thread):
             self.pill.send(state="failed", text=str(err)[:60])
             raise
         finally:
-            stream.close()  # no-op if already closed
-            self.typer.end()
+            if stream:
+                stream.close()  # no-op if already closed
+            if began:  # the typer is shared: don't restore the clipboard under a previous dictation still typing
+                self.typer.end()
 
 
 def run():
     if sys.platform == "win32":
+        from . import win32
         from .typer_windows import Typer
+
+        if not win32.claim_single_instance():  # before loading the model: a second copy must not take the keyboard
+            raise SystemExit("Labia ya está abierta.")
     else:
         from .typer import Typer  # needs uinput and wl-copy; keep --simulate usable without them
 
