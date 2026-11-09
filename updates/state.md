@@ -52,6 +52,12 @@ Después se desinstaló con `setup.ps1 -Desinstalar` y se dejó la Labia de desa
 - `scripts/appcast.sh` probado: sin llave pública falla; Estable sin feed anterior genera uno; Estable sin cambios de Mac desde la versión del feed anterior lo repite; Desarrollo genera `Labia-desarrollo.zip`.
 - Pendiente: correr `scripts/setup-signing.sh`, commitear `Resources/SparklePublicKey`, publicar la 1.1.0 e instalarla a mano una vez (la 1.0.0 no trae Sparkle). Aún sin verificar: que Sparkle acepte pasar de la 1.1.0 firmada con «Labia» a la 1.1.1 firmada igual (debería: mismo requisito de firma y EdDSA válida).
 
+## Unión a develop (2026-11-08)
+
+- `feature/auto-update` se unió a `develop` con Windows probado de punta a punta y macOS probado en local. Los secretos (`MAC_CERT_P12`, `MAC_CERT_PASSWORD`, `SPARKLE_ED_PRIVATE_KEY`) **todavía no existen**: falta correr `scripts/setup-signing.sh` en la Mac antes de publicar la 1.1.0.
+- Mientras no existan, `dev-build.yml` se salta (trabajo `secrets`) en vez de dejar `develop` en rojo; `ci.yml` firma ad hoc; `release.yml` sí falla, a propósito.
+- `CLAUDE.md` y `.claude/settings.json` (`includeCoAuthoredBy: false`) en el repo: commits de sólo título en cualquier computadora. Los dos commits de la Mac se unieron sin su línea de coautor.
+
 ## Para la sesión en la Mac (fases 6 y 7) · plan original
 
 1. Crear el certificado: Acceso a Llaveros → Asistente de certificados → Crear un certificado → nombre «Labia», tipo «Firma de código». Exportarlo como `.p12` con contraseña.

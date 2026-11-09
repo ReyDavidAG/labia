@@ -21,7 +21,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Until scripts/setup-signing.sh uploads the secrets (RELEASING.md), skip instead of failing develop.
+  secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          MAC_CERT_P12: ${{ secrets.MAC_CERT_P12 }}
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          if [ -n "$MAC_CERT_P12" ] && [ -n "$SPARKLE_ED_PRIVATE_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Sin MAC_CERT_P12 o SPARKLE_ED_PRIVATE_KEY: no se publica el canal Desarrollo de macOS (scripts/setup-signing.sh)"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: secrets
+    if: needs.secrets.outputs.ready == 'true'
     runs-on: macos-15
     env:
       GH_TOKEN: ${{ github.token }}
