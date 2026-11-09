@@ -1,4 +1,4 @@
-﻿# Labia Windows como app · plan
+# Labia Windows como app · plan
 
 Rama `feature/windows-app`, sale de `feature/windows-single-instance` (una sola Labia por sesión y error visible si no abre el micrófono).
 
