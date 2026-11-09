@@ -2,6 +2,14 @@
 
 ## Sin publicar
 
+### macOS
+
+- Labia se actualiza sola con Sparkle: busca cada 6 h en los releases de GitHub, baja la versión nueva, comprueba su firma EdDSA y la instala cuando no estás dictando (sin dictado en curso y 1 min después del último). Se reinicia y la cápsula dice «Labia se actualizó a…».
+- Una versión que no cambia la app de Mac no la reinstala: el feed sigue en la última versión que sí la cambió.
+- Ajustes › General: «Actualizar automáticamente» y canal Estable o Desarrollo. Ajustes › Modelo: versión con su commit y «Buscar actualizaciones», también en el menú.
+- La app se firma con un certificado propio, siempre el mismo: el permiso de Accesibilidad sobrevive a cada actualización. Al pasar de la 1.0 hay que darlo una última vez.
+- `Labia --login-item` sin `on` u `off` sólo dice cómo está; antes cualquier otra cosa lo apagaba.
+
 ### Windows y Linux
 
 - Labia se actualiza sola desde GitHub ([`updates/plan.md`](updates/plan.md)): busca al abrir y cada 6 h, instala cuando no estás dictando, se reinicia y avisa. Una versión que no cambia nada de tu plataforma no la reinicia.

@@ -9,9 +9,9 @@
 | 3 | `updater.py` y sus pruebas | ✅ 10 pruebas con repos de git reales |
 | 4 | Ayudante `update.py` + integración en Windows | ✅ probado de punta a punta (abajo) |
 | 5 | Linux | ⏳ código listo (`systemd-run`, `notify-send`), falta probarlo en la laptop con Linux |
-| 6 | Certificado propio y firma en el CI | ⏳ necesita la Mac |
-| 7 | Sparkle en la app de macOS | ⏳ necesita la Mac |
-| 8 | `release.yml`, canal Desarrollo, `RELEASING.md` | ⏳ |
+| 6 | Certificado propio y firma en el CI | 🧪 `scripts/import-cert.sh` probado con un certificado desechable; falta que el autor corra `scripts/setup-signing.sh` |
+| 7 | Sparkle en la app de macOS | ✅ probado en local de punta a punta (abajo); falta la llave real (`setup-signing.sh`) |
+| 8 | `release.yml`, canal Desarrollo, `RELEASING.md` | 🧪 escritos; `scripts/appcast.sh` probado en local; los workflows corren hasta que existan los secretos |
 | 9 | Release 1.1.0 e instalarla a mano una vez | ⏳ |
 | 10 | Prueba de punta a punta con 1.1.1 | ⏳ |
 
@@ -40,7 +40,19 @@ Después se desinstaló con `setup.ps1 -Desinstalar` y se dejó la Labia de desa
 - Una copia de desarrollo (esta, en OneDrive, rama `feature/auto-update`) queda bloqueada: «Copia de desarrollo (rama …): no se actualiza sola».
 - `update.json` (estado, `ready`, aviso) y `update.log` viven en `%APPDATA%\Labia`.
 
-## Para la sesión en la Mac (fases 6 y 7)
+## macOS (2026-11-08)
+
+- `Updater.swift`: `SPUStandardUpdaterController` con delegado. El feed sale del canal (`UpdateChannel.feedURL`); `updateFeedURL` en las preferencias lo reemplaza para probar. `willInstallUpdateOnQuit` guarda el bloque de instalación y Labia lo llama en reposo: sin grabar, sin dictado en vivo, sin «Transcribiendo» y 60 s después del último dictado. Antes guarda `updatedFrom`; la versión nueva lo lee y muestra «Labia se actualizó a X» en la cápsula (aunque la cápsula esté apagada).
+- Sin `SUPublicEDKey` real (compilación local) el actualizador no arranca y Ajustes lo dice.
+- `CFBundleVersion` = fecha del commit (`git log -1 --format=%ct`): crece en `main` y en `develop` por igual, así cambiar de canal no confunde a Sparkle. Antes era el número de commits.
+- Con *hardened runtime*, macOS sólo carga librerías del mismo Team ID; ad hoc y el certificado propio no tienen. `com.apple.security.cs.disable-library-validation` en `Labia.entitlements` (si no: «different Team IDs» y la app no abre).
+- `bundle.sh` firma Sparkle de adentro hacia afuera (XPC, Autoupdate, Updater.app, framework) y la app sin `--deep`.
+- `codesign` firma con el certificado autofirmado aunque no sea de confianza; el requisito queda `identifier "io.github.reydavidag.labia" and certificate leaf = H"…"`, igual entre compilaciones.
+- **Prueba de punta a punta** con una llave EdDSA desechable y un feed en `127.0.0.1`: la 1.0.1-test bajó el feed y la 1.0.2-test, verificó la firma, se cerró, se reemplazó y se reabrió como 1.0.2-test en ~2 s, y mostró el aviso.
+- `scripts/appcast.sh` probado: sin llave pública falla; Estable sin feed anterior genera uno; Estable sin cambios de Mac desde la versión del feed anterior lo repite; Desarrollo genera `Labia-desarrollo.zip`.
+- Pendiente: correr `scripts/setup-signing.sh`, commitear `Resources/SparklePublicKey`, publicar la 1.1.0 e instalarla a mano una vez (la 1.0.0 no trae Sparkle). Aún sin verificar: que Sparkle acepte pasar de la 1.1.0 firmada con «Labia» a la 1.1.1 firmada igual (debería: mismo requisito de firma y EdDSA válida).
+
+## Para la sesión en la Mac (fases 6 y 7) · plan original
 
 1. Crear el certificado: Acceso a Llaveros → Asistente de certificados → Crear un certificado → nombre «Labia», tipo «Firma de código». Exportarlo como `.p12` con contraseña.
 2. Subir los secretos: `base64 -i Labia.p12 | gh secret set MAC_CERT_P12` y `gh secret set MAC_CERT_PASSWORD`.
