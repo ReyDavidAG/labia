@@ -246,6 +246,10 @@ class UpdateLoop(threading.Thread):
             if manual:
                 self.notify("Labia está al día", f"Versión {c.current}")
             return
+        if not manual and u.target == update.state().get("failed_target"):
+            update.save_state(reason=f"La versión {u.label} no arrancó y se regresó a la anterior; se espera la "
+                                     "siguiente (o «Buscar actualizaciones» para reintentar)")
+            return
         if not u.affects:
             updater.advance(self.root, u)
             update.save_state(current=updater.describe(self.root), available=None)

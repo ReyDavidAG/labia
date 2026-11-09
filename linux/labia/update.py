@@ -143,7 +143,8 @@ def apply(root, target, branch, label, needs_pip):
                     pip_install(root)
                 except Exception as pip_err:
                     log(f"pip al regresar: {pip_err}")
-        save_state(notice={"kind": "failed", "label": label, "previous": previous, "error": str(err)[:200]})
+        save_state(notice={"kind": "failed", "label": label, "previous": previous, "error": str(err)[:200]},
+                   failed_target=target)  # not retried on its own: only by hand or when a newer one comes out
         start_labia(cwd)
         return False
 
