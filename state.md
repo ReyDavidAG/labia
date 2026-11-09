@@ -17,6 +17,7 @@
 | 10. Windows como app: menú Inicio, ícono junto al reloj, ajustes (`windows/app/`) | ✅ v1.0.0; ver `windows/app/state.md` |
 | 11. Tiempo real en macOS | ✅ simulación con el modelo real y prueba en vivo del usuario en Claude Code (2026-11-08) |
 | 12. Release 1.0.0 | ✅ v1.0.0, con las pruebas manuales de «Antes de la 1.0» hechas por el usuario |
+| 13. Actualizaciones automáticas en las tres plataformas (`updates/`) | 📝 plan en `feature/auto-update`; ver `updates/state.md` |
 
 ## Antes de la 1.0 (pruebas manuales) · ✅ probadas por el usuario el 2026-11-08
 
