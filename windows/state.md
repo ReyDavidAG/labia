@@ -11,6 +11,7 @@
 | 4. Atajo AltGr + flujo en vivo | ✅ dictados en vivo en Claude Code: 7 s y 112 s (este destapó el bug del pegado); ya corregido, 102 s y 45 s completos |
 | 5. Cápsula | ✅ los seis estados, `docs/img/windows-states.png` |
 | 6. Arranque, README, release | ✅ v0.4.0 |
+| 7. Como app: menú Inicio, ícono junto al reloj, ajustes | 🧪 `feature/windows-app`, ver `windows/app/state.md` |
 
 ## Hallazgos de la prueba en Windows
 

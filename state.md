@@ -14,6 +14,7 @@
 | 7. Versión Linux (`linux/`, ver `linux/state.md`) | ✅ v0.3.0 |
 | 8. Versión Windows (`windows/`, ver `windows/state.md`) | ✅ v0.4.0 |
 | 9. Ícono 1.0 «Dicho y escrito» (`propuesta/logos.html`) | 🧪 en `develop`; falta verlo en una Mac |
+| 10. Windows como app: menú Inicio, ícono junto al reloj, ajustes (`windows/app/`) | 🧪 en `feature/windows-app`; ver `windows/app/state.md` |
 
 ## Para probar en macOS (desde `develop`)
 

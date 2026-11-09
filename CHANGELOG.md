@@ -1,5 +1,16 @@
 # Cambios
 
+## Sin publicar
+
+Labia en Windows ya es una app ([`windows/app/plan.md`](windows/app/plan.md)).
+
+- Aparece al buscar «Labia» en el menú Inicio, con el ícono «Dicho y escrito». `windows\install.ps1` crea los accesos directos.
+- Ícono junto al reloj con su estado y un menú: Ajustes, Historial, Pausar, Reiniciar y Salir.
+- Ventana de ajustes con las pestañas de macOS: General, Vocabulario, Reemplazos, Historial y Modelo. Los cambios se usan desde el siguiente dictado.
+- Se elige el micrófono, y se busca en cada dictado: el que conectes con Labia abierta también sirve. Si no está, usa el predeterminado.
+- Nunca corren dos Labias: abrirla otra vez muestra los ajustes de la que ya corre.
+- Corregido: si el micrófono no abría, la cápsula se quedaba en «escuchando» para siempre. Ahora muestra el error.
+- Corregido: los ajustes y el historial se guardaban con la codificación de Windows, y un emoji o «→» los rompía. Ahora van en UTF-8; los archivos anteriores se siguen leyendo.
 ## 0.4.0 · 2026-11-08
 
 Primera versión para Windows 11, en [`windows/`](windows/README.md): el mismo paquete de Python de Linux con atajo, escritura y cápsula propios de Windows.
