@@ -2,7 +2,7 @@
 
 <h1 align="center">Labia</h1>
 
-<p align="center"><b>Mantén ⌥ y habla. Suelta y se pega.</b><br>
+<p align="center"><b>Lo dices y se escribe donde está tu cursor.</b><br>
 Dictado en español para macOS, Linux y Windows, en cualquier app y sin internet.</p>
 
 <p align="center"><a href="#english">English below</a></p>
@@ -11,7 +11,7 @@ Dictado en español para macOS, Linux y Windows, en cualquier app y sin internet
 
 ---
 
-Labia vive en la barra de menú. Mantienes **⌥ derecho**, dices lo que quieres escribir y al soltar el texto aparece donde está el cursor: la terminal, el navegador, Slack, VS Code o un chat con una IA.
+Labia vive en la barra de menú. Mantienes **⌥ derecho** y hablas: el texto aparece donde está el cursor mientras lo dices, y al soltar Labia lo corrige con una última pasada. Sirve en la terminal, el navegador, Slack, VS Code o un chat con una IA.
 
 - **Local.** Transcribe con [Whisper large-v3-turbo](https://huggingface.co/argmaxinc/whisperkit-coreml) vía [WhisperKit](https://github.com/argmaxinc/argmax-oss-swift) en el Neural Engine de tu Mac. El audio nunca sale de tu equipo ni se guarda en disco.
 - **Entiende tu spanglish.** Le das tu vocabulario (`commit`, `pull request`, `useApiQuery`, `Vercel`) y lo escribe bien, con sus mayúsculas.
@@ -21,9 +21,9 @@ Labia vive en la barra de menú. Mantienes **⌥ derecho**, dices lo que quieres
 
 | Gesto | Qué hace |
 |---|---|
-| Mantener ⌥ derecho | Graba mientras lo sostienes; al soltar transcribe y pega |
+| Mantener ⌥ derecho | Escribe mientras lo sostienes; al soltar corrige con la pasada final |
 | Doble toque ⌥ | Manos libres: sigue grabando hasta el siguiente toque (máximo 5 min) |
-| esc mientras grabas | Cancela sin transcribir |
+| esc mientras grabas | Cancela y borra lo que ya había escrito |
 | ⌥ + otra tecla | Se ignora: puedes seguir usando ⌥ para acentos y atajos |
 
 Una cápsula abajo al centro de la pantalla te dice en qué va: escuchando (con el volumen real del micrófono), transcribiendo, pegado y cuántas palabras.
@@ -86,14 +86,17 @@ La guía completa, con el arranque como servicio, está en [`linux/README.md`](l
 
 La versión para Windows 11 es la misma de Linux, con el atajo, la escritura y la cápsula propios de Windows: [`windows/README.md`](windows/README.md). Escribe en tiempo real, se corrige sola y se dicta manteniendo **AltGr**. Probada con GPU NVIDIA.
 
+Se usa como app: aparece al buscar **Labia** en el menú Inicio, vive en un ícono junto al reloj (Ajustes, Historial, Pausar, Reiniciar, Salir) y tiene una ventana de ajustes con las mismas pestañas que en macOS, incluido el micrófono.
+
 <p align="center"><img src="docs/img/windows-states.png" alt="La cápsula de Labia en Windows: escuchando, manos libres, transcribiendo, pegado, sin voz y cancelado"></p>
 
+Para instalarla, pega esto en PowerShell (no hace falta abrirlo como administrador):
+
 ```powershell
-winget install Git.Git Python.Python.3.12
-git clone https://github.com/ReyDavidAG/labia.git; cd labia\linux
-py -3.12 -m venv .venv; .venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\python -m labia
+irm https://raw.githubusercontent.com/ReyDavidAG/labia/main/windows/setup.ps1 -OutFile $env:TEMP\labia-setup.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\labia-setup.ps1
 ```
+
+Instala Git y Python si faltan, baja Labia y el modelo (unos 4 GB la primera vez), la pone en el menú Inicio, la abre al iniciar sesión y la abre. Correrlo otra vez la actualiza. Al final del comando se puede agregar `-SinInicio` (no abrirla al iniciar sesión) o `-Desinstalar`. Instalación a mano y detalles: [`windows/README.md`](windows/README.md).
 
 ## Vocabulario: precisión contra velocidad
 
@@ -120,18 +123,22 @@ Para lo demás están los **Reemplazos**, que traen `nueva línea` → salto de 
 ## Cómo funciona
 
 ```
-CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario
-  → limpieza (alucinaciones de silencio, vocabulario, reemplazos)
-  → portapapeles + ⌘V simulado → restaurar portapapeles → historial
+CGEventTap (atajo) → AVAudioEngine 16 kHz
+  → cada 0.5 s: WhisperKit turbo sobre los últimos ≤10 s → LocalAgreement → retrocesos + ⌘V de lo nuevo
+  → cada 3 s de audio: pasada cuidadosa que corrige lo ya escrito
+  → al soltar: WhisperKit + vocabulario sobre toda la grabación (cortada en pausas si pasa de 30 s)
+  → limpieza (alucinaciones de silencio, vocabulario, reemplazos) → corrección final → restaurar portapapeles → historial
 ```
 
-- `Sources/LabiaCore`: lógica pura con pruebas: los gestos como máquina de estados, la limpieza del texto, las preferencias y el historial.
+- `Sources/LabiaCore`: lógica pura con pruebas: los gestos como máquina de estados, la limpieza del texto, el dictado en tiempo real (`LiveSession`, el mismo algoritmo que `linux/labia/stream.py`), las preferencias y el historial.
+- `Labia --simulate audio.wav` pasa una grabación como si se dictara en vivo e imprime cada pasada y lo que tardó.
 - `Sources/Labia`: la app (SwiftUI + AppKit).
 
 ## Problemas comunes
 
 - **No hace nada al mantener ⌥.** Revisa Ajustes del Sistema → Privacidad y seguridad → Accesibilidad. Si actualizaste la app y Labia ya aparece activado, quítalo con `−` y vuelve a agregarlo.
 - **Escribe "No te oí".** El micrófono no captó voz. Revisa la entrada en Ajustes del Sistema → Sonido.
+- **Un dictado largo sale incompleto.** Desde la 1.0, los dictados de más de 30 s se cortan en las pausas y cada tramo se transcribe aparte (máximo 5 min). Si aun así falta texto, habla con pausas cortas entre ideas.
 - **El primer dictado del día tarda.** El modelo se libera de la memoria tras 30 minutos sin uso. Puedes cambiarlo en Ajustes → Modelo.
 - **fn abre los emojis.** macOS usa esa tecla. Elige ⌥ o ⌘ derecho, o cambia en Ajustes del Sistema → Teclado qué hace la tecla 🌐.
 
@@ -143,13 +150,13 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario
 
 ## English
 
-**Labia** is a push-to-talk dictation app for macOS, tuned for Spanish speakers who mix English tech terms. Hold **right ⌥**, speak, and release: the text is pasted wherever your cursor is.
+**Labia** is a push-to-talk dictation app for macOS, tuned for Spanish speakers who mix English tech terms. Hold **right ⌥** and speak: the text appears wherever your cursor is as you talk, a careful pass every 3 s fixes what is already typed, and on release a final pass with your vocabulary settles it (turn live typing off in Settings to paste only on release).
 
 - Fully local. It uses Whisper large-v3-turbo through WhisperKit on the Apple Neural Engine. Audio never leaves your Mac.
 - A custom vocabulary fixes code-switched terms. On an M2 a sentence takes about 1.5 s, plus ~25 ms per vocabulary token.
 - Double-tap ⌥ for hands-free mode and press esc to cancel. It presses Enter only when you end the dictation with the send keyword («Claude» by default; change or turn it off in Settings).
 - Requires macOS 14+ on Apple Silicon. Download it from [Releases](../../releases), or build it with `scripts/bundle.sh`. The app is not notarized, so run `xattr -dr com.apple.quarantine /Applications/Labia.app` after installing.
 - **Linux** (KDE Plasma on Wayland, NVIDIA GPU): see [`linux/`](linux/README.md). It types in real time while you speak and corrects itself every few seconds with a careful Whisper pass, like Apple's volatile and final results. The final pass covers the whole recording with VAD, so silence types nothing.
-- **Windows 11** (NVIDIA GPU): the same Python app with a low-level keyboard hook for AltGr, see [`windows/`](windows/README.md).
+- **Windows 11** (NVIDIA GPU): the same Python app with a low-level keyboard hook for AltGr, see [`windows/`](windows/README.md). Install with one PowerShell line: `irm https://raw.githubusercontent.com/ReyDavidAG/labia/main/windows/setup.ps1 -OutFile $env:TEMP\labia-setup.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\labia-setup.ps1`. It shows up in the Start menu and runs from a tray icon (settings, history, pause, restart, quit) with a settings window like the Mac one.
 
 The UI is in Spanish. Set **Ajustes → Modelo → Idioma** to English to dictate in English.

@@ -42,7 +42,7 @@ enum SettingsTab: Hashable {
 final class AppModel {
 	static let historyURL = Transcriber.base.appending(path: "history.json")
 	static let waveformBars = 24
-	static let silenceRMS: Float = 0.004
+	static let silenceRMS = LiveSession.silenceRMS
 
 	var settings: Preferences {
 		didSet {
@@ -76,6 +76,9 @@ final class AppModel {
 	private let hotkey = HotkeyTap()
 	private let overlay = Overlay()
 	private var target: NSRunningApplication?
+	private var live: LiveDictation?
+	/// La entrega del dictado anterior: el siguiente espera a que termine de escribir antes de escribir él.
+	private var delivery: Task<Void, Never>?
 	private var tickTimer: Timer?
 	private var permissionTimer: Timer?
 	private var hideTask: Task<Void, Never>?
@@ -178,6 +181,12 @@ final class AppModel {
 			return
 		}
 		target = NSWorkspace.shared.frontmostApplication
+		refreshPermissions()
+		if settings.liveTyping, settings.autoPaste, accessibilityGranted {
+			let dictation = LiveDictation(settings: settings, transcriber: transcriber, recorder: recorder)
+			dictation.start(after: delivery)
+			live = dictation
+		}
 		recordingStart = .now
 		levels = Array(repeating: 0, count: Self.waveformBars)
 		unloadTask?.cancel()
@@ -194,15 +203,34 @@ final class AppModel {
 
 	private func finish() {
 		stopTicking()
+		live?.stopListening()
 		let samples = recorder.stop()
 		recordingStart = nil
 		let seconds = Double(samples.count) / Recorder.sampleRate
-		guard seconds >= machine.minHold else { return flash(.short) }
-		guard Recorder.rms(samples) > Self.silenceRMS else { return flash(.silent) }
+		guard seconds >= machine.minHold else { return discardLive(.short) }
+		guard Recorder.rms(samples) > Self.silenceRMS else { return discardLive(.silent) }
 		show(.transcribing)
 		play("Pop")
 		let settings = settings
 		let target = target
+		if let live {
+			self.live = nil
+			delivery = Task {
+				do {
+					let (text, _) = try await live.finish(samples)
+					modelStatus = .ready
+					guard !text.isEmpty else { return flash(.silent) }
+					history.add(HistoryEntry(text: text, seconds: seconds, app: target?.localizedName))
+					try? history.save(to: Self.historyURL)
+					show(.done(words: text.split(whereSeparator: \.isWhitespace).count, pasted: true))
+					hide(after: 0.9)
+				} catch {
+					flash(.failed("No se pudo transcribir"))
+				}
+				scheduleUnload()
+			}
+			return
+		}
 		Task {
 			do {
 				let raw = try await transcriber.transcribe(samples, prompt: settings.prompt, language: settings.language)
@@ -219,8 +247,18 @@ final class AppModel {
 
 	private func abort(_ reason: Pill?) {
 		stopTicking()
+		live?.stopListening()
 		_ = recorder.stop()
 		recordingStart = nil
+		discardLive(reason)
+	}
+
+	/// Termina sin texto: borra lo que el dictado en vivo ya había escrito.
+	private func discardLive(_ reason: Pill?) {
+		if let live {
+			self.live = nil
+			delivery = Task { await live.cancel() }
+		}
 		if let reason { flash(reason) } else { hide(after: 0) }
 	}
 

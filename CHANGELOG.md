@@ -1,5 +1,30 @@
 # Cambios
 
+## 1.0.0 · 2026-11-08
+
+Primera versión estable: en macOS, Linux y Windows Labia escribe en tiempo real mientras hablas y se corrige sola. En macOS y Windows se instala y se usa como una app, con ajustes e historial. Estrena el ícono «Dicho y escrito».
+
+### macOS
+
+- Escribe en tiempo real, como Linux y Windows: las palabras aparecen mientras hablas, una pasada cuidadosa cada 3 s corrige lo ya escrito y al soltar la pasada final con tu vocabulario deja el texto definitivo. En una M2 cada pasada tarda unos 0.7 s. Se apaga en Ajustes › General › «Escribir mientras hablas».
+- Esc borra lo que el dictado en vivo ya había escrito.
+- En las pausas no gasta el Neural Engine: si sólo llega silencio y no hay nada por confirmar, se salta la pasada.
+- Los dictados de más de 30 s se cortan en las pausas y cada tramo se transcribe por separado. Antes, en dictados de más de un minuto sólo llegaban las primeras frases.
+- Ícono nuevo «Dicho y escrito», regenerado en la Mac con todos los tamaños.
+
+### Windows
+
+Labia en Windows ya es una app ([`windows/app/plan.md`](windows/app/plan.md)).
+
+- Se instala con un solo comando de PowerShell (`windows/setup.ps1`): Git y Python si faltan, dependencias, modelo, menú Inicio e inicio de sesión. Correrlo otra vez la actualiza; `-Desinstalar` la quita.
+- Aparece al buscar «Labia» en el menú Inicio, con el ícono «Dicho y escrito». `windows\install.ps1` crea los accesos directos.
+- Ícono junto al reloj con su estado y un menú: Ajustes, Historial, Pausar, Reiniciar y Salir.
+- Ventana de ajustes con las pestañas de macOS: General, Vocabulario, Reemplazos, Historial y Modelo. Los cambios se usan desde el siguiente dictado.
+- Se elige el micrófono, y se busca en cada dictado: el que conectes con Labia abierta también sirve. Si no está, usa el predeterminado.
+- Nunca corren dos Labias: abrirla otra vez muestra los ajustes de la que ya corre.
+- Corregido: si el micrófono no abría, la cápsula se quedaba en «escuchando» para siempre. Ahora muestra el error.
+- Corregido: los ajustes y el historial se guardaban con la codificación de Windows, y un emoji o «→» los rompía. Ahora van en UTF-8; los archivos anteriores se siguen leyendo.
+
 ## 0.4.0 · 2026-11-08
 
 Primera versión para Windows 11, en [`windows/`](windows/README.md): el mismo paquete de Python de Linux con atajo, escritura y cápsula propios de Windows.

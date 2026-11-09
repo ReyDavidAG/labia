@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Labia · Logos 1.0</title>
+<meta name="description" content="Tres propuestas de logo para Labia 1.0: labios de onda, dicho y escrito, y la tilde que habla.">
+<meta name="theme-color" content="#f6f2ec">
+<link rel="icon" href="img/concepto-2-dicho-y-escrito.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400..800&family=IBM+Plex+Mono:wght@500;600&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Space+Grotesk:wght@700&family=Baloo+2:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/logos.css">
+</head>
+<body>
+
+<!-- Los tres logos, una sola vez; el resto de la página los reutiliza con <use>. -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="c1-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff7a59"/><stop offset=".55" stop-color="#ff3d77"/><stop offset="1" stop-color="#c2187a"/>
+    </linearGradient>
+    <linearGradient id="c2-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7b5cff"/><stop offset="1" stop-color="#3b1fd1"/>
+    </linearGradient>
+    <linearGradient id="c3-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb627"/><stop offset="1" stop-color="#ff5e00"/>
+    </linearGradient>
+    <mask id="c2-glyph-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <path fill="#fff" d="M176 136H336A72 72 0 0 1 408 208V272A72 72 0 0 1 336 344H236L148 404L176 344A72 72 0 0 1 104 272V208A72 72 0 0 1 176 136Z"/>
+      <rect fill="#000" x="241" y="180" width="30" height="120" rx="6"/>
+      <rect fill="#000" x="206" y="168" width="100" height="26" rx="13"/>
+      <rect fill="#000" x="206" y="286" width="100" height="26" rx="13"/>
+    </mask>
+  </defs>
+
+  <!-- 1 · Labios de onda -->
+  <symbol id="c1-icon" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="112" fill="url(#c1-bg)"/>
+    <g fill="#fff"><rect x="117" y="226" width="14" height="23" rx="7"/><rect x="139" y="206" width="14" height="44" rx="7"/><rect x="161" y="187" width="14" height="62" rx="7"/><rect x="183" y="173" width="14" height="75" rx="7"/><rect x="205" y="165" width="14" height="82" rx="7"/><rect x="227" y="168" width="14" height="80" rx="7"/><rect x="249" y="185" width="14" height="66" rx="7"/><rect x="271" y="168" width="14" height="80" rx="7"/><rect x="293" y="165" width="14" height="82" rx="7"/><rect x="315" y="173" width="14" height="75" rx="7"/><rect x="337" y="187" width="14" height="62" rx="7"/><rect x="359" y="206" width="14" height="44" rx="7"/><rect x="381" y="226" width="14" height="23" rx="7"/></g>
+    <g fill="#ffe3ec"><rect x="117" y="270" width="14" height="32" rx="7"/><rect x="139" y="272" width="14" height="49" rx="7"/><rect x="161" y="272" width="14" height="61" rx="7"/><rect x="183" y="273" width="14" height="69" rx="7"/><rect x="205" y="273" width="14" height="74" rx="7"/><rect x="227" y="274" width="14" height="76" rx="7"/><rect x="249" y="277" width="14" height="74" rx="7"/><rect x="271" y="274" width="14" height="76" rx="7"/><rect x="293" y="273" width="14" height="74" rx="7"/><rect x="315" y="273" width="14" height="69" rx="7"/><rect x="337" y="272" width="14" height="61" rx="7"/><rect x="359" y="272" width="14" height="49" rx="7"/><rect x="381" y="270" width="14" height="32" rx="7"/></g>
+  </symbol>
+  <symbol id="c1-icon-sm" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="112" fill="url(#c1-bg)"/>
+    <path fill="#fff" d="M88 250C130 228 168 168 214 162C236 159 248 176 256 182C264 176 276 159 298 162C344 168 382 228 424 250C340 258 300 244 256 254C212 244 172 258 88 250Z"/>
+    <path fill="#ffe3ec" d="M96 264C170 274 210 266 256 274C302 266 342 274 416 264C388 324 330 354 256 354C182 354 124 324 96 264Z"/>
+  </symbol>
+  <symbol id="c1-glyph" viewBox="84 154 344 204">
+    <path fill="currentColor" d="M88 250C130 228 168 168 214 162C236 159 248 176 256 182C264 176 276 159 298 162C344 168 382 228 424 250C340 258 300 244 256 254C212 244 172 258 88 250Z"/>
+    <path fill="currentColor" d="M96 264C170 274 210 266 256 274C302 266 342 274 416 264C388 324 330 354 256 354C182 354 124 324 96 264Z"/>
+  </symbol>
+
+  <!-- 2 · Dicho y escrito -->
+  <symbol id="c2-icon" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="112" fill="url(#c2-bg)"/>
+    <path fill="#d4ff3a" d="M176 136H336A72 72 0 0 1 408 208V272A72 72 0 0 1 336 344H236L148 404L176 344A72 72 0 0 1 104 272V208A72 72 0 0 1 176 136Z"/>
+    <g fill="#24106b">
+      <rect x="163" y="218" width="18" height="44" rx="9"/><rect x="195" y="192" width="18" height="96" rx="9"/>
+      <rect x="227" y="208" width="18" height="64" rx="9"/>
+      <rect x="308" y="178" width="16" height="124" rx="4"/><rect x="284" y="172" width="64" height="16" rx="8"/>
+      <rect x="284" y="292" width="64" height="16" rx="8"/>
+    </g>
+  </symbol>
+  <symbol id="c2-icon-sm" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="112" fill="url(#c2-bg)"/>
+    <path fill="#d4ff3a" d="M176 136H336A72 72 0 0 1 408 208V272A72 72 0 0 1 336 344H236L148 404L176 344A72 72 0 0 1 104 272V208A72 72 0 0 1 176 136Z"/>
+    <g fill="#24106b">
+      <rect x="241" y="180" width="30" height="120" rx="6"/><rect x="206" y="168" width="100" height="26" rx="13"/>
+      <rect x="206" y="286" width="100" height="26" rx="13"/>
+    </g>
+  </symbol>
+  <symbol id="c2-glyph" viewBox="96 128 320 284">
+    <rect width="512" height="512" fill="currentColor" mask="url(#c2-glyph-mask)"/>
+  </symbol>
+
+  <!-- 3 · La tilde que habla -->
+  <symbol id="c3-icon" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="112" fill="url(#c3-bg)"/>
+    <path d="M200 208V384H340" fill="none" stroke="#fff" stroke-width="68" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M150 146C186 104 222 104 256 138S326 172 362 130" fill="none" stroke="#1b1f4b" stroke-width="36" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="c3-glyph" viewBox="124 88 264 338">
+    <path d="M200 208V384H340" fill="none" stroke="currentColor" stroke-width="68" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M150 146C186 104 222 104 256 138S326 172 362 130" fill="none" stroke="currentColor" stroke-width="36" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Labia 1.0 · Propuesta de identidad</div>
+      <h1>Tres logos para la 1.0</h1>
+      <p class="lead">Labia convierte lo que dices en texto donde está tu cursor, en español y con tu spanglish, en macOS, Linux y Windows. Cada propuesta cuenta esa idea de una forma distinta y trae su versión para la barra de menú y la bandeja, donde el ícono vive a 16 px.</p>
+    </div>
+    <div class="current">
+      <img src="img/icono-anterior.png" alt="Ícono anterior de Labia: barras de audio sobre fondo oscuro">
+      <div><b>Ícono anterior (hasta 0.4)</b>Barras de audio genéricas: se confundía con cualquier app de audio.</div>
+    </div>
+  </header>
+
+  <ul class="jump">
+    <li><a href="#c1"><svg aria-hidden="true"><use href="#c1-icon-sm"/></svg>1 · Labios de onda</a></li>
+    <li><a href="#c2"><svg aria-hidden="true"><use href="#c2-icon-sm"/></svg>2 · Dicho y escrito</a></li>
+    <li><a href="#c3"><svg aria-hidden="true"><use href="#c3-icon"/></svg>3 · La tilde que habla</a></li>
+  </ul>
+
+  <!-- ═════════════ 1 · Labios de onda ═════════════ -->
+  <section class="concept c1" id="c1">
+    <div class="stage">
+      <span class="num">01</span>
+      <svg class="hero" viewBox="0 0 512 512" role="img" aria-label="Labios formados por barras de audio sobre un degradado coral y rosa">
+        <rect width="512" height="512" rx="112" fill="url(#c1-bg)"/>
+        <g class="up" fill="#fff"><rect x="117" y="226" width="14" height="23" rx="7"/><rect x="139" y="206" width="14" height="44" rx="7"/><rect x="161" y="187" width="14" height="62" rx="7"/><rect x="183" y="173" width="14" height="75" rx="7"/><rect x="205" y="165" width="14" height="82" rx="7"/><rect x="227" y="168" width="14" height="80" rx="7"/><rect x="249" y="185" width="14" height="66" rx="7"/><rect x="271" y="168" width="14" height="80" rx="7"/><rect x="293" y="165" width="14" height="82" rx="7"/><rect x="315" y="173" width="14" height="75" rx="7"/><rect x="337" y="187" width="14" height="62" rx="7"/><rect x="359" y="206" width="14" height="44" rx="7"/><rect x="381" y="226" width="14" height="23" rx="7"/></g>
+        <g class="down" fill="#ffe3ec"><rect x="117" y="270" width="14" height="32" rx="7"/><rect x="139" y="272" width="14" height="49" rx="7"/><rect x="161" y="272" width="14" height="61" rx="7"/><rect x="183" y="273" width="14" height="69" rx="7"/><rect x="205" y="273" width="14" height="74" rx="7"/><rect x="227" y="274" width="14" height="76" rx="7"/><rect x="249" y="277" width="14" height="74" rx="7"/><rect x="271" y="274" width="14" height="76" rx="7"/><rect x="293" y="273" width="14" height="74" rx="7"/><rect x="315" y="273" width="14" height="69" rx="7"/><rect x="337" y="272" width="14" height="61" rx="7"/><rect x="359" y="272" width="14" height="49" rx="7"/><rect x="381" y="270" width="14" height="32" rx="7"/></g>
+      </svg>
+    </div>
+    <div class="body">
+      <div>
+        <h2>Labios de onda</h2>
+        <p class="tagline">«Tener labia»: hablar bonito y convencer.</p>
+        <p>El nombre viene de <em>labios</em> y de <em>tener labia</em>. Las barras de la voz siguen la silueta de unos labios: arriba el arco de cupido, a los lados las comisuras y abajo el labio lleno. Se lee al mismo tiempo como voz y como boca, y nadie más en dictado lo usa.</p>
+        <p>En movimiento, las barras se abren y se cierran como si hablaran: sirve para la pantalla de bienvenida y para el ícono mientras graba.</p>
+        <ul class="why">
+          <li>Liga directo con el nombre: es el más fácil de recordar.</li>
+          <li>Coral y rosa no se parecen a los íconos de audio azules o negros del dock.</li>
+          <li>A 32 px y menos las barras se funden en la silueta sólida de la boca, que se reconoce aun a 16 px.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="block">
+          <h3>Paleta</h3>
+          <div class="palette">
+            <div class="swatch"><i style="background:#ff7a59"></i><span><b>Coral</b>#FF7A59</span></div>
+            <div class="swatch"><i style="background:#ff3d77"></i><span><b>Rosa</b>#FF3D77</span></div>
+            <div class="swatch"><i style="background:#c2187a"></i><span><b>Magenta</b>#C2187A</span></div>
+            <div class="swatch"><i style="background:#2b0b1f"></i><span><b>Tinta</b>#2B0B1F</span></div>
+          </div>
+        </div>
+        <div class="block">
+          <h3>Tamaños</h3>
+          <div class="sizes">
+            <figure><svg width="128" height="128" aria-hidden="true"><use href="#c1-icon"/></svg>128</figure>
+            <figure><svg width="64" height="64" aria-hidden="true"><use href="#c1-icon"/></svg>64</figure>
+            <figure><svg width="32" height="32" aria-hidden="true"><use href="#c1-icon-sm"/></svg>32</figure>
+            <figure><svg width="16" height="16" aria-hidden="true"><use href="#c1-icon-sm"/></svg>16</figure>
+          </div>
+        </div>
+        <div class="block">
+          <h3>Barra de menú y bandeja</h3>
+          <div class="bars">
+            <div class="menubar dark"><span class="label">macOS</span><svg class="glyph" width="27" height="16" aria-hidden="true"><use href="#c1-glyph"/></svg><span class="dim">ES</span><span>mar 10:42</span></div>
+            <div class="menubar light"><span class="label">macOS</span><svg class="glyph" width="27" height="16" aria-hidden="true"><use href="#c1-glyph"/></svg><span class="dim">ES</span><span>mar 10:42</span></div>
+            <div class="menubar win"><span class="label">Windows</span><svg class="glyph" width="27" height="16" aria-hidden="true"><use href="#c1-glyph"/></svg><span class="dim">ESP</span><span>10:42 a. m.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="body" style="padding-top:0; display:block">
+      <div class="lockups">
+        <div class="lockup on-light"><svg aria-hidden="true"><use href="#c1-icon"/></svg><span class="word">labia<em>.</em></span></div>
+        <div class="lockup on-dark"><svg aria-hidden="true"><use href="#c1-icon"/></svg><span class="word">labia<em>.</em></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ 2 · Dicho y escrito ═════════════ -->
+  <section class="concept c2" id="c2">
+    <div class="stage">
+      <span class="num">02</span>
+      <svg class="hero" viewBox="0 0 512 512" role="img" aria-label="Globo de diálogo verde lima con una onda de voz que termina en un cursor de texto, sobre violeta">
+        <rect width="512" height="512" rx="112" fill="url(#c2-bg)"/>
+        <path fill="#d4ff3a" d="M176 136H336A72 72 0 0 1 408 208V272A72 72 0 0 1 336 344H236L148 404L176 344A72 72 0 0 1 104 272V208A72 72 0 0 1 176 136Z"/>
+        <g fill="#24106b">
+          <rect x="163" y="218" width="18" height="44" rx="9"/><rect x="195" y="192" width="18" height="96" rx="9"/>
+          <rect x="227" y="208" width="18" height="64" rx="9"/>
+          <g class="cursor">
+            <rect x="308" y="178" width="16" height="124" rx="4"/><rect x="284" y="172" width="64" height="16" rx="8"/>
+            <rect x="284" y="292" width="64" height="16" rx="8"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="body">
+      <div>
+        <h2>Dicho y escrito</h2>
+        <p class="tagline">Lo dices y aparece donde está el cursor.</p>
+        <p>Un globo de diálogo con la voz adentro, y la voz termina en el cursor de texto. Cuenta en un solo vistazo lo que hace Labia: lo que hablas se escribe en la app donde estás, sea la terminal, el navegador o un chat con una IA.</p>
+        <p>El cursor parpadea igual que en un editor, y el verde lima sobre violeta se ve desde lejos en el dock, la barra de tareas y el launcher de Linux.</p>
+        <ul class="why">
+          <li>Es el que mejor explica la función, ideal para desarrolladores.</li>
+          <li>El contraste lima con violeta es el más llamativo de los tres.</li>
+          <li>A tamaño chico se queda sólo el globo con el cursor.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="block">
+          <h3>Paleta</h3>
+          <div class="palette">
+            <div class="swatch"><i style="background:#d4ff3a"></i><span><b>Lima</b>#D4FF3A</span></div>
+            <div class="swatch"><i style="background:#7b5cff"></i><span><b>Violeta</b>#7B5CFF</span></div>
+            <div class="swatch"><i style="background:#3b1fd1"></i><span><b>Índigo</b>#3B1FD1</span></div>
+            <div class="swatch"><i style="background:#24106b"></i><span><b>Tinta</b>#24106B</span></div>
+          </div>
+        </div>
+        <div class="block">
+          <h3>Tamaños</h3>
+          <div class="sizes">
+            <figure><svg width="128" height="128" aria-hidden="true"><use href="#c2-icon"/></svg>128</figure>
+            <figure><svg width="64" height="64" aria-hidden="true"><use href="#c2-icon"/></svg>64</figure>
+            <figure><svg width="32" height="32" aria-hidden="true"><use href="#c2-icon-sm"/></svg>32</figure>
+            <figure><svg width="16" height="16" aria-hidden="true"><use href="#c2-icon-sm"/></svg>16</figure>
+          </div>
+        </div>
+        <div class="block">
+          <h3>Barra de menú y bandeja</h3>
+          <div class="bars">
+            <div class="menubar dark"><span class="label">macOS</span><svg class="glyph" width="19" height="17" aria-hidden="true"><use href="#c2-glyph"/></svg><span class="dim">ES</span><span>mar 10:42</span></div>
+            <div class="menubar light"><span class="label">macOS</span><svg class="glyph" width="19" height="17" aria-hidden="true"><use href="#c2-glyph"/></svg><span class="dim">ES</span><span>mar 10:42</span></div>
+            <div class="menubar win"><span class="label">Windows</span><svg class="glyph" width="19" height="17" aria-hidden="true"><use href="#c2-glyph"/></svg><span class="dim">ESP</span><span>10:42 a. m.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="body" style="padding-top:0; display:block">
+      <div class="lockups">
+        <div class="lockup on-light"><svg aria-hidden="true"><use href="#c2-icon"/></svg><span class="word">labia<span class="caret"></span></span></div>
+        <div class="lockup on-dark"><svg aria-hidden="true"><use href="#c2-icon"/></svg><span class="word">labia<span class="caret"></span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ 3 · La tilde que habla ═════════════ -->
+  <section class="concept c3" id="c3">
+    <div class="stage">
+      <span class="num">03</span>
+      <svg class="hero" viewBox="0 0 512 512" role="img" aria-label="Una L blanca con una tilde de eñe en forma de onda, sobre un degradado mango y naranja">
+        <rect width="512" height="512" rx="112" fill="url(#c3-bg)"/>
+        <path d="M200 208V384H340" fill="none" stroke="#fff" stroke-width="68" stroke-linecap="round" stroke-linejoin="round"/>
+        <path class="tilde" d="M150 146C186 104 222 104 256 138S326 172 362 130" fill="none" stroke="#1b1f4b" stroke-width="36" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="body">
+      <div>
+        <h2>La tilde que habla</h2>
+        <p class="tagline">La virgulilla de la ñ es una onda de sonido.</p>
+        <p>La tilde de la ñ es la marca más nuestra del español, y su forma es literalmente una onda. Aquí flota sobre la L de Labia como si fuera la voz: una letra que sólo existe en español, hecha con lo que dices.</p>
+        <p>Es un monograma, así que funciona igual de bien como ícono de app, favicon, avatar de GitHub o sello en el README.</p>
+        <ul class="why">
+          <li>Deja claro que es dictado en español, no un clon de otro.</li>
+          <li>Dos trazos gruesos: es el más legible a 16 px.</li>
+          <li>Mango y naranja dan calidez, lejos del azul de todo lo técnico.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="block">
+          <h3>Paleta</h3>
+          <div class="palette">
+            <div class="swatch"><i style="background:#ffb627"></i><span><b>Mango</b>#FFB627</span></div>
+            <div class="swatch"><i style="background:#ff5e00"></i><span><b>Naranja</b>#FF5E00</span></div>
+            <div class="swatch"><i style="background:#1b1f4b"></i><span><b>Marino</b>#1B1F4B</span></div>
+            <div class="swatch"><i style="background:#fff4e0"></i><span><b>Crema</b>#FFF4E0</span></div>
+          </div>
+        </div>
+        <div class="block">
+          <h3>Tamaños</h3>
+          <div class="sizes">
+            <figure><svg width="128" height="128" aria-hidden="true"><use href="#c3-icon"/></svg>128</figure>
+            <figure><svg width="64" height="64" aria-hidden="true"><use href="#c3-icon"/></svg>64</figure>
+            <figure><svg width="32" height="32" aria-hidden="true"><use href="#c3-icon"/></svg>32</figure>
+            <figure><svg width="16" height="16" aria-hidden="true"><use href="#c3-icon"/></svg>16</figure>
+          </div>
+        </div>
+        <div class="block">
+          <h3>Barra de menú y bandeja</h3>
+          <div class="bars">
+            <div class="menubar dark"><span class="label">macOS</span><svg class="glyph" width="14" height="18" aria-hidden="true"><use href="#c3-glyph"/></svg><span class="dim">ES</span><span>mar 10:42</span></div>
+            <div class="menubar light"><span class="label">macOS</span><svg class="glyph" width="14" height="18" aria-hidden="true"><use href="#c3-glyph"/></svg><span class="dim">ES</span><span>mar 10:42</span></div>
+            <div class="menubar win"><span class="label">Windows</span><svg class="glyph" width="14" height="18" aria-hidden="true"><use href="#c3-glyph"/></svg><span class="dim">ESP</span><span>10:42 a. m.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="body" style="padding-top:0; display:block">
+      <div class="lockups">
+        <div class="lockup on-light"><svg aria-hidden="true"><use href="#c3-icon"/></svg><span class="word">Labia<em>~</em></span></div>
+        <div class="lockup on-dark"><svg aria-hidden="true"><use href="#c3-icon"/></svg><span class="word">Labia<em>~</em></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ Comparación ═════════════ -->
+  <section class="compare">
+    <h2>Elegido: Dicho y escrito</h2>
+    <table>
+      <thead><tr><th>Propuesta</th><th>Fuerte en</th><th>Cuidado con</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><svg aria-hidden="true"><use href="#c1-icon"/></svg><b>1 · Labios de onda</b></td>
+          <td>Recordable: el nombre y el dibujo cuentan lo mismo. Colores que nadie más usa en dictado. Se anima de forma natural.</td>
+          <td>A tamaño chico pierde las barras y queda sólo la boca.</td>
+        </tr>
+        <tr class="pick">
+          <td><svg aria-hidden="true"><use href="#c2-icon"/></svg><b>2 · Dicho y escrito</b><span class="badge">ELEGIDO</span></td>
+          <td>Explica la función sin palabras. El contraste más fuerte de los tres.</td>
+          <td>Los globos de diálogo son comunes en apps de chat.</td>
+        </tr>
+        <tr>
+          <td><svg aria-hidden="true"><use href="#c3-icon"/></svg><b>3 · La tilde que habla</b></td>
+          <td>Identidad en español. El más legible en la barra de menú.</td>
+          <td>Habla de idioma más que de voz: hay que verlo junto al nombre.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <p class="files">Los archivos de cada logo están en <code>propuesta/img/</code>: el ícono de app (<code>concepto-N-*.svg</code>), su versión para 32 px y menos cuando la necesita (<code>-chico.svg</code>) y el glifo de un color para la barra de menú y la bandeja (<code>-glifo.svg</code>, usa <code>currentColor</code>).</p>
+</div>
+</body>
+</html>

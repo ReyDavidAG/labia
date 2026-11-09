@@ -1,5 +1,6 @@
 """Port of LabiaCore (Sources/LabiaCore): pure logic, no I/O besides JSON files."""
 import json
+import locale
 import os
 import re
 import unicodedata
@@ -240,6 +241,7 @@ class Preferences:
         {"from": "de velo", "to": "develop"},
     ])
     max_recording_seconds: int = 300
+    input_device: str = ""  # microphone name; empty = the system default
 
     @property
     def prompt(self):
@@ -257,9 +259,8 @@ class Preferences:
     @classmethod
     def load(cls, path=CONFIG_DIR / "settings.json"):
         """Missing or broken keys keep their defaults."""
-        try:
-            data = json.loads(Path(path).read_text())
-        except (OSError, ValueError):
+        data = read_json(path, {})
+        if not isinstance(data, dict):
             data = {}
         p = cls()
         for f in fields(cls):
@@ -268,8 +269,50 @@ class Preferences:
         return p
 
     def save(self, path=CONFIG_DIR / "settings.json"):
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_text(json.dumps(asdict(self), ensure_ascii=False, indent=2))
+        write_json(path, asdict(self), indent=2)
+
+
+def read_json(path, default):
+    """JSON from a UTF-8 file, or `default` if missing or broken.
+
+    Files written before 0.5 used the locale encoding (cp1252 on Windows): read those too, so the history survives.
+    """
+    try:
+        raw = Path(path).read_bytes()
+    except OSError:
+        return default
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        text = raw.decode(locale.getpreferredencoding(False), errors="replace")
+    try:
+        return json.loads(text)
+    except ValueError:
+        return default
+
+
+def write_json(path, data, indent=1):
+    """Write UTF-8 through a temp file, so a crash mid-write never leaves half a file."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=indent), encoding="utf-8")
+    tmp.replace(path)
+
+
+def parse_list(text):
+    """Settings window text box -> list: one item per line, trimmed, no blanks or repeats."""
+    out = []
+    for line in text.splitlines():
+        line = line.strip()
+        if line and line not in out:
+            out.append(line)
+    return out
+
+
+def parse_keywords(text):
+    """'Claude, cloud, clod' -> ['Claude', 'cloud', 'clod'] (commas or new lines)."""
+    return parse_list(re.sub(r"[,;]", "\n", text))
 
 
 # --- History --------------------------------------------------------------
@@ -277,20 +320,22 @@ class Preferences:
 HISTORY_LIMIT = 50
 
 
+def load_history(path=DATA_DIR / "history.json"):
+    entries = read_json(path, [])
+    return [e for e in entries if isinstance(e, dict) and isinstance(e.get("text"), str)] if isinstance(entries, list) else []
+
+
 def add_history(text, seconds, path=DATA_DIR / "history.json"):
-    path = Path(path)
-    try:
-        entries = json.loads(path.read_text())
-    except (OSError, ValueError):
-        entries = []
+    entries = load_history(path)
     entries.insert(0, {
         "id": str(uuid.uuid4()),
         "text": text,
         "date": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "seconds": round(seconds, 2),
     })
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(entries[:HISTORY_LIMIT], ensure_ascii=False, indent=1))
-    tmp.replace(path)
+    write_json(path, entries[:HISTORY_LIMIT])
     return entries[:HISTORY_LIMIT]
+
+
+def clear_history(path=DATA_DIR / "history.json"):
+    write_json(path, [])

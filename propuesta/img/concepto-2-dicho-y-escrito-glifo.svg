@@ -1,0 +1,9 @@
+<svg color="#000" xmlns="http://www.w3.org/2000/svg" viewBox="96 128 320 284" width="320" height="284">
+<defs><mask id="c2-glyph-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <path fill="#fff" d="M176 136H336A72 72 0 0 1 408 208V272A72 72 0 0 1 336 344H236L148 404L176 344A72 72 0 0 1 104 272V208A72 72 0 0 1 176 136Z"/>
+      <rect fill="#000" x="241" y="180" width="30" height="120" rx="6"/>
+      <rect fill="#000" x="206" y="168" width="100" height="26" rx="13"/>
+      <rect fill="#000" x="206" y="286" width="100" height="26" rx="13"/>
+    </mask></defs>
+<rect width="512" height="512" fill="currentColor" mask="url(#c2-glyph-mask)"/>
+</svg>

@@ -42,6 +42,11 @@ final class Recorder {
 		return lock.withLock { samples }
 	}
 
+	/// Lo grabado desde `index`, sin detener la grabación.
+	func samples(from index: Int) -> [Float] {
+		lock.withLock { index < samples.count ? Array(samples[index...]) : [] }
+	}
+
 	private func consume(_ input: AVAudioPCMBuffer) {
 		guard let converter else { return }
 		let capacity = AVAudioFrameCount(Double(input.frameLength) * format.sampleRate / input.format.sampleRate) + 64
