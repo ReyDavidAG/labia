@@ -1,4 +1,4 @@
-# Labia Windows como app · plan
+﻿# Labia Windows como app · plan
 
 Rama `feature/windows-app`, sale de `feature/windows-single-instance` (una sola Labia por sesión y error visible si no abre el micrófono).
 
@@ -49,7 +49,7 @@ Que en Windows se use como la versión de macOS: la buscas en Inicio, la abres, 
 
 ## Fases
 
-1. Plan y state. ✍️
+1. Plan y state.
 2. UTF-8 y `input_device` en el núcleo, con pruebas.
 3. Micrófono elegido (`audio.py`) en el dictado.
 4. Ícono junto al reloj: estado, pausar, reiniciar, salir, una sola copia que abre Ajustes.
