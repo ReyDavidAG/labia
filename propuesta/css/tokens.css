@@ -1,0 +1,32 @@
+:root {
+  --page: #f6f2ec;
+  --paper: #fffdf9;
+  --ink: #1d1a22;
+  --ink-soft: #5d5866;
+  --line: #e4ddd3;
+  --night: #15141a;
+  --night-2: #232129;
+
+  /* Concepto 1 · Labios de onda */
+  --c1-coral: #ff7a59;
+  --c1-rosa: #ff3d77;
+  --c1-magenta: #c2187a;
+  --c1-tinta: #2b0b1f;
+
+  /* Concepto 2 · Dicho y escrito */
+  --c2-lima: #d4ff3a;
+  --c2-violeta: #7b5cff;
+  --c2-indigo: #3b1fd1;
+  --c2-tinta: #24106b;
+
+  /* Concepto 3 · La tilde que habla */
+  --c3-mango: #ffb627;
+  --c3-naranja: #ff5e00;
+  --c3-marino: #1b1f4b;
+  --c3-crema: #fff4e0;
+
+  --font-ui: "Figtree", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --radius: 22px;
+  --shadow: 0 1px 2px rgb(29 26 34 / .06), 0 12px 32px -12px rgb(29 26 34 / .18);
+}
