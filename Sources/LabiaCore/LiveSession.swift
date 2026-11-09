@@ -25,6 +25,8 @@ public enum PassKind: Equatable, Sendable {
 public struct LocalAgreement: Sendable {
 	public internal(set) var committed: [Word] = []
 	var recent: [[Word]] = []
+	/// Palabras de la última pasada que todavía no se confirman.
+	public private(set) var pending = 0
 
 	public init() {}
 
@@ -59,6 +61,7 @@ public struct LocalAgreement: Sendable {
 			if agreed.count > best.count { best = agreed }
 		}
 		committed += best
+		pending = new.count - best.count
 		recent = Array((recent + [words]).suffix(2))
 		return best
 	}
@@ -101,6 +104,8 @@ public final class LiveSession {
 	public static let refineSeconds = 3.0
 	/// Una pasada cuidadosa con menos de esta parte de las palabras que reemplaza es basura y se ignora.
 	public static let garbageRatio = 0.6
+	/// Por debajo de este volumen (RMS) el audio nuevo es silencio.
+	public static let silenceRMS: Float = 0.004
 
 	public let preferences: Preferences
 	public private(set) var agreement = LocalAgreement()
@@ -109,6 +114,8 @@ public final class LiveSession {
 	private var window: [Float] = []
 	private var offset = 0
 	private var refinedAt = 0
+	private var passedAt = 0
+	private var settled = false
 
 	public init(preferences: Preferences) {
 		self.preferences = preferences
@@ -121,8 +128,14 @@ public final class LiveSession {
 
 	private var windowStart: Double { Double(offset) / Double(Self.sampleRate) }
 
-	/// La pasada que toca y el audio de la ventana para hacerla.
-	public func nextPass() -> (audio: [Float], kind: PassKind) {
+	/// La pasada que toca y el audio de la ventana para hacerla, o `nil` si no hace falta:
+	/// si sólo llegó silencio, la pasada anterior no cambió nada y no quedan palabras por confirmar,
+	/// otra pasada tampoco cambiaría nada.
+	/// En manos libres, con pausas largas, eso ahorra el Neural Engine sin escribir más tarde.
+	public func nextPass() -> (audio: [Float], kind: PassKind)? {
+		let fresh = window.suffix(samples - passedAt)
+		passedAt = samples
+		if settled, !fresh.isEmpty, Self.rms(fresh) < Self.silenceRMS { return nil }
 		if samples - refinedAt >= Int(Self.refineSeconds * Double(Self.sampleRate)), !agreement.committed.isEmpty {
 			refinedAt = samples
 			return (window, .careful)
@@ -139,7 +152,14 @@ public final class LiveSession {
 		case .careful: refine(shifted)
 		}
 		trim()
-		return apply(LiveText.holdLastWord(clean(agreement.text)))
+		let change = apply(LiveText.holdLastWord(clean(agreement.text)))
+		settled = change.back == 0 && change.text.isEmpty && agreement.pending == 0
+		return change
+	}
+
+	public static func rms<C: Collection>(_ values: C) -> Float where C.Element == Float {
+		guard !values.isEmpty else { return 0 }
+		return (values.reduce(0) { $0 + $1 * $1 } / Float(values.count)).squareRoot()
 	}
 
 	/// El texto de la pasada final sobre toda la grabación. Regresa lo que hay que cambiar en pantalla y si se envía.

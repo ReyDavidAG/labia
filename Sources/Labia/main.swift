@@ -51,7 +51,11 @@ if let i = arguments.firstIndex(of: "--simulate"), arguments.count > i + 1 {
 				let next = min(audio.count, fed + advance)
 				session.feed(Array(audio[fed..<next]))
 				fed = next
-				let (window, kind) = session.nextPass()
+				guard let (window, kind) = session.nextPass() else {
+					print(String(format: "%6.1fs  silencio, sin pasada", Double(fed) / rate))
+					costs.append(0)
+					continue
+				}
 				let start = Date()
 				let words = try await transcriber.words(window, kind: kind, language: settings.language)
 				costs.append(Date().timeIntervalSince(start))

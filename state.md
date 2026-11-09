@@ -32,6 +32,7 @@
 - Medido con `Labia --simulate` en la M2 (voz de `say -v Paulina`, 4 s y 44 s): mediana 0.66–0.74 s por pasada, máximo 1.13 s; el texto va 1–2 s detrás de la voz.
 - Las teclas que manda Labia llevan `eventSourceUserData` = `Paster.syntheticMark`: sin eso el atajo las tomaba como «⌥ + otra tecla» y cancelaba el dictado. Salen de una fuente `.privateState` para que no se les sume el ⌥ que se está manteniendo.
 - La pasada cuidadosa no cambia palabras que sólo difieren en mayúsculas: «Revisa» → «revisa» borraba y reescribía todo lo que seguía.
+- Con silencio, la pasada se salta si la anterior no cambió nada y no quedan palabras por confirmar (`LocalAgreement.pending`): en una pausa de 4 s se ahorran 4 de 8 pasadas y nada se escribe más tarde.
 - Probado en vivo por el usuario dictando en Claude Code: funciona. Falta revisar VS Code y el navegador, esc a media frase y un dictado de más de 1 min.
 
 ## Hallazgos
