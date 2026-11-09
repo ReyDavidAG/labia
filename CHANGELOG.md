@@ -1,5 +1,16 @@
 # Cambios
 
+## Sin publicar
+
+### Windows y Linux
+
+- Labia se actualiza sola desde GitHub ([`updates/plan.md`](updates/plan.md)): busca al abrir y cada 6 h, instala cuando no estás dictando, se reinicia y avisa. Una versión que no cambia nada de tu plataforma no la reinicia.
+- Si la versión nueva no arranca, regresa sola a la anterior y avisa.
+- Canal Estable (versiones publicadas) o Desarrollo (`develop`), «Actualizar automáticamente» y «Buscar actualizaciones» en Ajustes y en el menú del ícono.
+- Una copia donde programas nunca se actualiza sola.
+- `setup.ps1 -Repo` instala desde otro repositorio (un fork).
+- El CI corre las pruebas de Python en Windows y Linux.
+
 ## 1.0.0 · 2026-11-08
 
 Primera versión estable: en macOS, Linux y Windows Labia escribe en tiempo real mientras hablas y se corrige sola. En macOS y Windows se instala y se usa como una app, con ajustes e historial. Estrena el ícono «Dicho y escrito».
