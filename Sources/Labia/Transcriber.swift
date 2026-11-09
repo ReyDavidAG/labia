@@ -1,4 +1,5 @@
 import Foundation
+import LabiaCore
 import WhisperKit
 
 actor Transcriber {
@@ -63,6 +64,25 @@ actor Transcriber {
 		}
 		let results: [TranscriptionResult] = try await kit.transcribe(audioArray: samples, decodeOptions: options)
 		return results.map(\.text).joined(separator: " ")
+	}
+
+	/// Una pasada del dictado en tiempo real, con el tiempo de cada palabra.
+	/// Sin vocabulario como prompt: en audio corto hace que Whisper entre en bucle (medido en Linux, ver `linux/state.md`).
+	func words(_ samples: [Float], kind: PassKind, language: String) async throws -> [Word] {
+		try await load()
+		guard let kit else { return [] }
+		var options = DecodingOptions(
+			task: .transcribe,
+			language: language,
+			temperature: 0,
+			temperatureFallbackCount: kind == .careful ? 5 : 0,
+			usePrefillPrompt: true,
+			skipSpecialTokens: true,
+			wordTimestamps: true
+		)
+		if samples.count > 28 * LiveSession.sampleRate { options.chunkingStrategy = .vad }
+		let results: [TranscriptionResult] = try await kit.transcribe(audioArray: samples, decodeOptions: options)
+		return results.flatMap(\.segments).flatMap { $0.words ?? [] }.map { Word(Double($0.start), Double($0.end), $0.word) }
 	}
 
 	private func makeKit() async throws {

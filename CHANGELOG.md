@@ -2,6 +2,9 @@
 
 ## 0.5.0 · sin publicar
 
+- macOS escribe en tiempo real, como Linux y Windows: las palabras aparecen mientras hablas, una pasada cuidadosa cada 3 s corrige lo ya escrito y al soltar la pasada final con tu vocabulario deja el texto definitivo. En una M2 cada pasada tarda unos 0.7 s. Se apaga en Ajustes › General › «Escribir mientras hablas».
+- Esc borra lo que el dictado en vivo ya había escrito.
+- Ícono nuevo «Dicho y escrito», regenerado en la Mac con todos los tamaños.
 - macOS: los dictados de más de 30 s se cortan en las pausas y cada tramo se transcribe por separado. Antes, en dictados de más de un minuto sólo llegaban las primeras frases.
 
 ## 0.4.0 · 2026-11-08
