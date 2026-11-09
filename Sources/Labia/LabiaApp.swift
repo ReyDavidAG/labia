@@ -60,6 +60,9 @@ private struct MenuContent: View {
 		Toggle("Pausar Labia", isOn: $model.paused)
 		Button("Ajustes…") { showSettings(.general) }
 			.keyboardShortcut(",")
+		if model.updater.isRunning {
+			Button("Buscar actualizaciones…") { model.updater.checkNow() }
+		}
 		Divider()
 		Button("Salir de Labia") { NSApp.terminate(nil) }
 			.keyboardShortcut("q")

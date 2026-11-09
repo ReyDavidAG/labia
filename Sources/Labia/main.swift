@@ -86,9 +86,14 @@ if let i = arguments.firstIndex(of: "--screenshots"), arguments.count > i + 1 {
 	exit(0)
 }
 
-if let i = arguments.firstIndex(of: "--login-item"), arguments.count > i + 1 {
+if let i = arguments.firstIndex(of: "--login-item") {
+	let value = arguments.count > i + 1 ? arguments[i + 1] : ""
 	do {
-		if arguments[i + 1] == "on" { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+		switch value {
+		case "on": try SMAppService.mainApp.register()
+		case "off": try SMAppService.mainApp.unregister()
+		default: break
+		}
 	} catch {
 		FileHandle.standardError.write(Data("error: \(error.localizedDescription)\n".utf8))
 	}

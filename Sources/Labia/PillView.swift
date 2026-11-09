@@ -84,6 +84,8 @@ struct PillBody: View {
 			Label("Falta descargar el modelo", systemImage: "arrow.down.circle")
 		case let .failed(message):
 			Warning(text: message)
+		case let .updated(version):
+			Label("Labia se actualizó a \(version)", systemImage: "arrow.down.circle.fill")
 		}
 	}
 }
