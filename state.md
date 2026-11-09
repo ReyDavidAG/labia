@@ -14,11 +14,11 @@
 | 7. Versión Linux (`linux/`, ver `linux/state.md`) | ✅ v0.3.0 |
 | 8. Versión Windows (`windows/`, ver `windows/state.md`) | ✅ v0.4.0 |
 | 9. Ícono 1.0 «Dicho y escrito» (`propuesta/logos.html`) | ✅ regenerado en la Mac con los 10 tamaños |
-| 10. Windows como app: menú Inicio, ícono junto al reloj, ajustes (`windows/app/`) | 🧪 en `develop`; ver `windows/app/state.md` |
+| 10. Windows como app: menú Inicio, ícono junto al reloj, ajustes (`windows/app/`) | ✅ v1.0.0; ver `windows/app/state.md` |
 | 11. Tiempo real en macOS | ✅ simulación con el modelo real y prueba en vivo del usuario en Claude Code (2026-11-08) |
-| 12. Release 1.0.0 | 🧪 rama `release/1.0.0`; faltan las pruebas manuales de «Antes de la 1.0» |
+| 12. Release 1.0.0 | ✅ v1.0.0, con las pruebas manuales de «Antes de la 1.0» hechas por el usuario |
 
-## Antes de la 1.0 (pruebas manuales)
+## Antes de la 1.0 (pruebas manuales) · ✅ probadas por el usuario el 2026-11-08
 
 Windows (`windows/app/state.md`, «Lo que falta probar»):
 

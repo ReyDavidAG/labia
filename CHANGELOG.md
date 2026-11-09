@@ -1,6 +1,6 @@
 # Cambios
 
-## 1.0.0 · sin publicar
+## 1.0.0 · 2026-11-08
 
 Primera versión estable: en macOS, Linux y Windows Labia escribe en tiempo real mientras hablas y se corrige sola. En macOS y Windows se instala y se usa como una app, con ajustes e historial. Estrena el ícono «Dicho y escrito».
 
