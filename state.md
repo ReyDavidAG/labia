@@ -13,6 +13,15 @@
 | 6. Palabra de envío «Claude» | ✅ v0.2.0 |
 | 7. Versión Linux (`linux/`, ver `linux/state.md`) | ✅ v0.3.0 |
 | 8. Versión Windows (`windows/`, ver `windows/state.md`) | ✅ v0.4.0 |
+| 9. Ícono 1.0 «Dicho y escrito» (`propuesta/logos.html`) | 🧪 en `develop`; falta verlo en una Mac |
+
+## Para probar en macOS (desde `develop`)
+
+1. `swift test && scripts/bundle.sh && open build/Labia.app`: el ícono nuevo en el Dock, Finder y Ajustes del Sistema. El `.icns` se generó en Windows desde el SVG; si algo se ve mal, `scripts/make-icon.sh` lo regenera con `icon.swift` (el CI ya comprobó que ese script dibuja el mismo diseño).
+2. Pegado con «Restaurar portapapeles» activo: copia algo, dicta y revisa que el texto quede pegado y luego regrese lo que habías copiado. Ahora se restaura cuando la app lee el pegado (datos diferidos de `NSPasteboard`), no a los 600 ms fijos.
+3. Terminar con «Claude» en la terminal: el Enter llega después del pegado.
+4. Con «Restaurar portapapeles» apagado, el texto dictado se queda en el portapapeles aunque cierres Labia.
+5. Pendiente aparte: `feature/mac-long-audio` (dictados de más de 30 s), ver «Pendientes» en `windows/plan.md`.
 
 ## Hallazgos
 
