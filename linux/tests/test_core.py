@@ -1,9 +1,11 @@
 # Same cases as Tests/LabiaCoreTests (Swift), so both versions behave alike.
 import json
+import locale
 
 from labia.core import (
     CANCEL, CHORD, ESCAPE, IDLE, KEY_DOWN, KEY_UP, LOCK, LOCKED, OTHER_KEY, SEND_DEFAULTS, START, STOP, TICK,
-    TOO_SHORT, GestureMachine, MAX_PROMPT_CHARS, Preferences, add_history, clean, split_send,
+    TOO_SHORT, GestureMachine, MAX_PROMPT_CHARS, Preferences, add_history, clean, clear_history, load_history,
+    parse_keywords, parse_list, split_send,
 )
 
 
@@ -110,3 +112,33 @@ def test_history(tmp_path):
         entries = add_history(f"frase {i}", 1, f)
     assert len(entries) == 50 and entries[0]["text"] == "frase 59"
     assert json.loads(f.read_text())[0]["text"] == "frase 59"
+
+
+def test_settings_are_utf8_and_keep_old_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(locale, "getpreferredencoding", lambda _=True: "cp1252")
+    f = tmp_path / "settings.json"
+    Preferences(vocabulary=["useApiQuery", "→ flecha", "año 🎙"], input_device="Micrófono (DualSense)").save(f)
+    assert "→ flecha" in f.read_text(encoding="utf-8")
+    back = Preferences.load(f)
+    assert back.vocabulary[1:] == ["→ flecha", "año 🎙"] and back.input_device == "Micrófono (DualSense)"
+    # Before 0.5 Windows wrote these in cp1252: «ñ» must survive the switch.
+    f.write_bytes(json.dumps({"vocabulary": ["piñata"]}, ensure_ascii=False).encode("cp1252"))
+    assert Preferences.load(f).vocabulary == ["piñata"]
+    f.write_text("[1, 2]")
+    assert Preferences.load(f) == Preferences()
+
+
+def test_history_survives_old_encoding_and_clears(tmp_path):
+    f = tmp_path / "h.json"
+    f.write_bytes(b'[{"text": "dictado viejo", "date": "x"}, 3, {"text": 5}]')
+    assert [e["text"] for e in load_history(f)] == ["dictado viejo"]
+    add_history("acción rápida ✓", 2.5, f)
+    assert [e["text"] for e in load_history(f)] == ["acción rápida ✓", "dictado viejo"]
+    clear_history(f)
+    assert load_history(f) == [] and load_history(tmp_path / "missing.json") == []
+
+
+def test_parse_lists_from_the_settings_window():
+    assert parse_list("  commit \n\n Vercel\ncommit\n") == ["commit", "Vercel"]
+    assert parse_keywords("Claude, cloud;clod\n Claude ") == ["Claude", "cloud", "clod"]
+    assert parse_keywords(" , ") == []
