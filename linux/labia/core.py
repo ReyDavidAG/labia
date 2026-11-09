@@ -242,6 +242,8 @@ class Preferences:
     ])
     max_recording_seconds: int = 300
     input_device: str = ""  # microphone name; empty = the system default
+    auto_update: bool = True  # install new versions by itself when idle (updates/plan.md)
+    update_channel: str = "estable"  # "estable": published releases; "desarrollo": the tip of develop
 
     @property
     def prompt(self):

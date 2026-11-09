@@ -17,7 +17,7 @@ from dataclasses import replace
 from datetime import datetime
 from tkinter import messagebox, ttk
 
-from . import audio, core, shortcuts_windows, tray_windows, win32
+from . import audio, core, shortcuts_windows, tray_windows, update, updater, win32
 from .hotkey_windows import LABELS
 
 TITLE = "Labia · Ajustes"
@@ -25,6 +25,7 @@ APP_ID = "ReyDavidAG.Labia"  # groups the window under Labia's icon in the taskb
 TABS = ["general", "vocabulario", "reemplazos", "historial", "modelo"]
 DEFAULT_MIC = "Predeterminado de Windows"
 LANGUAGES = {"es": "Español", "en": "English"}
+CHANNELS = {"estable": "Estable (versiones publicadas)", "desarrollo": "Desarrollo (sigue develop)"}
 RESTART_FIELDS = ("hotkey", "model", "language")  # read once at start-up
 PAD = 12
 
@@ -118,6 +119,14 @@ class SettingsWindow:
         self.keywords.pack(anchor="w", pady=4)
         hint(words, "Termina el dictado con la palabra y Labia la quita, pega y da Enter. Separa con comas.").pack(anchor="w")
         ttk.Checkbutton(checks, text="Abrir al iniciar sesión", variable=self.startup).pack(anchor="w", pady=(10, 2))
+        self.auto_update = tk.BooleanVar(value=s.auto_update)
+        ttk.Checkbutton(checks, text="Actualizar automáticamente", variable=self.auto_update).pack(anchor="w", pady=2)
+        channel = ttk.Frame(checks)
+        channel.pack(anchor="w", padx=(24, 0))
+        ttk.Label(channel, text="Canal").pack(side="left", padx=(0, 8))
+        self.channel = ttk.Combobox(channel, state="readonly", values=list(CHANNELS.values()), width=30)
+        self.channel.set(CHANNELS.get(s.update_channel, CHANNELS[updater.STABLE]))
+        self.channel.pack(side="left")
         self._sync_send()
 
     def _sync_send(self):
@@ -239,6 +248,37 @@ class SettingsWindow:
         self.language.pack(side="left")
         hint(f, "El atajo, el modelo y el idioma se aplican al reiniciar Labia.").pack(anchor="w", pady=(16, 0))
 
+        ttk.Separator(f).pack(fill="x", pady=16)
+        root = updater.repo_root()
+        ttk.Label(f, text=f"Labia {updater.describe(root) if root else ''}".strip(), style="Title.TLabel").pack(anchor="w")
+        self.update_info = hint(f, "")
+        self.update_info.pack(anchor="w", pady=(4, 8))
+        ttk.Button(f, text="Buscar actualizaciones", command=self._check_updates).pack(anchor="w")
+        self._show_update_state()
+
+    def _show_update_state(self):
+        st = update.state()
+        lines = []
+        if st.get("checked_at"):
+            lines.append(f"Última revisión: {_when(st['checked_at'])}.")
+        if st.get("reason"):
+            lines.append(st["reason"] + ".")
+        elif st.get("error"):
+            lines.append(f"No se pudo revisar: {st['error']}")
+        elif st.get("available"):
+            lines.append(f"Hay una versión nueva: {st['available']}. Se instala cuando no estés dictando.")
+        elif st.get("checked_at"):
+            lines.append("Está al día.")
+        lines.append("Las actualizaciones vienen de github.com/ReyDavidAG/labia.")
+        self.update_info.configure(text=" ".join(lines))
+        self.root.after(5000, self._show_update_state)  # Labia writes update.json as it checks
+
+    def _check_updates(self):
+        if tray_windows.post_to_running("update"):
+            self.flash("Buscando… Labia te avisa con una notificación.", ms=6000)
+        else:
+            self.flash("Labia no está abierta: ábrela para buscar actualizaciones.", ms=6000)
+
     # --- save ---
 
     def collect(self):
@@ -250,7 +290,9 @@ class SettingsWindow:
             self.saved, hotkey=hotkey, input_device=mic, auto_type=self.auto_type.get(),
             trailing_space=self.trailing.get(), send_on_keyword=self.send.get(),
             send_keywords=core.parse_keywords(self.keywords.get()) or list(core.SEND_DEFAULTS),
-            vocabulary=core.parse_list(self.vocab.get("1.0", "end")), replacements=repl, language=language)
+            vocabulary=core.parse_list(self.vocab.get("1.0", "end")), replacements=repl, language=language,
+            auto_update=self.auto_update.get(),
+            update_channel=next((k for k, v in CHANNELS.items() if v == self.channel.get()), updater.STABLE))
 
     def dirty(self):
         return self.collect() != self.saved or self.startup.get() != self.saved_startup
@@ -258,7 +300,10 @@ class SettingsWindow:
     def save(self):
         new = self.collect()
         needs_restart = any(getattr(new, k) != getattr(self.saved, k) for k in RESTART_FIELDS)
+        channel_changed = new.update_channel != self.saved.update_channel
         new.save()
+        if channel_changed:
+            tray_windows.post_to_running("update")  # move to the other channel now, not in 6 h
         if self.startup.get() != self.saved_startup:
             try:
                 shortcuts_windows.set_startup(self.startup.get())

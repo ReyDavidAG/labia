@@ -62,6 +62,16 @@ private struct GeneralTab: View {
 				Toggle("Sonido al empezar y terminar", isOn: $model.settings.sounds)
 				Toggle("Abrir al iniciar sesión", isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
 			}
+			Section {
+				Toggle("Actualizar automáticamente", isOn: $model.settings.autoUpdate)
+				Picker("Canal", selection: $model.settings.updateChannel) {
+					ForEach(UpdateChannel.allCases) { Text($0.label).tag($0) }
+				}
+			} footer: {
+				Text(model.settings.autoUpdate
+					? "Las versiones nuevas se bajan solas y se instalan cuando no estás dictando: Labia se reinicia y te avisa."
+					: "Labia te avisa cuando haya una versión nueva y tú decides cuándo instalarla.")
+			}
 			Section("Permisos") {
 				PermissionRow(title: "Micrófono", granted: model.micGranted, action: model.requestMicrophone)
 				PermissionRow(title: "Accesibilidad", granted: model.accessibilityGranted, action: model.requestAccessibility)
@@ -257,6 +267,24 @@ private struct ModelTab: View {
 				}
 			} footer: {
 				Text("Cuando el modelo está liberado, el primer dictado tarda unos segundos más mientras vuelve a cargar.")
+			}
+			Section {
+				LabeledContent("Labia") {
+					Text("Versión \(Updater.version)" + (Updater.commit.map { " (\($0))" } ?? "")).textSelection(.enabled)
+				}
+				HStack {
+					Button("Buscar actualizaciones", action: model.updater.checkNow)
+						.disabled(!model.updater.isRunning)
+					Spacer()
+					if let last = model.updater.lastCheck {
+						Text("Última revisión: \(last.formatted(.relative(presentation: .named)))")
+							.font(.callout).foregroundStyle(.secondary)
+					}
+				}
+			} footer: {
+				Text(model.updater.isRunning
+					? "Las actualizaciones vienen de github.com/ReyDavidAG/labia. No se envía nada de esta Mac."
+					: "Esta compilación no se actualiza sola (no trae la llave de Sparkle). Instala Labia desde los releases de GitHub.")
 			}
 		}
 		.formStyle(.grouped)

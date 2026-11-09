@@ -83,6 +83,21 @@ El micrófono elegido se busca en cada dictado: si lo conectas con Labia abierta
 
 Todo se guarda en `%APPDATA%\Labia\`: `settings.json` (las mismas claves que en Linux, más `input_device`) e `history.json`, en UTF-8.
 
+## Actualizaciones
+
+Labia se actualiza sola desde [github.com/ReyDavidAG/labia](https://github.com/ReyDavidAG/labia): busca 2 minutos después de abrir y luego cada 6 horas.
+
+- **Canal Estable** (el de siempre): sólo versiones publicadas. **Desarrollo** sigue `develop`, para probar lo nuevo antes. Se elige en **Ajustes → General**.
+- **Nunca te corta un dictado.** Espera a que lleves un minuto sin dictar, se reinicia en unos segundos y avisa «Labia se actualizó».
+- **Sólo si cambia algo de Windows.** Una versión que sólo toca macOS no reinicia nada.
+- **Si la versión nueva no arranca**, regresa sola a la anterior, avisa y no la vuelve a intentar hasta que salga otra.
+- **Ajustes → Modelo** muestra tu versión y la última revisión; **Buscar actualizaciones** (también en el menú del ícono) revisa en ese momento e instala sin esperar.
+- Se apaga con «Actualizar automáticamente» en Ajustes → General: entonces sólo avisa que hay versión nueva.
+
+Sólo se actualiza sola una instalación limpia (la de `setup.ps1`). Una copia donde programas (otra rama, cambios sin guardar o commits sin subir) nunca se toca; Ajustes lo dice. El detalle de cada paso queda en `%APPDATA%\Labia\update.log`. Cómo funciona por dentro: [`updates/plan.md`](../updates/plan.md).
+
+La 1.0.0 todavía no trae esto: para pasar a la primera versión que se actualiza sola, vuelve a correr el comando de «Instalar».
+
 ## Cómo escribe
 
 Las palabras se pegan con el portapapeles y Ctrl+V, y las correcciones borran con Retroceso. Tres detalles evitan que se pierda texto:

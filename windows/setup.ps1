@@ -22,10 +22,10 @@ param(
     [string]$Destino = (Join-Path $env:LOCALAPPDATA 'Programs\Labia'),
     [string]$Rama = 'main',
     [switch]$SinInicio,     # no abrir Labia al iniciar sesión
-    [switch]$Desinstalar    # quitar accesos directos y la carpeta de Labia (conserva ajustes e historial)
+    [switch]$Desinstalar,   # quitar accesos directos y la carpeta de Labia (conserva ajustes e historial)
+    [string]$Repo = 'https://github.com/ReyDavidAG/labia.git'  # otro origen (un fork)
 )
 $ErrorActionPreference = 'Stop'
-$Repo = 'https://github.com/ReyDavidAG/labia.git'
 $Linux = Join-Path $Destino 'linux'
 $Python = Join-Path $Linux '.venv\Scripts\python.exe'
 $PythonW = Join-Path $Linux '.venv\Scripts\pythonw.exe'
