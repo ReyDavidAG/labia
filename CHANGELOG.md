@@ -1,5 +1,9 @@
 # Cambios
 
+## 0.5.0 · sin publicar
+
+- macOS: los dictados de más de 30 s se cortan en las pausas y cada tramo se transcribe por separado. Antes, en dictados de más de un minuto sólo llegaban las primeras frases.
+
 ## 0.4.0 · 2026-11-08
 
 Primera versión para Windows 11, en [`windows/`](windows/README.md): el mismo paquete de Python de Linux con atajo, escritura y cápsula propios de Windows.
