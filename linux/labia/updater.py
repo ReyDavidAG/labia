@@ -48,13 +48,25 @@ def repo_root(start=PACKAGE_ROOT):
 
 
 def describe(root):
-    """'1.0.1' on a release, '1.0.1+3 (a1b2c3d)' past it, 'a1b2c3d' with no tags."""
-    try:
-        d = git(root, "describe", "--tags", "--long", "--match", "v[0-9]*")  # v1.0.1-3-ga1b2c3d
-    except GitError:
-        return git(root, "rev-parse", "--short", "HEAD")
-    tag, ahead, sha = d.rsplit("-", 2)
-    return tag[1:] if ahead == "0" else f"{tag[1:]}+{ahead} ({sha[1:]})"
+    """'1.0.1' on a release, '1.0.1+3 (a1b2c3d)' past it, 'a1b2c3d' with no release behind it.
+
+    Not `git describe`: with git flow the tag sits on main's merge commit, which develop never contains
+    (develop merges the release branch instead). A release counts as behind HEAD if its commit or the release
+    branch it merged (its second parent) is.
+    """
+    sha = git(root, "rev-parse", "--short", "HEAD")
+    tags = sorted((t for t in git(root, "tag", "--list", "v*").splitlines() if _semver(t)), key=_semver, reverse=True)
+    for tag in tags:
+        commit = git(root, "rev-parse", f"{tag}^{{commit}}")
+        for base in (commit, f"{commit}^2"):
+            try:
+                git(root, "rev-parse", "--verify", "--quiet", base)
+            except GitError:
+                continue
+            if _is_ancestor(root, base, "HEAD"):
+                ahead = int(git(root, "rev-list", "--count", f"{base}..HEAD"))
+                return tag[1:] if ahead == 0 else f"{tag[1:]}+{ahead} ({sha})"
+    return sha
 
 
 @dataclass

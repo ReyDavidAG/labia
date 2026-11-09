@@ -124,5 +124,20 @@ def test_development_channel_follows_develop_and_back(repos):
     assert run(install, "branch", "--show-current") == "main" and updater.describe(install) == "1.0.0"
 
 
+def test_describe_sees_git_flow_releases_from_develop(repos):
+    # git flow: release/1.1.0 is merged into main (tagged there) and into develop, never main into develop.
+    up, _ = repos
+    run(up, "switch", "-q", "-c", "release/1.1.0", "develop")
+    commit(up, "CHANGELOG.md", "1.1.0")
+    run(up, "switch", "-q", "main")
+    run(up, "merge", "-q", "--no-ff", "-m", "Release 1.1.0", "release/1.1.0")
+    run(up, "tag", "-a", "v1.1.0", "-m", "v1.1.0")
+    run(up, "switch", "-q", "develop")
+    run(up, "merge", "-q", "--no-ff", "-m", "Merge release/1.1.0 into develop", "release/1.1.0")
+    assert updater.describe(up).startswith("1.1.0+1 (")  # not «1.0.0+3»
+    run(up, "switch", "-q", "main")
+    assert updater.describe(up) == "1.1.0"
+
+
 def test_not_a_git_copy(tmp_path):
     assert updater.repo_root(tmp_path) is None
