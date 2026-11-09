@@ -17,7 +17,7 @@
 | 10. Windows como app: menú Inicio, ícono junto al reloj, ajustes (`windows/app/`) | ✅ v1.0.0; ver `windows/app/state.md` |
 | 11. Tiempo real en macOS | ✅ simulación con el modelo real y prueba en vivo del usuario en Claude Code (2026-11-08) |
 | 12. Release 1.0.0 | ✅ v1.0.0, con las pruebas manuales de «Antes de la 1.0» hechas por el usuario |
-| 13. Actualizaciones automáticas en las tres plataformas (`updates/`) | 🧪 Windows probado; macOS con Sparkle probado en local, falta `scripts/setup-signing.sh` (secretos) y el primer release; falta Linux. Ver `updates/state.md` |
+| 13. Actualizaciones automáticas en las tres plataformas (`updates/`) | ✅ v1.1.0. Falta probar Linux en un equipo real y la prueba de punta a punta con 1.1.1. Ver `updates/state.md` |
 
 ## Antes de la 1.0 (pruebas manuales) · ✅ probadas por el usuario el 2026-11-08
 

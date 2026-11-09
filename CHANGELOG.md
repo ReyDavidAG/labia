@@ -1,6 +1,8 @@
 # Cambios
 
-## Sin publicar
+## 1.1.0 · 2026-11-08
+
+Labia se actualiza sola en macOS, Windows y Linux. Esta versión hay que instalarla a mano una vez (la 1.0.0 no sabe actualizarse); de aquí en adelante llegan solas.
 
 ### macOS
 
@@ -16,6 +18,7 @@
 - Si la versión nueva no arranca, regresa sola a la anterior y avisa.
 - Canal Estable (versiones publicadas) o Desarrollo (`develop`), «Actualizar automáticamente» y «Buscar actualizaciones» en Ajustes y en el menú del ícono.
 - Una copia donde programas nunca se actualiza sola.
+- Probado de punta a punta en Windows. En Linux usa el mismo código (con `systemd-run` y `notify-send`), pero todavía no se ha probado en un equipo real.
 - `setup.ps1 -Repo` instala desde otro repositorio (un fork).
 - El CI corre las pruebas de Python en Windows y Linux.
 
