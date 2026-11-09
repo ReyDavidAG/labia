@@ -18,7 +18,7 @@ CLASS = "LabiaTray"
 ICON = Path(__file__).with_name("labia.ico")
 WM_TRAY = 0x8000  # WM_APP: tray clicks
 # Commands other processes post to the hidden window (settings window, a second Labia launched from Start).
-COMMANDS = {0x8001: "settings", 0x8002: "history", 0x8003: "restart"}
+COMMANDS = {0x8001: "settings", 0x8002: "history", 0x8003: "restart", 0x8004: "quit"}
 MESSAGE_OF = {v: k for k, v in COMMANDS.items()}
 WM_CLOSE, WM_COMMAND, WM_LBUTTONUP, WM_RBUTTONUP = 0x0010, 0x0111, 0x0202, 0x0205
 NIM_ADD, NIM_MODIFY, NIM_DELETE = 0, 1, 2
@@ -56,7 +56,7 @@ user32.DestroyWindow.argtypes = [w.HWND]
 
 
 def post_to_running(command):
-    """Ask the Labia already running to do `command` ('settings', 'history', 'restart'). False if none runs."""
+    """Ask the Labia already running to do `command` ('settings', 'history', 'restart', 'quit'). False if none runs."""
     hwnd = user32.FindWindowW(CLASS, None)
     return bool(hwnd) and bool(user32.PostMessageW(hwnd, MESSAGE_OF[command], 0, 0))
 
