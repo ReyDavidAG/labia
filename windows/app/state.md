@@ -41,7 +41,9 @@ Pruebas: 26 pasan, 1 saltada (la de evdev). `python -m pytest -q` en `linux/`.
 - `FindWindowW` desde PowerShell (`Add-Type`) no encontró las ventanas, desde Python sí: era la prueba, no Labia.
 - Con un entorno virtual, `sys.executable` es el `pythonw.exe` del `.venv` (aunque el proceso real sea el Python base): sirve para lanzar la ventana de ajustes y el reinicio.
 
-## Lo que falta probar (a mano)
+## Pruebas a mano
+
+Las 1 a 3 las probó el usuario antes de la 1.0.0 (2026-11-08). Faltan de la 4 a la 7.
 
 1. Clic derecho en el ícono: el menú se cierra al hacer clic afuera; Pausar queda con palomita y el tooltip dice «En pausa».
 2. En pausa, AltGr no graba y AltGr+Q sigue dando @.

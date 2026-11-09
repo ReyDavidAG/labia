@@ -14,8 +14,25 @@
 | 7. Versión Linux (`linux/`, ver `linux/state.md`) | ✅ v0.3.0 |
 | 8. Versión Windows (`windows/`, ver `windows/state.md`) | ✅ v0.4.0 |
 | 9. Ícono 1.0 «Dicho y escrito» (`propuesta/logos.html`) | ✅ regenerado en la Mac con los 10 tamaños |
-| 10. Windows como app: menú Inicio, ícono junto al reloj, ajustes (`windows/app/`) | 🧪 en `develop`; ver `windows/app/state.md` |
+| 10. Windows como app: menú Inicio, ícono junto al reloj, ajustes (`windows/app/`) | ✅ v1.0.0; ver `windows/app/state.md` |
 | 11. Tiempo real en macOS | ✅ simulación con el modelo real y prueba en vivo del usuario en Claude Code (2026-11-08) |
+| 12. Release 1.0.0 | ✅ v1.0.0, con las pruebas manuales de «Antes de la 1.0» hechas por el usuario |
+
+## Antes de la 1.0 (pruebas manuales) · ✅ probadas por el usuario el 2026-11-08
+
+Windows (`windows/app/state.md`, «Lo que falta probar»):
+
+1. Clic derecho en el ícono junto al reloj: el menú se cierra al hacer clic afuera.
+2. Pausar: el tooltip dice «En pausa», AltGr no graba y AltGr+Q sigue dando @. Reanudar y dictar.
+3. Salir desde el menú a mitad de un dictado largo: termina de escribir y no deja Ctrl presionado.
+
+macOS (desde `release/1.0.0`: `swift test && scripts/bundle.sh && open build/Labia.app`):
+
+4. Dictar en VS Code y en el navegador.
+5. Esc a media frase: borra lo que ya había escrito.
+6. Un dictado de más de 1 minuto: llega completo.
+
+Si algo falla, el arreglo va en `release/1.0.0` (o en un `fix/*` que salga de ahí) antes de unir a `main`.
 
 ## Para probar en macOS (desde `develop`)
 

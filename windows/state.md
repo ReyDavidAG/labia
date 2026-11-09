@@ -11,7 +11,7 @@
 | 4. Atajo AltGr + flujo en vivo | ✅ dictados en vivo en Claude Code: 7 s y 112 s (este destapó el bug del pegado); ya corregido, 102 s y 45 s completos |
 | 5. Cápsula | ✅ los seis estados, `docs/img/windows-states.png` |
 | 6. Arranque, README, release | ✅ v0.4.0 |
-| 7. Como app: menú Inicio, ícono junto al reloj, ajustes | 🧪 `feature/windows-app`, ver `windows/app/state.md` |
+| 7. Como app: menú Inicio, ícono junto al reloj, ajustes | ✅ v1.0.0, ver `windows/app/state.md` |
 
 ## Hallazgos de la prueba en Windows
 
@@ -48,5 +48,5 @@ Hoy no funciona en Windows: el **Intel SST OED** falla con código 10 y el regis
 
 ## Dónde quedó todo (2026-11-08)
 
-- `main` = v0.4.0: primera versión de Windows. Release en GitHub sin marcar como «Latest», para que la 0.2.0 siga siendo la descarga de macOS.
-- `feature/mac-long-audio`: arreglo de dictados largos en macOS, sin probar (ver «Pendientes» en `plan.md`).
+- `main` = v1.0.0: Windows como app (menú Inicio, ícono junto al reloj, ajustes, instalador de un comando) y tiempo real en macOS. Release en GitHub marcado como «Latest», con el `.zip` de macOS.
+- Los dictados largos en macOS (`feature/mac-long-audio`) entraron en la 1.0.0.

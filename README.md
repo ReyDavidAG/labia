@@ -138,7 +138,7 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz
 
 - **No hace nada al mantener ⌥.** Revisa Ajustes del Sistema → Privacidad y seguridad → Accesibilidad. Si actualizaste la app y Labia ya aparece activado, quítalo con `−` y vuelve a agregarlo.
 - **Escribe "No te oí".** El micrófono no captó voz. Revisa la entrada en Ajustes del Sistema → Sonido.
-- **Un dictado largo sale incompleto.** Desde la 0.5.0, los dictados de más de 30 s se cortan en las pausas y cada tramo se transcribe aparte (máximo 5 min). Si aun así falta texto, habla con pausas cortas entre ideas.
+- **Un dictado largo sale incompleto.** Desde la 1.0, los dictados de más de 30 s se cortan en las pausas y cada tramo se transcribe aparte (máximo 5 min). Si aun así falta texto, habla con pausas cortas entre ideas.
 - **El primer dictado del día tarda.** El modelo se libera de la memoria tras 30 minutos sin uso. Puedes cambiarlo en Ajustes → Modelo.
 - **fn abre los emojis.** macOS usa esa tecla. Elige ⌥ o ⌘ derecho, o cambia en Ajustes del Sistema → Teclado qué hace la tecla 🌐.
 
