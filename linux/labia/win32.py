@@ -83,6 +83,13 @@ def claim_single_instance(name="Local\\Labia", wait=0.0):
         time.sleep(0.25)
 
 
+def release_single_instance(name="Local\\Labia"):
+    """Let go of a mutex claim_single_instance() took, so another process can take it."""
+    h = _mutexes.pop(name, None)
+    if h:
+        kernel32.CloseHandle(h)
+
+
 # --- clipboard -----------------------------------------------------------------
 
 CF_UNICODETEXT, GMEM_MOVEABLE = 13, 0x2
