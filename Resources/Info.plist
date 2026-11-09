@@ -15,6 +15,12 @@
 	<key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
 	<key>LSUIElement</key><true/>
 	<key>NSMicrophoneUsageDescription</key><string>Labia escucha mientras mantienes el atajo para transcribir lo que dices. El audio se procesa en esta Mac y no se guarda.</string>
+	<key>LabiaCommit</key><string>__COMMIT__</string>
+	<key>SUFeedURL</key><string>https://github.com/ReyDavidAG/labia/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key><string>__SPARKLE_PUBLIC_KEY__</string>
+	<key>SUEnableAutomaticChecks</key><true/>
+	<key>SUAutomaticallyUpdate</key><true/>
+	<key>SUScheduledCheckInterval</key><integer>21600</integer>
 	<key>NSHumanReadableCopyright</key><string>MIT · Rey David Aguila Diaz</string>
 </dict>
 </plist>

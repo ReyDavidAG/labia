@@ -16,6 +16,13 @@ enum Pill: Equatable {
 	case permission
 	case noModel
 	case failed(String)
+	case updated(String)
+
+	/// Se muestra aunque la cápsula esté apagada en Ajustes.
+	var isNotice: Bool {
+		if case .updated = self { return true }
+		return false
+	}
 
 	var isWarning: Bool {
 		switch self {
@@ -51,6 +58,7 @@ final class AppModel {
 			if settings.hotkey != oldValue.hotkey { hotkey.hotkey = settings.hotkey }
 			if settings.vocabulary != oldValue.vocabulary { refreshPromptCost() }
 			if settings.unloadAfterMinutes != oldValue.unloadAfterMinutes { scheduleUnload() }
+			if settings.autoUpdate != oldValue.autoUpdate || settings.updateChannel != oldValue.updateChannel { updater.apply(settings) }
 		}
 	}
 
@@ -75,6 +83,8 @@ final class AppModel {
 	private let transcriber = Transcriber()
 	private let hotkey = HotkeyTap()
 	private let overlay = Overlay()
+	let updater = Updater()
+	private var lastDictation = Date.distantPast
 	private var target: NSRunningApplication?
 	private var live: LiveDictation?
 	/// La entrega del dictado anterior: el siguiente espera a que termine de escribir antes de escribir él.
@@ -110,6 +120,19 @@ final class AppModel {
 		refreshPermissions()
 		if modelStatus == .unloaded { preload() }
 		if needsSetup { startPermissionPolling() }
+		updater.isBusy = { [weak self] in
+			guard let self else { return false }
+			return machine.isRecording || live != nil || pill == .transcribing
+		}
+		updater.lastActivity = { [weak self] in self?.lastDictation ?? .distantPast }
+		updater.start(settings: settings)
+		if let version = Updater.takeNotice() {
+			Task {
+				try? await Task.sleep(for: .seconds(1))
+				show(.updated(version))
+				hide(after: 4)
+			}
+		}
 	}
 
 	var needsSetup: Bool { !micGranted || !accessibilityGranted || modelStatus == .missing || isDownloading }
@@ -188,6 +211,7 @@ final class AppModel {
 			live = dictation
 		}
 		recordingStart = .now
+		lastDictation = .now
 		levels = Array(repeating: 0, count: Self.waveformBars)
 		unloadTask?.cancel()
 		show(.listening)
@@ -203,6 +227,7 @@ final class AppModel {
 
 	private func finish() {
 		stopTicking()
+		lastDictation = .now
 		live?.stopListening()
 		let samples = recorder.stop()
 		recordingStart = nil
@@ -317,7 +342,7 @@ final class AppModel {
 	private func show(_ next: Pill) {
 		hideTask?.cancel()
 		pill = next
-		guard settings.showPill || next.isWarning else { return }
+		guard settings.showPill || next.isWarning || next.isNotice else { return }
 		overlay.show(self)
 		if !pillVisible {
 			withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) { pillVisible = true }

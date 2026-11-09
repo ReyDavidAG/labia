@@ -18,7 +18,7 @@ CLASS = "LabiaTray"
 ICON = Path(__file__).with_name("labia.ico")
 WM_TRAY = 0x8000  # WM_APP: tray clicks
 # Commands other processes post to the hidden window (settings window, a second Labia launched from Start).
-COMMANDS = {0x8001: "settings", 0x8002: "history", 0x8003: "restart", 0x8004: "quit"}
+COMMANDS = {0x8001: "settings", 0x8002: "history", 0x8003: "restart", 0x8004: "quit", 0x8005: "update"}
 MESSAGE_OF = {v: k for k, v in COMMANDS.items()}
 WM_CLOSE, WM_COMMAND, WM_LBUTTONUP, WM_RBUTTONUP = 0x0010, 0x0111, 0x0202, 0x0205
 NIM_ADD, NIM_MODIFY, NIM_DELETE = 0, 1, 2
@@ -28,7 +28,7 @@ TPM_RIGHTBUTTON, TPM_RETURNCMD, TPM_NONOTIFY = 0x2, 0x100, 0x80
 IMAGE_ICON, LR_LOADFROMFILE, LR_DEFAULTSIZE = 1, 0x10, 0x40
 IDI_APPLICATION = 32512
 MENU = [(1, "Ajustes…", "settings"), (2, "Historial…", "history"), None, (3, "Pausar", "pause"),
-        (4, "Reiniciar", "restart"), None, (5, "Salir", "quit")]
+        (6, "Buscar actualizaciones", "update"), (4, "Reiniciar", "restart"), None, (5, "Salir", "quit")]
 
 
 class NOTIFYICONDATAW(ctypes.Structure):
@@ -56,17 +56,17 @@ user32.DestroyWindow.argtypes = [w.HWND]
 
 
 def post_to_running(command):
-    """Ask the Labia already running to do `command` ('settings', 'history', 'restart', 'quit'). False if none runs."""
+    """Ask the running Labia to do `command` ('settings', 'history', 'restart', 'quit', 'update'). False if none."""
     hwnd = user32.FindWindowW(CLASS, None)
     return bool(hwnd) and bool(user32.PostMessageW(hwnd, MESSAGE_OF[command], 0, 0))
 
 
 class Tray:
-    """on_command(name) runs on the tray thread with 'settings', 'history', 'pause', 'restart' or 'quit'."""
+    """on_command(name) runs on the tray thread: 'settings', 'history', 'pause', 'update', 'restart' or 'quit'."""
 
     def __init__(self, on_command):
         self.on_command = on_command
-        self.hwnd, self.status, self.paused = None, "Labia", False
+        self.hwnd, self.status, self.paused, self.version = None, "Labia", False, None
         self._taskbar_created = user32.RegisterWindowMessageW("TaskbarCreated")
         self._icon = None
         ready = threading.Event()
@@ -75,10 +75,12 @@ class Tray:
 
     # --- public, any thread ---
 
-    def set_status(self, text, paused=None):
+    def set_status(self, text, paused=None, version=None):
         self.status = text
         if paused is not None:
             self.paused = paused
+        if version is not None:
+            self.version = version
         self._shell(NIM_MODIFY, NIF_TIP)
 
     def notify(self, title, text):
@@ -106,6 +108,8 @@ class Tray:
     def _menu(self):
         menu = user32.CreatePopupMenu()
         user32.AppendMenuW(menu, MF_STRING | MF_GRAYED, 0, self.status)
+        if self.version:
+            user32.AppendMenuW(menu, MF_STRING | MF_GRAYED, 0, f"Versión {self.version}")
         user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
         for item in MENU:
             if item is None:

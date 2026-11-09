@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import sounddevice as sd
 
-from . import audio, core, engine
+from . import audio, core, engine, update, updater
 
 if sys.platform == "win32":
     from . import hotkey_windows as hotkey
@@ -164,13 +164,16 @@ def relaunch():
 
 
 class NullTray:
-    """Linux has no tray icon (yet): same calls, nothing happens."""
+    """Linux has no tray icon (yet): same calls; notifications go through notify-send if it is there."""
 
-    def set_status(self, text, paused=None):
+    def set_status(self, text, paused=None, version=None):
         pass
 
     def notify(self, title, text):
-        pass
+        try:
+            subprocess.run(["notify-send", "--app-name=Labia", title, text], timeout=5)
+        except (OSError, subprocess.TimeoutExpired):
+            print(f"{title}: {text}")
 
     def close(self):
         pass
@@ -181,6 +184,101 @@ def settings_stamp():
         return (core.CONFIG_DIR / "settings.json").stat().st_mtime_ns
     except OSError:
         return None
+
+
+# --- updates (updates/plan.md) --------------------------------------------------------------------------------
+
+UPDATE_FIRST_CHECK = float(os.environ.get("LABIA_UPDATE_FIRST_CHECK", 120))  # s after start; tests shorten it
+UPDATE_EVERY = 6 * 3600
+IDLE_BEFORE_UPDATE = 60  # s without dictating before restarting into a new version
+
+
+def start_updater(u):
+    """Hand the update to labia.update, a separate process that outlives this one (see update.py)."""
+    cmd = [sys.executable, "-m", "labia.update", "--objetivo", u.target, "--rama", u.branch, "--etiqueta", u.label]
+    if u.needs_pip:
+        cmd.append("--pip")
+    if sys.platform != "win32" and "INVOCATION_ID" in os.environ:
+        # Under systemd: run it outside labia.service, or restarting the service would kill it halfway.
+        cmd = ["systemd-run", "--user", "--collect", "--quiet", f"--working-directory={PACKAGE_ROOT}", *cmd]
+    subprocess.Popen(cmd, cwd=PACKAGE_ROOT, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+
+
+class UpdateLoop(threading.Thread):
+    """Looks for a new version now and then. Updates that don't touch this platform are applied on the spot
+    (the code that runs doesn't change); the rest wait in `pending` for the main loop to apply when idle."""
+
+    def __init__(self, root, notify):
+        super().__init__(daemon=True, name="updates")
+        self.root, self.notify = root, notify
+        self.wake, self.manual = threading.Event(), False
+        self.pending = None  # (updater.Update, asked by the user)
+        self.announced = None  # version already announced with auto-update off
+
+    def check_now(self):
+        self.manual = True
+        self.wake.set()
+
+    def run(self):
+        self.wake.wait(UPDATE_FIRST_CHECK)
+        while True:
+            manual, self.manual = self.manual, False
+            self.wake.clear()
+            try:
+                self._check(manual)
+            except Exception as err:  # never let the checker take Labia down
+                update.save_state(checked_at=_now(), error=str(err)[:200])
+                if manual:
+                    self.notify("No se pudo buscar actualizaciones", str(err)[:120])
+            self.wake.wait(UPDATE_EVERY)
+
+    def _check(self, manual):
+        prefs = core.Preferences.load()
+        c = updater.check(self.root, prefs.update_channel)
+        update.save_state(current=c.current, checked_at=_now(), channel=prefs.update_channel, reason=c.reason,
+                          available=c.update.label if c.update else None, error=None)
+        if c.reason:
+            if manual:
+                self.notify("Esta copia no se actualiza sola", c.reason)
+            return
+        u = c.update
+        if u is None:
+            if manual:
+                self.notify("Labia está al día", f"Versión {c.current}")
+            return
+        if not manual and u.target == update.state().get("failed_target"):
+            update.save_state(reason=f"La versión {u.label} no arrancó y se regresó a la anterior; se espera la "
+                                     "siguiente (o «Buscar actualizaciones» para reintentar)")
+            return
+        if not u.affects:
+            updater.advance(self.root, u)
+            update.save_state(current=updater.describe(self.root), available=None)
+            if manual:
+                self.notify("Labia está al día", f"{u.label} no cambia nada de esta plataforma")
+            return
+        if prefs.auto_update or manual:
+            self.pending = (u, manual)
+        elif self.announced != u.label:
+            self.announced = u.label
+            self.notify("Hay una versión nueva de Labia", f"{u.label}: Ajustes → Modelo → Buscar actualizaciones")
+
+
+def _now():
+    from datetime import datetime
+
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def show_notice(notify, head):
+    """What labia.update left for us: «updated to…» or «couldn't update, still on…»."""
+    notice = update.state().get("notice")
+    if not notice:
+        return
+    update.save_state(notice=None)
+    if notice.get("kind") == "updated" and notice.get("target") == head:  # not if we are the old one, rolled back
+        notify("Labia se actualizó", f"Ahora tienes la versión {notice.get('label')}")
+    elif notice.get("kind") == "failed":
+        notify("No se pudo actualizar Labia", f"Sigue la versión {notice.get('previous')}. Detalles en update.log")
 
 
 def run(open_settings=False, restarting=False):
@@ -199,7 +297,9 @@ def run(open_settings=False, restarting=False):
         from .typer import Typer  # needs uinput and wl-copy; keep --simulate usable without them
 
     quitting, paused, restart = threading.Event(), threading.Event(), threading.Event()
-    ready, pill, tray = threading.Event(), None, None
+    ready, pill, tray, updates = threading.Event(), None, None, None
+    root = updater.repo_root()
+    version = updater.describe(root) if root else None
 
     def shutdown_now():
         """Quit while the model still loads: no dictation can be running, nothing to wait for."""
@@ -214,6 +314,11 @@ def run(open_settings=False, restarting=False):
         elif command == "pause":
             (paused.clear if paused.is_set() else paused.set)()
             tray.set_status(status(), paused=paused.is_set())
+        elif command == "update":
+            if updates:
+                updates.check_now()
+            else:
+                tray.notify("Labia no se actualiza sola", "No está instalada desde GitHub (copia de git)")
         elif command in ("restart", "quit"):
             if command == "restart":
                 restart.set()
@@ -230,26 +335,39 @@ def run(open_settings=False, restarting=False):
         return "En pausa" if paused.is_set() else f"Lista · mantén {label} y habla"
 
     tray = tray_windows.Tray(on_command) if windows else NullTray()
-    tray.set_status(status())
+    tray.set_status(status(), version=version)
     if open_settings:
         open_window()
     print("cargando modelo…")
     transcribe = engine.transcriber(engine.load(prefs.model), prefs.language)
     typer = Typer()
     pill = PillClient()
-    gestures, current = core.GestureMachine(), None
+    gestures, current, last_activity, update_to = core.GestureMachine(), None, time.monotonic(), None
     ready.set()
     tray.set_status(status())
+    if root:
+        head = updater.git(root, "rev-parse", "HEAD")
+        show_notice(tray.notify, head)
+        update.save_state(ready=head, current=version, available=None)  # labia.update waits for `ready`
+        updates = UpdateLoop(root, tray.notify)
+        updates.start()
     print(f"listo: mantén {prefs.hotkey} y habla (doble toque = manos libres, esc cancela)")
     for event, t in hotkey.events(prefs.hotkey):
         if quitting.is_set():
             break
+        if updates and updates.pending and not gestures.is_recording and not (current and current.is_alive()):
+            u, manual = updates.pending
+            if manual or time.monotonic() - last_activity > IDLE_BEFORE_UPDATE:
+                update_to = u
+                break
         if paused.is_set():
             if gestures.is_recording and current:
                 current.stop("cancel")
             gestures.reset()
             continue
         action = gestures.handle(event, t)
+        if action is not None:
+            last_activity = time.monotonic()
         if action == core.START:
             if (new := settings_stamp()) != stamp:  # saved from the settings window; hotkey and model need a restart
                 prefs, stamp = core.Preferences.load(), new
@@ -265,12 +383,14 @@ def run(open_settings=False, restarting=False):
             current.stop({core.STOP: "finish", core.CANCEL: "cancel", core.TOO_SHORT: "short"}.get(action, "chord"))
             # no join: this loop also forwards the keyboard, it must never wait on Whisper
 
-    # Quit or restart: a dictation still typing may be holding Ctrl down for a paste, let it finish.
+    # Quit, restart or update: a dictation still typing may be holding Ctrl down for a paste, let it finish.
     if current and current.is_alive():
         if gestures.is_recording:
             current.stop("cancel")
         current.join(10)
     pill.close()
     tray.close()
-    if restart.is_set():
+    if update_to:
+        start_updater(update_to)
+    elif restart.is_set():
         relaunch()
