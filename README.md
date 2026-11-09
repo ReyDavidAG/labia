@@ -46,6 +46,8 @@ Requiere macOS 14 o posterior y una Mac con Apple Silicon (M1 o más nueva).
 
 <p align="center"><img src="docs/img/welcome.png" width="420" alt="Ventana de bienvenida con los tres pasos completos y un cuadro para probar"></p>
 
+**Se actualiza sola** (desde la 1.1.0, con [Sparkle](https://sparkle-project.org)). Busca versiones nuevas cada 6 horas en los releases de este repositorio, baja la nueva en segundo plano, comprueba su firma y la instala cuando no estás dictando: Labia se reinicia y la cápsula dice «Labia se actualizó a…». Una versión que sólo cambia Windows o Linux no reinstala la Mac. En Ajustes › General se apaga o se cambia de canal (Estable o Desarrollo); en Ajustes › Modelo están la versión y «Buscar actualizaciones». Sólo se consulta github.com/ReyDavidAG/labia: no se envía nada de tu Mac.
+
 ### Compilar desde el código
 
 ```bash
@@ -60,6 +62,8 @@ Los permisos de macOS se amarran a la firma. Con firma ad hoc, cada compilación
 ```bash
 LABIA_SIGN_IDENTITY="Apple Development: Tu Nombre (XXXXXXXXXX)" scripts/bundle.sh
 ```
+
+Una compilación local no se actualiza sola a menos que traiga la llave pública de Sparkle (`Resources/SparklePublicKey`). Cómo se publica una versión: [`RELEASING.md`](RELEASING.md).
 
 Para probar el motor sin micrófono: `build/Labia.app/Contents/MacOS/Labia --transcribe audio.wav`. Las capturas de este README se regeneran con `--screenshots docs/img`. Para activar o quitar el arranque al iniciar sesión desde Terminal: `/Applications/Labia.app/Contents/MacOS/Labia --login-item on` (u `off`).
 
@@ -155,7 +159,7 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz
 - Fully local. It uses Whisper large-v3-turbo through WhisperKit on the Apple Neural Engine. Audio never leaves your Mac.
 - A custom vocabulary fixes code-switched terms. On an M2 a sentence takes about 1.5 s, plus ~25 ms per vocabulary token.
 - Double-tap ⌥ for hands-free mode and press esc to cancel. It presses Enter only when you end the dictation with the send keyword («Claude» by default; change or turn it off in Settings).
-- Requires macOS 14+ on Apple Silicon. Download it from [Releases](../../releases), or build it with `scripts/bundle.sh`. The app is not notarized, so run `xattr -dr com.apple.quarantine /Applications/Labia.app` after installing.
+- Requires macOS 14+ on Apple Silicon. Download it from [Releases](../../releases), or build it with `scripts/bundle.sh`. The app is not notarized, so run `xattr -dr com.apple.quarantine /Applications/Labia.app` after installing. From 1.1.0 on it updates itself with Sparkle (EdDSA-signed updates from this repository's releases, installed when you are not dictating).
 - **Linux** (KDE Plasma on Wayland, NVIDIA GPU): see [`linux/`](linux/README.md). It types in real time while you speak and corrects itself every few seconds with a careful Whisper pass, like Apple's volatile and final results. The final pass covers the whole recording with VAD, so silence types nothing.
 - **Windows 11** (NVIDIA GPU): the same Python app with a low-level keyboard hook for AltGr, see [`windows/`](windows/README.md). Install with one PowerShell line: `irm https://raw.githubusercontent.com/ReyDavidAG/labia/main/windows/setup.ps1 -OutFile $env:TEMP\labia-setup.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\labia-setup.ps1`. It shows up in the Start menu and runs from a tray icon (settings, history, pause, restart, quit) with a settings window like the Mac one.
 

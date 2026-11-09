@@ -18,6 +18,12 @@ jobs:
           xcode-version: latest-stable
       - name: Test
         run: swift test
+      # Con el certificado propio «Labia» si están los secretos (no en PR de forks); si no, ad hoc.
+      - name: Signing certificate
+        env:
+          MAC_CERT_P12: ${{ secrets.MAC_CERT_P12 }}
+          MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+        run: scripts/import-cert.sh
       - name: Bundle
         run: scripts/bundle.sh --zip
       - name: Icon
