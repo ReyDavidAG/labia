@@ -125,10 +125,10 @@ def apply(root, target, branch, label, needs_pip):
         old = updater.advance(root, updater.Update(target, label, branch))
         if needs_pip:
             pip_install(root)
-        save_state(ready=None)
+        # The notice goes first: the new Labia reads it the moment it is ready, before we'd see that it is.
+        save_state(ready=None, notice={"kind": "updated", "label": label, "previous": previous, "target": target})
         proc = start_labia(cwd)
         if wait_ready(target, proc):
-            save_state(notice={"kind": "updated", "label": label, "previous": previous})
             log(f"listo: {label}")
             return True
         stop_labia(proc)

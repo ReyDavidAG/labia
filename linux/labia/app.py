@@ -265,13 +265,13 @@ def _now():
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
-def show_notice(notify):
+def show_notice(notify, head):
     """What labia.update left for us: «updated to…» or «couldn't update, still on…»."""
     notice = update.state().get("notice")
     if not notice:
         return
     update.save_state(notice=None)
-    if notice.get("kind") == "updated":
+    if notice.get("kind") == "updated" and notice.get("target") == head:  # not if we are the old one, rolled back
         notify("Labia se actualizó", f"Ahora tienes la versión {notice.get('label')}")
     elif notice.get("kind") == "failed":
         notify("No se pudo actualizar Labia", f"Sigue la versión {notice.get('previous')}. Detalles en update.log")
@@ -342,8 +342,9 @@ def run(open_settings=False, restarting=False):
     ready.set()
     tray.set_status(status())
     if root:
-        update.save_state(ready=updater.git(root, "rev-parse", "HEAD"), current=version)  # labia.update waits for this
-        show_notice(tray.notify)
+        head = updater.git(root, "rev-parse", "HEAD")
+        show_notice(tray.notify, head)
+        update.save_state(ready=head, current=version, available=None)  # labia.update waits for `ready`
         updates = UpdateLoop(root, tray.notify)
         updates.start()
     print(f"listo: mantén {prefs.hotkey} y habla (doble toque = manos libres, esc cancela)")
