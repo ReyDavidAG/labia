@@ -25,11 +25,38 @@ py -3.12 -m venv .venv
 .venv\Scripts\python -m labia          # la primera vez baja el modelo (1.6 GB)
 ```
 
-Cuando dice `listo`, mantén **AltGr** (Alt derecho) en cualquier campo de texto y habla.
+Cuando dice `listo`, mantén **AltGr** (Alt derecho) en cualquier campo de texto y habla. Cierra esa consola y pon Labia en el menú Inicio:
 
-Para que arranque al iniciar sesión, sin ventana de consola: crea un acceso directo en `shell:startup` con destino `<ruta>\labia\linux\.venv\Scripts\pythonw.exe -m labia` e «Iniciar en» `<ruta>\labia\linux`.
+```powershell
+cd ..
+powershell -ExecutionPolicy Bypass -File windows\install.ps1 -Inicio   # sin -Inicio no se abre al iniciar sesión
+```
 
-Los ajustes van en `%APPDATA%\Labia\settings.json` (las mismas claves que en Linux) y el historial en `%APPDATA%\Labia\history.json`.
+Ahora aparece al buscar **Labia** en Inicio, con su ícono. `windows\install.ps1 -Quitar` borra los accesos directos.
+
+## Usarla
+
+<p align="center"><img src="../docs/img/windows-settings.png" width="480" alt="Ventana de ajustes de Labia en Windows, pestaña General: atajo, micrófono, escribir automáticamente, espacio al final, palabra de envío y abrir al iniciar sesión"></p>
+
+- **Abrirla desde Inicio** muestra los ajustes. Si ya estaba abierta, los abre en esa misma: nunca corren dos Labias.
+- **El ícono junto al reloj** dice en qué va (cargando el modelo, lista, en pausa). Clic abre los ajustes; clic derecho, el menú: Ajustes, Historial, Pausar, Reiniciar y Salir. Si no lo ves, está en la flecha **^** de la barra de tareas; arrástralo afuera para tenerlo siempre a la vista.
+- **Pausar** ignora el atajo (para jugar o presentar) sin cerrar Labia. **Salir** espera a que termine el dictado en curso.
+
+La ventana de ajustes tiene las mismas pestañas que en macOS:
+
+| Pestaña | Qué cambias |
+|---|---|
+| General | Atajo, micrófono, escribir automáticamente, espacio al final, palabra de envío («Claude») y abrir al iniciar sesión |
+| Vocabulario | Palabras que Whisper debe escribir bien, una por línea |
+| Reemplazos | «Dices» → «se escribe», por ejemplo «nueva línea» → `\n` |
+| Historial | Los últimos 50 dictados. Doble clic copia |
+| Modelo | Idioma |
+
+Los cambios se usan desde el siguiente dictado. El atajo, el modelo y el idioma piden **Reiniciar Labia** (botón en la ventana o en el menú del ícono).
+
+El micrófono elegido se busca en cada dictado: si lo conectas con Labia abierta, lo encuentra; si no está, usa el predeterminado de Windows. El del DualSense sólo existe con el control conectado por cable.
+
+Todo se guarda en `%APPDATA%\Labia\`: `settings.json` (las mismas claves que en Linux, más `input_device`) e `history.json`, en UTF-8.
 
 ## Cómo escribe
 
@@ -43,7 +70,9 @@ Al terminar regresa lo que tenías en el portapapeles. Lo que pega va marcado pa
 
 ## Problemas comunes
 
-- **No hace nada.** Revisa que la consola diga `listo`. Si el micrófono no capta nada, cámbialo en Configuración → Sistema → Sonido → Entrada: Labia usa el predeterminado.
+- **No hace nada.** Pasa el mouse sobre el ícono junto al reloj: debe decir «Lista», no «Cargando modelo…» ni «En pausa». Si el micrófono no capta nada, elige otro en Ajustes → General.
+- **La cápsula muestra ⚠ y un error al empezar.** No se pudo abrir el micrófono: está desconectado o lo usa otra app en modo exclusivo.
+- **Buscas Labia en Inicio y no sale.** Corre `windows\install.ps1` (ver «Instalar»).
 - **No escribe en una app.** Windows no deja que una app normal mande teclas a una que corre como administrador. Ahí sólo funciona si Labia también corre como administrador.
 - **Una imagen copiada desaparece.** Sólo se restaura el texto del portapapeles.
 - **Avisa que no puede crear enlaces simbólicos al bajar el modelo.** Es sólo una advertencia de Hugging Face; el modelo se baja igual.

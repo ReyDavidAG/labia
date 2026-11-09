@@ -86,14 +86,19 @@ La guía completa, con el arranque como servicio, está en [`linux/README.md`](l
 
 La versión para Windows 11 es la misma de Linux, con el atajo, la escritura y la cápsula propios de Windows: [`windows/README.md`](windows/README.md). Escribe en tiempo real, se corrige sola y se dicta manteniendo **AltGr**. Probada con GPU NVIDIA.
 
+Se usa como app: aparece al buscar **Labia** en el menú Inicio, vive en un ícono junto al reloj (Ajustes, Historial, Pausar, Reiniciar, Salir) y tiene una ventana de ajustes con las mismas pestañas que en macOS, incluido el micrófono.
+
 <p align="center"><img src="docs/img/windows-states.png" alt="La cápsula de Labia en Windows: escuchando, manos libres, transcribiendo, pegado, sin voz y cancelado"></p>
 
 ```powershell
 winget install Git.Git Python.Python.3.12
 git clone https://github.com/ReyDavidAG/labia.git; cd labia\linux
 py -3.12 -m venv .venv; .venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\python -m labia
+.venv\Scripts\python -m labia          # la primera vez baja el modelo (1.6 GB); Ctrl+C al decir «listo»
+cd ..; powershell -ExecutionPolicy Bypass -File windows\install.ps1 -Inicio   # menú Inicio y abrir al iniciar sesión
 ```
+
+Después ábrela desde Inicio. Sin `-Inicio` no se abre sola al iniciar sesión; se puede cambiar después en **Ajustes → General**.
 
 ## Vocabulario: precisión contra velocidad
 
@@ -151,6 +156,6 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario (
 - Double-tap ⌥ for hands-free mode and press esc to cancel. It presses Enter only when you end the dictation with the send keyword («Claude» by default; change or turn it off in Settings).
 - Requires macOS 14+ on Apple Silicon. Download it from [Releases](../../releases), or build it with `scripts/bundle.sh`. The app is not notarized, so run `xattr -dr com.apple.quarantine /Applications/Labia.app` after installing.
 - **Linux** (KDE Plasma on Wayland, NVIDIA GPU): see [`linux/`](linux/README.md). It types in real time while you speak and corrects itself every few seconds with a careful Whisper pass, like Apple's volatile and final results. The final pass covers the whole recording with VAD, so silence types nothing.
-- **Windows 11** (NVIDIA GPU): the same Python app with a low-level keyboard hook for AltGr, see [`windows/`](windows/README.md).
+- **Windows 11** (NVIDIA GPU): the same Python app with a low-level keyboard hook for AltGr, see [`windows/`](windows/README.md). `windows\install.ps1` adds it to the Start menu; it runs from a tray icon (settings, history, pause, restart, quit) with a settings window like the Mac one.
 
 The UI is in Spanish. Set **Ajustes → Modelo → Idioma** to English to dictate in English.

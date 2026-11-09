@@ -1,13 +1,16 @@
 """The live loop: hotkey thread drives the GestureMachine, a worker thread streams mic audio into a Session."""
+import os
 import queue
+import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 
 import numpy as np
 import sounddevice as sd
 
-from . import core, engine
+from . import audio, core, engine
 
 if sys.platform == "win32":
     from . import hotkey_windows as hotkey
@@ -55,6 +58,12 @@ class PillClient:
             except (BrokenPipeError, ValueError):
                 self.proc = None
 
+    def close(self):
+        with self.lock:
+            if self.proc:
+                self.proc.terminate()
+                self.proc = None
+
 
 def level(chunk):
     """Mic chunk -> 0..1 for the waveform, same curve as the macOS Recorder."""
@@ -88,17 +97,21 @@ class Dictation(threading.Thread):
         return sum(map(len, chunks))
 
     def run(self):
-        s, t0 = self.session, time.monotonic()
+        s, t0, stream, began = self.session, time.monotonic(), None, False
         def on_audio(data, *_):
             self.audio.put(data[:, 0].copy())
             self.pill.send(level=level(data[:, 0]))
 
-        stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32", blocksize=800, callback=on_audio)
-        stream.start()  # record from the keypress, even while the previous dictation finishes
-        if self.after:
-            self.after.join()
-        self.typer.begin()
         try:
+            # Inside the try: if the mic can't open (unplugged, busy), the pill must say so instead of
+            # staying on «listening» forever.
+            stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32", blocksize=800,
+                                    device=audio.resolve_device(self.prefs.input_device), callback=on_audio)
+            stream.start()  # record from the keypress, even while the previous dictation finishes
+            if self.after:
+                self.after.join()
+            self.typer.begin()
+            began = True
             while not self.done.wait(STEP):
                 if time.monotonic() - t0 > self.prefs.max_recording_seconds:
                     self.outcome = "finish"
@@ -129,26 +142,119 @@ class Dictation(threading.Thread):
             self.pill.send(state="failed", text=str(err)[:60])
             raise
         finally:
-            stream.close()  # no-op if already closed
-            self.typer.end()
+            if stream:
+                stream.close()  # no-op if already closed
+            if began:  # the typer is shared: don't restore the clipboard under a previous dictation still typing
+                self.typer.end()
 
 
-def run():
-    if sys.platform == "win32":
+PACKAGE_ROOT = Path(__file__).resolve().parent.parent  # the folder holding the labia package: cwd for child processes
+
+
+def open_window(tab="general"):
+    """The settings window, a separate process like the pill (tkinter wants its own main thread)."""
+    subprocess.Popen([sys.executable, "-m", "labia.settings_windows", "--tab", tab], cwd=PACKAGE_ROOT,
+                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+
+
+def relaunch():
+    """A new Labia that waits for this one to exit (single-instance mutex) before taking over."""
+    subprocess.Popen([sys.executable, "-m", "labia", "--reiniciar"], cwd=PACKAGE_ROOT,
+                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+
+
+class NullTray:
+    """Linux has no tray icon (yet): same calls, nothing happens."""
+
+    def set_status(self, text, paused=None):
+        pass
+
+    def notify(self, title, text):
+        pass
+
+    def close(self):
+        pass
+
+
+def settings_stamp():
+    try:
+        return (core.CONFIG_DIR / "settings.json").stat().st_mtime_ns
+    except OSError:
+        return None
+
+
+def run(open_settings=False, restarting=False):
+    windows = sys.platform == "win32"
+    if windows:
+        from . import tray_windows, win32
         from .typer_windows import Typer
+
+        # Before loading the model: a second copy must not take the keyboard. Opened again from Start, it shows
+        # the running one's settings instead of doing nothing.
+        if not win32.claim_single_instance(wait=15 if restarting else 0):
+            if open_settings:
+                tray_windows.post_to_running("settings")
+            raise SystemExit("Labia ya está abierta.")
     else:
         from .typer import Typer  # needs uinput and wl-copy; keep --simulate usable without them
 
-    prefs = core.Preferences.load()
+    quitting, paused, restart = threading.Event(), threading.Event(), threading.Event()
+    ready, pill, tray = threading.Event(), None, None
+
+    def shutdown_now():
+        """Quit while the model still loads: no dictation can be running, nothing to wait for."""
+        tray.close()
+        if restart.is_set():
+            relaunch()
+        os._exit(0)
+
+    def on_command(command):  # tray thread
+        if command in ("settings", "history"):
+            open_window("history" if command == "history" else "general")
+        elif command == "pause":
+            (paused.clear if paused.is_set() else paused.set)()
+            tray.set_status(status(), paused=paused.is_set())
+        elif command in ("restart", "quit"):
+            if command == "restart":
+                restart.set()
+            quitting.set()
+            if not ready.is_set():
+                shutdown_now()
+
+    prefs, stamp = core.Preferences.load(), settings_stamp()
+    label = getattr(hotkey, "LABELS", {}).get(prefs.hotkey, prefs.hotkey)
+
+    def status():
+        if not ready.is_set():
+            return "Cargando modelo…"
+        return "En pausa" if paused.is_set() else f"Lista · mantén {label} y habla"
+
+    tray = tray_windows.Tray(on_command) if windows else NullTray()
+    tray.set_status(status())
+    if open_settings:
+        open_window()
     print("cargando modelo…")
     transcribe = engine.transcriber(engine.load(prefs.model), prefs.language)
     typer = Typer()
     pill = PillClient()
     gestures, current = core.GestureMachine(), None
+    ready.set()
+    tray.set_status(status())
     print(f"listo: mantén {prefs.hotkey} y habla (doble toque = manos libres, esc cancela)")
     for event, t in hotkey.events(prefs.hotkey):
+        if quitting.is_set():
+            break
+        if paused.is_set():
+            if gestures.is_recording and current:
+                current.stop("cancel")
+            gestures.reset()
+            continue
         action = gestures.handle(event, t)
         if action == core.START:
+            if (new := settings_stamp()) != stamp:  # saved from the settings window; hotkey and model need a restart
+                prefs, stamp = core.Preferences.load(), new
+            if not (current and current.is_alive()):
+                audio.refresh()  # no stream open now: pick up a mic plugged in since the last dictation
             pill.send(state="listening")
             current = Dictation(transcribe, prefs, typer, pill, after=current)
             current.start()
@@ -158,3 +264,13 @@ def run():
         elif action in (core.STOP, core.CANCEL, core.TOO_SHORT, core.CHORD) and current:
             current.stop({core.STOP: "finish", core.CANCEL: "cancel", core.TOO_SHORT: "short"}.get(action, "chord"))
             # no join: this loop also forwards the keyboard, it must never wait on Whisper
+
+    # Quit or restart: a dictation still typing may be holding Ctrl down for a paste, let it finish.
+    if current and current.is_alive():
+        if gestures.is_recording:
+            current.stop("cancel")
+        current.join(10)
+    pill.close()
+    tray.close()
+    if restart.is_set():
+        relaunch()
