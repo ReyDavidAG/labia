@@ -68,6 +68,18 @@ import Testing
 		#expect(!s.sounds)
 		#expect(s.unloadAfterMinutes == 30)
 		#expect(s.vocabulary == Preferences.defaultVocabulary)
+		#expect(s.autoUpdate)
+		#expect(s.updateChannel == .stable)
+	}
+
+	@Test func updateChannelMatchesWindowsValues() throws {
+		let dev = try JSONDecoder().decode(Preferences.self, from: Data(#"{"updateChannel":"desarrollo","autoUpdate":false}"#.utf8))
+		#expect(dev.updateChannel == .development)
+		#expect(!dev.autoUpdate)
+		let unknown = try JSONDecoder().decode(Preferences.self, from: Data(#"{"updateChannel":"nocturno"}"#.utf8))
+		#expect(unknown.updateChannel == .stable)
+		#expect(UpdateChannel.stable.feedURL.hasSuffix("/releases/latest/download/appcast.xml"))
+		#expect(UpdateChannel.development.feedURL.hasSuffix("/releases/download/desarrollo/appcast.xml"))
 	}
 
 	@Test func roundTripsThroughDefaults() throws {

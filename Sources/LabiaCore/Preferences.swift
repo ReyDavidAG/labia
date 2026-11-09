@@ -38,6 +38,31 @@ public enum Hotkey: String, Codable, CaseIterable, Sendable, Identifiable {
 	}
 }
 
+/// De dónde salen las actualizaciones (updates/plan.md). Los valores son los mismos que en Windows y Linux.
+public enum UpdateChannel: String, Codable, CaseIterable, Sendable, Identifiable {
+	/// Sólo versiones publicadas (lo que llega a `main`).
+	case stable = "estable"
+	/// La punta de `develop`, pensado para el autor.
+	case development = "desarrollo"
+
+	public var id: String { rawValue }
+
+	public var label: String {
+		switch self {
+		case .stable: "Estable (versiones publicadas)"
+		case .development: "Desarrollo (sigue develop)"
+		}
+	}
+
+	/// El feed de Sparkle de cada canal: archivos de los releases de GitHub, sin servidor propio.
+	public var feedURL: String {
+		switch self {
+		case .stable: "https://github.com/ReyDavidAG/labia/releases/latest/download/appcast.xml"
+		case .development: "https://github.com/ReyDavidAG/labia/releases/download/desarrollo/appcast.xml"
+		}
+	}
+}
+
 public struct Preferences: Codable, Equatable, Sendable {
 	public static let defaultVocabulary = [
 		"develop", "pull request", "deploy", "endpoint", "lint", "cron", "GitHub", "Vercel", "Supabase",
@@ -63,6 +88,8 @@ public struct Preferences: Codable, Equatable, Sendable {
 	public var replacements = Preferences.defaultReplacements
 	public var unloadAfterMinutes = 30
 	public var maxRecordingSeconds = 300
+	public var autoUpdate = true
+	public var updateChannel = UpdateChannel.stable
 
 	public init() {}
 
@@ -83,6 +110,8 @@ public struct Preferences: Codable, Equatable, Sendable {
 		replacements = (try? c.decode([Replacement].self, forKey: .replacements)) ?? d.replacements
 		unloadAfterMinutes = (try? c.decode(Int.self, forKey: .unloadAfterMinutes)) ?? d.unloadAfterMinutes
 		maxRecordingSeconds = (try? c.decode(Int.self, forKey: .maxRecordingSeconds)) ?? d.maxRecordingSeconds
+		autoUpdate = (try? c.decode(Bool.self, forKey: .autoUpdate)) ?? d.autoUpdate
+		updateChannel = (try? c.decode(UpdateChannel.self, forKey: .updateChannel)) ?? d.updateChannel
 	}
 
 	public var prompt: String? {
