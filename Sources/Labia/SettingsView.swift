@@ -40,6 +40,8 @@ private struct GeneralTab: View {
 			}
 			Section {
 				Toggle("Pegar automáticamente", isOn: $model.settings.autoPaste)
+				Toggle("Escribir mientras hablas", isOn: $model.settings.liveTyping)
+					.disabled(!model.settings.autoPaste)
 				Toggle("Restaurar el portapapeles después de pegar", isOn: $model.settings.restoreClipboard)
 				Toggle("Agregar un espacio al final", isOn: $model.settings.trailingSpace)
 			}

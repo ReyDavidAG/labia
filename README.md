@@ -11,7 +11,7 @@ Dictado en español para macOS, Linux y Windows, en cualquier app y sin internet
 
 ---
 
-Labia vive en la barra de menú. Mantienes **⌥ derecho**, dices lo que quieres escribir y al soltar el texto aparece donde está el cursor: la terminal, el navegador, Slack, VS Code o un chat con una IA.
+Labia vive en la barra de menú. Mantienes **⌥ derecho** y hablas: el texto aparece donde está el cursor mientras lo dices, y al soltar Labia lo corrige con una última pasada. Sirve en la terminal, el navegador, Slack, VS Code o un chat con una IA.
 
 - **Local.** Transcribe con [Whisper large-v3-turbo](https://huggingface.co/argmaxinc/whisperkit-coreml) vía [WhisperKit](https://github.com/argmaxinc/argmax-oss-swift) en el Neural Engine de tu Mac. El audio nunca sale de tu equipo ni se guarda en disco.
 - **Entiende tu spanglish.** Le das tu vocabulario (`commit`, `pull request`, `useApiQuery`, `Vercel`) y lo escribe bien, con sus mayúsculas.
@@ -21,9 +21,9 @@ Labia vive en la barra de menú. Mantienes **⌥ derecho**, dices lo que quieres
 
 | Gesto | Qué hace |
 |---|---|
-| Mantener ⌥ derecho | Graba mientras lo sostienes; al soltar transcribe y pega |
+| Mantener ⌥ derecho | Escribe mientras lo sostienes; al soltar corrige con la pasada final |
 | Doble toque ⌥ | Manos libres: sigue grabando hasta el siguiente toque (máximo 5 min) |
-| esc mientras grabas | Cancela sin transcribir |
+| esc mientras grabas | Cancela y borra lo que ya había escrito |
 | ⌥ + otra tecla | Se ignora: puedes seguir usando ⌥ para acentos y atajos |
 
 Una cápsula abajo al centro de la pantalla te dice en qué va: escuchando (con el volumen real del micrófono), transcribiendo, pegado y cuántas palabras.
@@ -125,12 +125,15 @@ Para lo demás están los **Reemplazos**, que traen `nueva línea` → salto de 
 ## Cómo funciona
 
 ```
-CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario (cortado en pausas si pasa de 30 s)
-  → limpieza (alucinaciones de silencio, vocabulario, reemplazos)
-  → portapapeles + ⌘V simulado → restaurar portapapeles → historial
+CGEventTap (atajo) → AVAudioEngine 16 kHz
+  → cada 0.5 s: WhisperKit turbo sobre los últimos ≤10 s → LocalAgreement → retrocesos + ⌘V de lo nuevo
+  → cada 3 s de audio: pasada cuidadosa que corrige lo ya escrito
+  → al soltar: WhisperKit + vocabulario sobre toda la grabación (cortada en pausas si pasa de 30 s)
+  → limpieza (alucinaciones de silencio, vocabulario, reemplazos) → corrección final → restaurar portapapeles → historial
 ```
 
-- `Sources/LabiaCore`: lógica pura con pruebas: los gestos como máquina de estados, la limpieza del texto, las preferencias y el historial.
+- `Sources/LabiaCore`: lógica pura con pruebas: los gestos como máquina de estados, la limpieza del texto, el dictado en tiempo real (`LiveSession`, el mismo algoritmo que `linux/labia/stream.py`), las preferencias y el historial.
+- `Labia --simulate audio.wav` pasa una grabación como si se dictara en vivo e imprime cada pasada y lo que tardó.
 - `Sources/Labia`: la app (SwiftUI + AppKit).
 
 ## Problemas comunes
@@ -149,7 +152,7 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz → WhisperKit turbo + vocabulario (
 
 ## English
 
-**Labia** is a push-to-talk dictation app for macOS, tuned for Spanish speakers who mix English tech terms. Hold **right ⌥**, speak, and release: the text is pasted wherever your cursor is.
+**Labia** is a push-to-talk dictation app for macOS, tuned for Spanish speakers who mix English tech terms. Hold **right ⌥** and speak: the text appears wherever your cursor is as you talk, a careful pass every 3 s fixes what is already typed, and on release a final pass with your vocabulary settles it (turn live typing off in Settings to paste only on release).
 
 - Fully local. It uses Whisper large-v3-turbo through WhisperKit on the Apple Neural Engine. Audio never leaves your Mac.
 - A custom vocabulary fixes code-switched terms. On an M2 a sentence takes about 1.5 s, plus ~25 ms per vocabulary token.

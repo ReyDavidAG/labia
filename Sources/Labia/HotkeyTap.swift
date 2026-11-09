@@ -45,6 +45,7 @@ final class HotkeyTap {
 			return pass
 		}
 		guard isEnabled, let onEvent else { return pass }
+		guard event.getIntegerValueField(.eventSourceUserData) != Paster.syntheticMark else { return pass }
 		let code = event.getIntegerValueField(.keyboardEventKeycode)
 		let now = ProcessInfo.processInfo.systemUptime
 		switch type {

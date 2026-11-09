@@ -13,8 +13,9 @@
 | 6. Palabra de envío «Claude» | ✅ v0.2.0 |
 | 7. Versión Linux (`linux/`, ver `linux/state.md`) | ✅ v0.3.0 |
 | 8. Versión Windows (`windows/`, ver `windows/state.md`) | ✅ v0.4.0 |
-| 9. Ícono 1.0 «Dicho y escrito» (`propuesta/logos.html`) | 🧪 en `develop`; falta verlo en una Mac |
-| 10. Windows como app: menú Inicio, ícono junto al reloj, ajustes (`windows/app/`) | 🧪 en `feature/windows-app`; ver `windows/app/state.md` |
+| 9. Ícono 1.0 «Dicho y escrito» (`propuesta/logos.html`) | ✅ regenerado en la Mac con los 10 tamaños |
+| 10. Windows como app: menú Inicio, ícono junto al reloj, ajustes (`windows/app/`) | 🧪 en `develop`; ver `windows/app/state.md` |
+| 11. Tiempo real en macOS | ✅ simulación con el modelo real y prueba en vivo del usuario en Claude Code (2026-11-08) |
 
 ## Para probar en macOS (desde `develop`)
 
@@ -23,6 +24,15 @@
 3. Terminar con «Claude» en la terminal: el Enter llega después del pegado.
 4. Con «Restaurar portapapeles» apagado, el texto dictado se queda en el portapapeles aunque cierres Labia.
 5. Pendiente aparte: `feature/mac-long-audio` (dictados de más de 30 s), ver «Pendientes» en `windows/plan.md`.
+
+## Tiempo real en macOS (2026-11-08)
+
+- `LiveSession` (LabiaCore) es el port de `linux/labia/stream.py` con las mismas pruebas; `LiveDictation` (app) es el `Dictation` de `app.py` y escribe como `typer_windows.py`: retrocesos, pegados de ≤400 caracteres que esperan a que la app lea (datos diferidos) y los espacios del final como teclas.
+- Pasadas sin prompt (bucles en audio corto); la rápida sin fallback de temperatura y la cuidadosa con 5. La pasada final es la de siempre: vocabulario como prompt + cortes en pausas.
+- Medido con `Labia --simulate` en la M2 (voz de `say -v Paulina`, 4 s y 44 s): mediana 0.66–0.74 s por pasada, máximo 1.13 s; el texto va 1–2 s detrás de la voz.
+- Las teclas que manda Labia llevan `eventSourceUserData` = `Paster.syntheticMark`: sin eso el atajo las tomaba como «⌥ + otra tecla» y cancelaba el dictado. Salen de una fuente `.privateState` para que no se les sume el ⌥ que se está manteniendo.
+- La pasada cuidadosa no cambia palabras que sólo difieren en mayúsculas: «Revisa» → «revisa» borraba y reescribía todo lo que seguía.
+- Probado en vivo por el usuario dictando en Claude Code: funciona. Falta revisar VS Code y el navegador, esc a media frase y un dictado de más de 1 min.
 
 ## Hallazgos
 

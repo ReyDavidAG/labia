@@ -51,6 +51,7 @@ public struct Preferences: Codable, Equatable, Sendable {
 
 	public var hotkey: Hotkey = .rightOption
 	public var autoPaste = true
+	public var liveTyping = true
 	public var restoreClipboard = true
 	public var trailingSpace = true
 	public var sendOnKeyword = true
@@ -70,6 +71,7 @@ public struct Preferences: Codable, Equatable, Sendable {
 		let d = Preferences()
 		hotkey = (try? c.decode(Hotkey.self, forKey: .hotkey)) ?? d.hotkey
 		autoPaste = (try? c.decode(Bool.self, forKey: .autoPaste)) ?? d.autoPaste
+		liveTyping = (try? c.decode(Bool.self, forKey: .liveTyping)) ?? d.liveTyping
 		restoreClipboard = (try? c.decode(Bool.self, forKey: .restoreClipboard)) ?? d.restoreClipboard
 		trailingSpace = (try? c.decode(Bool.self, forKey: .trailingSpace)) ?? d.trailingSpace
 		sendOnKeyword = (try? c.decode(Bool.self, forKey: .sendOnKeyword)) ?? d.sendOnKeyword
