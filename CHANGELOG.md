@@ -1,5 +1,16 @@
 # Cambios
 
+## 1.2.1 · 2026-11-10
+
+Labia ya no se queda callada cuando pierde el permiso de Accesibilidad.
+
+### macOS
+
+- Los botones «Abrir Ajustes» y «Permitir» abren Privacidad y seguridad también en macOS 26; la dirección vieja ya no abría nada.
+- Si Labia pierde el permiso de Accesibilidad (una actualización con otra firma, o lo quitaste), lo nota en segundos: la cápsula avisa «Labia perdió el permiso de Accesibilidad · actívalo de nuevo» y se abre la bienvenida para activarlo. Antes sólo cambiaba el ícono y el atajo dejaba de funcionar sin aviso.
+- «Abrir Ajustes» borra el permiso viejo de otra firma (que en la lista sale activado pero no vale) para que macOS lo pida de nuevo.
+- `saveRecordings` guarda los últimos 20 dictados en `~/Library/Application Support/Labia/Recordings/`, con fecha y hora en el nombre, en lugar de sólo el último en `last.wav`. `saveLastRecording` sigue funcionando.
+
 ## 1.2.0 · 2026-11-10
 
 Dictados largos confiables en macOS: llegan completos hasta la última palabra, ya no se borran y no se pegan donde no deben.
