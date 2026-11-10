@@ -34,12 +34,12 @@ public struct LocalAgreement: Sendable {
 
 	public var text: String { committed.map(\.text).joined() }
 
-	func fresh(_ words: [Word]) -> [Word] {
+	func fresh(_ words: [Word], overlap: Int = 5) -> [Word] {
 		guard let last = committed.last else { return words }
 		// Por el inicio de la última palabra: Whisper estira el final de la última palabra del búfer.
 		let new = words.filter { $0.start > last.start + 0.05 }
 		// Las mismas palabras pueden regresar al principio de la pasada siguiente: se quita ese traslape.
-		for n in stride(from: min(5, new.count, committed.count), to: 0, by: -1) {
+		for n in stride(from: min(overlap, new.count, committed.count), to: 0, by: -1) {
 			if committed.suffix(n).map(\.text).map(fold) == new.prefix(n).map(\.text).map(fold) {
 				return Array(new.dropFirst(n))
 			}
@@ -113,6 +113,7 @@ public final class LiveSession {
 	/// La pasada final de un dictado largo empieza este tanto antes de la ventana: Whisper mueve los tiempos
 	/// de las palabras y las de la orilla se perdían. Lo que repite se quita por tiempo y por texto.
 	public static let finalOverlapSeconds = 3.0
+	public static let finalOverlapWords = 20
 	/// Una pasada final con menos de `garbageRatio` de las palabras ya confirmadas para el mismo audio se descarta
 	/// y se quedan esas: con el vocabulario como prompt, Whisper a veces regresa vacío y se borraba el final o todo
 	/// el dictado. Si la pasada cubre toda la grabación y hay menos palabras en pantalla (una alucinación sobre
@@ -204,7 +205,9 @@ public final class LiveSession {
 		let shift = Double(start) / Double(Self.sampleRate)
 		var frozen = LocalAgreement()
 		frozen.committed = agreement.committed.filter { $0.start < windowStart }
-		let tail = frozen.fresh(words.map { Word($0.start + shift, $0.end + shift, $0.text) })
+		// En el traslape, Whisper puede ubicar una frase entera más tarde que las pasadas en vivo: se compara texto
+		// hasta `finalOverlapWords` palabras (en una prueba real se repitió una frase de 11).
+		let tail = frozen.fresh(words.map { Word($0.start + shift, $0.end + shift, $0.text) }, overlap: Self.finalOverlapWords)
 		return settle(frozen: frozen.committed, tail: tail.map(\.text).joined())
 	}
 

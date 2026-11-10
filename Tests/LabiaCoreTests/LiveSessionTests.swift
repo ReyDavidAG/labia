@@ -165,6 +165,21 @@ import Testing
 		#expect(screen == "uno dos tres cuatro cinco. ")
 	}
 
+	@Test func longFinalPassDropsAPhraseItPlacesLater() {
+		let s = LiveSession(preferences: preferences(send: false))
+		var screen = ""
+		for _ in 0..<11 { s.feed(second) }
+		let phrase = " que ya quede todo más sencillo y más fácil para ellos".split(separator: " ").map { " " + $0 }
+		let said = phrase.enumerated().map { i, w in Word(Double(i) * 0.3, Double(i) * 0.3 + 0.25, w) }
+		step(s, said + [Word(4, 4.3, " implementar")], screen: &screen)
+		step(s, said + [Word(4, 4.3, " implementar")], screen: &screen)
+		for _ in 0..<20 { s.feed(second) }
+		let late = phrase.enumerated().map { i, w in Word(Double(i) * 0.3 + 3.2, Double(i) * 0.3 + 3.45, w) }
+		let (back, add, _) = s.finish(words: late + [Word(7, 7.3, " implementar"), Word(7.4, 7.6, " ya.")], from: s.finalStart!)
+		screen = String(screen.dropLast(back)) + add
+		#expect(screen == "que ya quede todo más sencillo y más fácil para ellos implementar ya. ")
+	}
+
 	@Test func emptyLongFinalPassKeepsTheWordsHeardLive() {
 		let s = LiveSession(preferences: preferences(send: false))
 		var screen = ""

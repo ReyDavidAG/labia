@@ -71,6 +71,8 @@ Causas encontradas y arreglo:
 
 Simulación (`Labia --simulate`, voz de `say -v Paulina`, 48 s, 4 corridas): el texto llega completo hasta la última frase; la pasada final tarda 1.3–3.3 s (antes 4.5 s sobre todo el audio). En una corrida con pasadas lentas al arranque la ventana pasó de 25 s, se detuvo la escritura en vivo y la final escribió todo (13.8 s).
 
+Prueba real del usuario (2026-11-10, dictando en Claude Code dentro de VS Code, 2 min 3 s): llegó completo hasta la última frase, sin cortes ni borrados. Una frase de 11 palabras salió duplicada en la unión con la pasada final (Whisper la ubicó más tarde que las pasadas en vivo y el traslape por texto sólo veía 5 palabras): `finalOverlapWords` = 20 y la prueba `longFinalPassDropsAPhraseItPlacesLater`. La pasada única sobre todo el audio (lo de antes) inventó frases en ese mismo audio («Para grabar la transcripción…»); la nueva no.
+
 Costo aceptado: en dictados largos el texto que ya salió de la ventana viene de las pasadas en vivo (sin vocabulario como prompt); `TextCleaner` corrige las variantes con las mismas letras, no las palabras mal oídas.
 
 Falta probar en la Mac (`swift test && scripts/bundle.sh && open build/Labia.app`):
