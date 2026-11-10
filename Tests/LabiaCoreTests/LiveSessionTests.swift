@@ -157,11 +157,31 @@ import Testing
 		step(s, hypothesis, screen: &screen)
 		step(s, hypothesis, screen: &screen)
 		for _ in 0..<20 { s.feed(second) }
-		#expect(s.finalStart == Int(1.4 * Double(LiveSession.sampleRate)))
-		let (back, add, _) = s.finish(raw: " tres, cuatro cinco.", from: s.finalStart)
+		#expect(s.finalStart == 0)
+		let final = [Word(0.5, 0.9, " dos"), Word(1.0, 1.4, " tres,"), Word(1.6, 1.9, " cuatro"), Word(2.0, 2.4, " cinco.")]
+		let (back, add, _) = s.finish(words: final, from: 0)
 		screen = String(screen.dropLast(back)) + add
 		#expect(back == 0)
 		#expect(screen == "uno dos tres cuatro cinco. ")
+	}
+
+	@Test func emptyLongFinalPassKeepsTheWordsHeardLive() {
+		let s = LiveSession(preferences: preferences(send: false))
+		var screen = ""
+		for _ in 0..<11 { s.feed(second) }
+		step(s, words(" uno", " dos", " tres"), screen: &screen)
+		step(s, words(" uno", " dos", " tres"), screen: &screen)
+		let late = [Word(1.6, 1.9, " cuatro"), Word(2.0, 2.4, " cinco"), Word(2.5, 2.9, " seis")]
+		let voice = [Float](repeating: 0.1, count: LiveSession.sampleRate)
+		for _ in 0..<3 {
+			s.feed(voice)
+			step(s, late, screen: &screen)
+		}
+		#expect(screen == "uno dos tres cuatro cinco")
+		for _ in 0..<20 { s.feed(second) }
+		let (back, add, _) = s.finish(words: [], from: s.finalStart!)
+		screen = String(screen.dropLast(back)) + add
+		#expect(screen == "uno dos tres cuatro cinco seis ")
 	}
 
 	@Test func shortRecordingsGetAFullFinalPass() {
@@ -170,16 +190,15 @@ import Testing
 		var screen = ""
 		step(s, words(" uno", " dos", " tres"), screen: &screen)
 		step(s, words(" uno", " dos", " tres"), screen: &screen)
-		#expect(s.finalStart == 0)
+		#expect(s.finalStart == nil)
 	}
 
 	@Test func aWindowWithNothingConfirmedStopsLivePasses() {
 		let s = LiveSession(preferences: preferences(send: false))
 		for _ in 0..<26 { s.feed(second) }
 		#expect(s.nextPass() == nil)
-		#expect(s.finalStart == 0)
 		for _ in 0..<5 { s.feed(second) }
-		#expect(s.finalStart == 0)
+		#expect(s.finalStart == nil)
 	}
 
 	@Test func discardErasesEverything() {

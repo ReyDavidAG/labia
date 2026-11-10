@@ -87,13 +87,18 @@ final class LiveDictation {
 		await loop?.value
 		if samples.count > pulled { session.feed(Array(samples[pulled...])) }
 		do {
-			let start = min(session.finalStart, samples.count)
-			let rest = Array(samples[start...])
-			// Sin voz en lo que falta, Whisper inventaría una frase («Gracias.») al final.
-			let raw = start > 0 && !LiveSession.hasVoice(rest)
-				? ""
-				: try await transcriber.transcribe(rest, prompt: settings.prompt, language: settings.language)
-			let (back, text, send) = session.finish(raw: raw, from: start)
+			let (back, text, send): (Int, String, Bool)
+			if let start = session.finalStart, start < samples.count {
+				let rest = Array(samples[start...])
+				// Sin voz en lo que falta, Whisper inventaría una frase («Gracias.») al final.
+				let words = LiveSession.hasVoice(rest)
+					? try await transcriber.transcribeWords(rest, prompt: settings.prompt, language: settings.language)
+					: []
+				(back, text, send) = session.finish(words: words, from: start)
+			} else {
+				let raw = try await transcriber.transcribe(samples, prompt: settings.prompt, language: settings.language)
+				(back, text, send) = session.finish(raw: raw)
+			}
 			await type(back, text)
 			let final = session.typed.trimmingCharacters(in: .whitespacesAndNewlines)
 			if missed {
