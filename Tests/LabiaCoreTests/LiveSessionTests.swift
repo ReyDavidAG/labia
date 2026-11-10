@@ -117,6 +117,27 @@ import Testing
 		#expect(back == "Uno dos tres".count)
 	}
 
+	@Test func emptyFinalPassKeepsALongDraft() {
+		let s = LiveSession(preferences: preferences(send: false))
+		s.feed(second)
+		var screen = ""
+		let draft = words(" Revisa", " que", " el", " build", " pase", " ya")
+		step(s, draft, screen: &screen)
+		step(s, draft, screen: &screen)
+		#expect(screen == "Revisa que el build pase")
+		let (back, add, _) = s.finish(raw: "")
+		screen = String(screen.dropLast(back)) + add
+		#expect(screen == "Revisa que el build pase ya ")
+	}
+
+	@Test func voiceAmongLongPausesIsNotSilence() {
+		var audio = [Float](repeating: 0, count: 60 * LiveSession.sampleRate)
+		#expect(!LiveSession.hasVoice(audio))
+		for i in 0..<LiveSession.sampleRate { audio[i] = 0.02 }
+		#expect(LiveSession.rms(audio) < LiveSession.silenceRMS)
+		#expect(LiveSession.hasVoice(audio))
+	}
+
 	@Test func windowIsTrimmedPastTenSecondsKeepingCommittedText() {
 		let s = LiveSession(preferences: preferences(send: false))
 		var screen = ""

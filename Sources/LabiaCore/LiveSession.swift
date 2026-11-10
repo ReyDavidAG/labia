@@ -104,6 +104,10 @@ public final class LiveSession {
 	public static let refineSeconds = 3.0
 	/// Una pasada cuidadosa con menos de esta parte de las palabras que reemplaza es basura y se ignora.
 	public static let garbageRatio = 0.6
+	/// Una pasada final con menos de `garbageRatio` de las palabras ya confirmadas se descarta y se quedan esas:
+	/// en audio largo Whisper a veces regresa vacío y se borraba todo el dictado. Con menos palabras en pantalla
+	/// (una alucinación sobre silencio, «Gracias.») sí se borra.
+	public static let keepMinWords = 4
 	/// Por debajo de este volumen (RMS) el audio nuevo es silencio.
 	public static let silenceRMS: Float = 0.004
 
@@ -162,9 +166,22 @@ public final class LiveSession {
 		return (values.reduce(0) { $0 + $1 * $1 } / Float(values.count)).squareRoot()
 	}
 
+	/// Si algún tramo de 0.1 s pasa de `silenceRMS`. El promedio de toda la grabación no sirve:
+	/// las pausas de un dictado largo lo bajan y se tomaba como silencio.
+	public static func hasVoice(_ samples: [Float]) -> Bool {
+		let frame = sampleRate / 10
+		return stride(from: 0, to: samples.count, by: frame).contains { start in
+			rms(samples[start..<min(start + frame, samples.count)]) > silenceRMS
+		}
+	}
+
 	/// El texto de la pasada final sobre toda la grabación. Regresa lo que hay que cambiar en pantalla y si se envía.
 	public func finish(raw: String) -> (back: Int, text: String, send: Bool) {
 		var text = clean(raw)
+		let kept = clean(agreement.text)
+		if Self.wordCount(typed) >= Self.keepMinWords, Double(Self.wordCount(text)) < Self.garbageRatio * Double(Self.wordCount(kept)) {
+			text = kept
+		}
 		var send = false
 		if preferences.sendOnKeyword {
 			(text, send) = SendKeyword.split(text, keywords: preferences.sendKeywords)
@@ -174,6 +191,10 @@ public final class LiveSession {
 		}
 		let (back, add) = apply(text)
 		return (back, add, send)
+	}
+
+	static func wordCount(_ text: String) -> Int {
+		text.split(whereSeparator: \.isWhitespace).count
 	}
 
 	/// Borra todo lo escrito (dictado cancelado).

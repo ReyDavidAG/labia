@@ -49,7 +49,6 @@ enum SettingsTab: Hashable {
 final class AppModel {
 	static let historyURL = Transcriber.base.appending(path: "history.json")
 	static let waveformBars = 24
-	static let silenceRMS = LiveSession.silenceRMS
 
 	var settings: Preferences {
 		didSet {
@@ -233,7 +232,7 @@ final class AppModel {
 		recordingStart = nil
 		let seconds = Double(samples.count) / Recorder.sampleRate
 		guard seconds >= machine.minHold else { return discardLive(.short) }
-		guard Recorder.rms(samples) > Self.silenceRMS else { return discardLive(.silent) }
+		guard LiveSession.hasVoice(samples) else { return discardLive(.silent) }
 		show(.transcribing)
 		play("Pop")
 		let settings = settings
