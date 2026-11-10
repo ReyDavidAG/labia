@@ -49,6 +49,8 @@ enum SettingsTab: Hashable {
 final class AppModel {
 	static let historyURL = Transcriber.base.appending(path: "history.json")
 	static let waveformBars = 24
+	/// Se sigue grabando esto después de soltar: casi siempre se suelta mientras suena la última sílaba.
+	static let tail: Duration = .milliseconds(300)
 
 	var settings: Preferences {
 		didSet {
@@ -88,6 +90,7 @@ final class AppModel {
 	private var live: LiveDictation?
 	/// La entrega del dictado anterior: el siguiente espera a que termine de escribir antes de escribir él.
 	private var delivery: Task<Void, Never>?
+	private var tailTask: Task<Void, Never>?
 	private var tickTimer: Timer?
 	private var permissionTimer: Timer?
 	private var hideTask: Task<Void, Never>?
@@ -121,7 +124,7 @@ final class AppModel {
 		if needsSetup { startPermissionPolling() }
 		updater.isBusy = { [weak self] in
 			guard let self else { return false }
-			return machine.isRecording || live != nil || pill == .transcribing
+			return machine.isRecording || tailTask != nil || live != nil || pill == .transcribing
 		}
 		updater.lastActivity = { [weak self] in self?.lastDictation ?? .distantPast }
 		updater.start(settings: settings)
@@ -185,6 +188,7 @@ final class AppModel {
 	}
 
 	private func begin() {
+		complete()
 		guard modelStatus != .missing, !isDownloading else {
 			machine.reset()
 			flash(.noModel)
@@ -227,9 +231,21 @@ final class AppModel {
 	private func finish() {
 		stopTicking()
 		lastDictation = .now
+		recordingStart = nil
+		tailTask = Task {
+			try? await Task.sleep(for: Self.tail)
+			guard !Task.isCancelled else { return }
+			complete()
+		}
+	}
+
+	/// Cierra la grabación después de la cola. Si empieza otro dictado antes, la cola se corta ahí.
+	private func complete() {
+		guard let tailTask else { return }
+		tailTask.cancel()
+		self.tailTask = nil
 		live?.stopListening()
 		let samples = recorder.stop()
-		recordingStart = nil
 		let seconds = Double(samples.count) / Recorder.sampleRate
 		guard seconds >= machine.minHold else { return discardLive(.short) }
 		guard LiveSession.hasVoice(samples) else { return discardLive(.silent) }
