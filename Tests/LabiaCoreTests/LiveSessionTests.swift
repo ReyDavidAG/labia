@@ -149,6 +149,29 @@ import Testing
 		#expect(screen == "uno dos")
 	}
 
+	@Test func longFinalPassKeepsTextBeforeTheWindow() {
+		let s = LiveSession(preferences: preferences(send: false))
+		var screen = ""
+		for _ in 0..<31 { s.feed(second) }
+		let hypothesis = words(" uno", " dos", " tres")
+		step(s, hypothesis, screen: &screen)
+		step(s, hypothesis, screen: &screen)
+		#expect(s.finalStart == Int(1.4 * Double(LiveSession.sampleRate)))
+		let (back, add, _) = s.finish(raw: " tres, cuatro cinco.", from: s.finalStart)
+		screen = String(screen.dropLast(back)) + add
+		#expect(back == 0)
+		#expect(screen == "uno dos tres cuatro cinco. ")
+	}
+
+	@Test func shortRecordingsGetAFullFinalPass() {
+		let s = LiveSession(preferences: preferences(send: false))
+		for _ in 0..<11 { s.feed(second) }
+		var screen = ""
+		step(s, words(" uno", " dos", " tres"), screen: &screen)
+		step(s, words(" uno", " dos", " tres"), screen: &screen)
+		#expect(s.finalStart == 0)
+	}
+
 	@Test func discardErasesEverything() {
 		let s = LiveSession(preferences: preferences())
 		s.feed(second)

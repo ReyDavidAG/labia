@@ -76,15 +76,21 @@ final class LiveDictation {
 		listening = false
 	}
 
-	/// Pasada final sobre toda la grabación (con vocabulario y cortes en pausas) y corrección de lo escrito.
+	/// Pasada final (con vocabulario y cortes en pausas) y corrección de lo escrito. En grabaciones largas
+	/// sólo cubre la parte que todavía no es definitiva (`LiveSession.finalStart`).
 	/// Si no se pudo escribir todo, el texto completo queda en el portapapeles y regresa por qué.
 	func finish(_ samples: [Float]) async throws -> (text: String, miss: Miss?) {
 		stopListening()
 		await loop?.value
 		if samples.count > pulled { session.feed(Array(samples[pulled...])) }
 		do {
-			let raw = try await transcriber.transcribe(samples, prompt: settings.prompt, language: settings.language)
-			let (back, text, send) = session.finish(raw: raw)
+			let start = min(session.finalStart, samples.count)
+			let rest = Array(samples[start...])
+			// Sin voz en lo que falta, Whisper inventaría una frase («Gracias.») al final.
+			let raw = start > 0 && !LiveSession.hasVoice(rest)
+				? ""
+				: try await transcriber.transcribe(rest, prompt: settings.prompt, language: settings.language)
+			let (back, text, send) = session.finish(raw: raw, from: start)
 			await type(back, text)
 			let final = session.typed.trimmingCharacters(in: .whitespacesAndNewlines)
 			if missed {

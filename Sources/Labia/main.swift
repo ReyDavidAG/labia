@@ -64,10 +64,11 @@ if let i = arguments.firstIndex(of: "--simulate"), arguments.count > i + 1 {
 				print(String(format: "%6.1fs  %@ %.2fs  -%-3d +%@", Double(fed) / rate, kind == .careful ? "cuidadosa" : "rápida   ", costs.last!, back, add.debugDescription))
 			}
 			let start = Date()
-			let raw = try await transcriber.transcribe(audio, prompt: settings.prompt, language: settings.language)
-			let (back, add, send) = session.finish(raw: raw)
+			let from = session.finalStart
+			let raw = try await transcriber.transcribe(Array(audio[from...]), prompt: settings.prompt, language: settings.language)
+			let (back, add, send) = session.finish(raw: raw, from: from)
 			screen = String(screen.dropLast(back)) + add
-			print(String(format: "final  %.2fs  -%d +%@ enviar=%@", Date().timeIntervalSince(start), back, add.debugDescription, send ? "sí" : "no"))
+			print(String(format: "final desde %.1fs  %.2fs  -%d +%@ enviar=%@", Double(from) / rate, Date().timeIntervalSince(start), back, add.debugDescription, send ? "sí" : "no"))
 			let sorted = costs.sorted()
 			print(String(format: "\npasadas: %d, mediana %.2fs, máx %.2fs", costs.count, sorted[sorted.count / 2], sorted.last ?? 0))
 			print("\n\(screen)")

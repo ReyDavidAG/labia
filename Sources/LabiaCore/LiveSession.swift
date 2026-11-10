@@ -104,6 +104,9 @@ public final class LiveSession {
 	public static let refineSeconds = 3.0
 	/// Una pasada cuidadosa con menos de esta parte de las palabras que reemplaza es basura y se ignora.
 	public static let garbageRatio = 0.6
+	/// Hasta esta duración la pasada final cubre toda la grabación. Más larga, sólo la ventana abierta:
+	/// lo que ya salió de ella se queda y la corrección final no borra medio dictado.
+	public static let fullPassSeconds = 30.0
 	/// Una pasada final con menos de `garbageRatio` de las palabras ya confirmadas se descarta y se quedan esas:
 	/// en audio largo Whisper a veces regresa vacío y se borraba todo el dictado. Con menos palabras en pantalla
 	/// (una alucinación sobre silencio, «Gracias.») sí se borra.
@@ -131,6 +134,11 @@ public final class LiveSession {
 	}
 
 	private var windowStart: Double { Double(offset) / Double(Self.sampleRate) }
+
+	/// Desde qué muestra de la grabación se hace la pasada final; se le pasa a `finish(raw:from:)`.
+	public var finalStart: Int {
+		Double(samples) / Double(Self.sampleRate) > Self.fullPassSeconds ? offset : 0
+	}
 
 	/// La pasada que toca y el audio de la ventana para hacerla, o `nil` si no hace falta:
 	/// si sólo llegó silencio, la pasada anterior no cambió nada y no quedan palabras por confirmar,
@@ -175,9 +183,9 @@ public final class LiveSession {
 		}
 	}
 
-	/// El texto de la pasada final sobre toda la grabación. Regresa lo que hay que cambiar en pantalla y si se envía.
-	public func finish(raw: String) -> (back: Int, text: String, send: Bool) {
-		var text = clean(raw)
+	/// El texto de la pasada final sobre la grabación desde `start`. Regresa lo que hay que cambiar en pantalla y si se envía.
+	public func finish(raw: String, from start: Int = 0) -> (back: Int, text: String, send: Bool) {
+		var text = clean(start > 0 ? frozen(before: start, then: raw) : raw)
 		let kept = clean(agreement.text)
 		if Self.wordCount(typed) >= Self.keepMinWords, Double(Self.wordCount(text)) < Self.garbageRatio * Double(Self.wordCount(kept)) {
 			text = kept
@@ -200,6 +208,18 @@ public final class LiveSession {
 	/// Borra todo lo escrito (dictado cancelado).
 	public func discard() -> Int {
 		apply("").back
+	}
+
+	/// Las palabras confirmadas antes de `start` seguidas de `raw`, sin repetir las que `raw` vuelve a traer al inicio.
+	private func frozen(before start: Int, then raw: String) -> String {
+		let kept = agreement.committed.filter { $0.start < Double(start) / Double(Self.sampleRate) }.map(\.text)
+		var tail = raw.split(whereSeparator: \.isWhitespace).map(String.init)
+		for n in stride(from: min(3, kept.count, tail.count), to: 0, by: -1)
+		where kept.suffix(n).map(fold) == tail.prefix(n).map(fold) {
+			tail.removeFirst(n)
+			break
+		}
+		return kept.joined() + " " + tail.joined(separator: " ")
 	}
 
 	private func refine(_ words: [Word]) {
