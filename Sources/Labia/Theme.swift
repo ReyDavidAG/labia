@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Los colores del ícono «Dicho y escrito».
@@ -9,6 +10,35 @@ enum Brand {
 	static let indigo = Color(red: 0.129, green: 0.063, blue: 0.416)
 
 	static let gradient = LinearGradient(colors: [violetLight, violetDeep], startPoint: .topLeading, endPoint: .bottomTrailing)
+
+	/// Violeta para texto: más claro en modo oscuro para que se lea.
+	static let accent = Color(nsColor: NSColor(name: nil) { appearance in
+		appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+			? NSColor(red: 0.612, green: 0.549, blue: 1, alpha: 1)
+			: NSColor(red: 0.353, green: 0.263, blue: 0.886, alpha: 1)
+	})
+}
+
+/// El botón principal: violeta sólido aunque la ventana no esté activa.
+struct BrandButtonStyle: ButtonStyle {
+	var large = false
+	@Environment(\.isEnabled) private var isEnabled
+
+	func makeBody(configuration: Configuration) -> some View {
+		configuration.label
+			.font(.system(size: large ? 14 : 13, weight: .semibold))
+			.foregroundStyle(.white)
+			.padding(.horizontal, large ? 18 : 12)
+			.padding(.vertical, large ? 7 : 4)
+			.background(RoundedRectangle(cornerRadius: large ? 8 : 6, style: .continuous).fill(Brand.violet.gradient))
+			.opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.45)
+			.contentShape(Rectangle())
+	}
+}
+
+extension ButtonStyle where Self == BrandButtonStyle {
+	static var brand: BrandButtonStyle { BrandButtonStyle() }
+	static var brandLarge: BrandButtonStyle { BrandButtonStyle(large: true) }
 }
 
 /// Mosaico de color con un símbolo, como los de Ajustes del Sistema.

@@ -25,7 +25,12 @@ enum Screenshots {
 			model.settingsTab = tab
 			save(SettingsView(model: model), size: CGSize(width: 580, height: 480), dark: false, to: folder.appending(path: "\(name).png"))
 		}
-		save(OnboardingView(model: model), size: CGSize(width: 520, height: 600), dark: false, to: folder.appending(path: "welcome.png"))
+		for step in OnboardingView.Step.allCases {
+			for dark in [false, true] {
+				let name = "welcome-\(step.rawValue + 1)\(dark ? "-dark" : "").png"
+				save(OnboardingView(model: model, initialStep: step), size: CGSize(width: 760, height: 500), dark: dark, to: folder.appending(path: name))
+			}
+		}
 	}
 
 	private static func sampleLevel(_ i: Int) -> Float {
