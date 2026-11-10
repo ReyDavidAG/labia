@@ -9,6 +9,13 @@
 - Ajustes › General: «Actualizar automáticamente» y canal Estable o Desarrollo. Ajustes › Modelo: versión con su commit y «Buscar actualizaciones», también en el menú.
 - La app se firma con un certificado propio, siempre el mismo: el permiso de Accesibilidad sobrevive a cada actualización. Al pasar de la 1.0 hay que darlo una última vez.
 - `Labia --login-item` sin `on` u `off` sólo dice cómo está; antes cualquier otra cosa lo apagaba.
+- Dictados largos: ya no se pierde lo último. Con el vocabulario como prompt, Whisper dejaba vacío el tramo final; ahora cada tramo vacío o muy corto se repite sin prompt.
+- Ya no se borra lo dictado: rozar otra tecla después del primer segundo no cancela, una pasada final vacía no borra lo escrito y las pausas largas no hacen que todo cuente como silencio.
+- Labia sigue grabando 300 ms después de soltar el atajo: la última palabra ya no se corta.
+- Si la app no lee el pegado, o cambiaste de app, hiciste clic o tecleaste mientras Labia escribía, ya no borra ni pega a ciegas: el dictado completo queda en el portapapeles y la cápsula lo avisa.
+- En dictados de más de 30 s la pasada final sólo rehace los últimos segundos: termina antes y no reescribe todo el texto.
+- Menos trabajo del procesador al dictar: pausa mínima entre pasadas, tope a la ventana en vivo y la onda de la cápsula a 20 cuadros por segundo.
+- `defaults write io.github.reydavidag.labia saveLastRecording -bool true` guarda cada dictado en `~/Library/Application Support/Labia/last.wav` para revisarlo con `Labia --simulate`.
 
 ### Windows y Linux
 
