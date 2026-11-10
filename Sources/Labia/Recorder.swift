@@ -9,12 +9,11 @@ enum RecorderError: LocalizedError {
 final class Recorder {
 	static let sampleRate = 16_000.0
 
-	var onLevel: ((Float) -> Void)?
-
 	private var engine: AVAudioEngine?
 	private var converter: AVAudioConverter?
 	private let lock = NSLock()
 	private var samples: [Float] = []
+	private var peak: Float = 0
 	private let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Recorder.sampleRate, channels: 1, interleaved: false)!
 
 	func start() throws {
@@ -64,8 +63,37 @@ final class Recorder {
 		}
 		guard error == nil, let channel = output.floatChannelData?[0] else { return }
 		let chunk = UnsafeBufferPointer(start: channel, count: Int(output.frameLength))
-		lock.withLock { samples.append(contentsOf: chunk) }
-		onLevel?(Self.level(Self.rms(chunk)))
+		let level = Self.level(Self.rms(chunk))
+		lock.withLock {
+			samples.append(contentsOf: chunk)
+			peak = max(peak, level)
+		}
+	}
+
+	/// El nivel más alto desde la última vez que se pidió: la onda lo lee a su ritmo, sin una tarea por bloque de audio.
+	func takeLevel() -> Float {
+		lock.withLock {
+			defer { peak = 0 }
+			return peak
+		}
+	}
+
+	/// WAV de 16 kHz para revisar un dictado con `Labia --simulate` o `--transcribe`.
+	static func write(_ samples: [Float], to url: URL) throws {
+		let settings: [String: Any] = [
+			AVFormatIDKey: kAudioFormatLinearPCM,
+			AVSampleRateKey: sampleRate,
+			AVNumberOfChannelsKey: 1,
+			AVLinearPCMBitDepthKey: 16,
+			AVLinearPCMIsFloatKey: false,
+		]
+		let file = try AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
+		guard let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(samples.count)),
+			let channel = buffer.floatChannelData?[0]
+		else { return }
+		buffer.frameLength = AVAudioFrameCount(samples.count)
+		samples.withUnsafeBufferPointer { channel.update(from: $0.baseAddress!, count: samples.count) }
+		try file.write(from: buffer)
 	}
 
 	static func rms<C: Collection>(_ values: C) -> Float where C.Element == Float {

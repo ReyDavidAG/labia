@@ -51,7 +51,7 @@ final class HotkeyTap {
 		switch type {
 		case .flagsChanged:
 			guard code == hotkey.keyCode else {
-				_ = onEvent(.otherKey)
+				_ = onEvent(.otherKey(now))
 				return pass
 			}
 			let down = event.flags.rawValue & hotkey.deviceMask != 0
@@ -62,7 +62,7 @@ final class HotkeyTap {
 			if code == Self.escapeKeyCode {
 				return onEvent(.escape) ? nil : pass
 			}
-			_ = onEvent(.otherKey)
+			_ = onEvent(.otherKey(now))
 		default:
 			break
 		}

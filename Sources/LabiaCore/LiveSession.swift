@@ -34,12 +34,12 @@ public struct LocalAgreement: Sendable {
 
 	public var text: String { committed.map(\.text).joined() }
 
-	func fresh(_ words: [Word]) -> [Word] {
+	func fresh(_ words: [Word], overlap: Int = 5) -> [Word] {
 		guard let last = committed.last else { return words }
 		// Por el inicio de la última palabra: Whisper estira el final de la última palabra del búfer.
 		let new = words.filter { $0.start > last.start + 0.05 }
 		// Las mismas palabras pueden regresar al principio de la pasada siguiente: se quita ese traslape.
-		for n in stride(from: min(5, new.count, committed.count), to: 0, by: -1) {
+		for n in stride(from: min(overlap, new.count, committed.count), to: 0, by: -1) {
 			if committed.suffix(n).map(\.text).map(fold) == new.prefix(n).map(\.text).map(fold) {
 				return Array(new.dropFirst(n))
 			}
@@ -104,6 +104,21 @@ public final class LiveSession {
 	public static let refineSeconds = 3.0
 	/// Una pasada cuidadosa con menos de esta parte de las palabras que reemplaza es basura y se ignora.
 	public static let garbageRatio = 0.6
+	/// Una ventana más larga (nada se confirmó en todo ese tiempo) ya no se transcribe en vivo: cada pasada costaría
+	/// cada vez más. Lo que falta lo escribe la pasada final, que en grabaciones largas empieza justo ahí.
+	public static let maxWindowSeconds = 25.0
+	/// Hasta esta duración la pasada final cubre toda la grabación. Más larga, sólo la ventana abierta:
+	/// lo que ya salió de ella se queda y la corrección final no borra medio dictado.
+	public static let fullPassSeconds = 30.0
+	/// La pasada final de un dictado largo empieza este tanto antes de la ventana: Whisper mueve los tiempos
+	/// de las palabras y las de la orilla se perdían. Lo que repite se quita por tiempo y por texto.
+	public static let finalOverlapSeconds = 3.0
+	public static let finalOverlapWords = 20
+	/// Una pasada final con menos de `garbageRatio` de las palabras ya confirmadas para el mismo audio se descarta
+	/// y se quedan esas: con el vocabulario como prompt, Whisper a veces regresa vacío y se borraba el final o todo
+	/// el dictado. Si la pasada cubre toda la grabación y hay menos palabras en pantalla (una alucinación sobre
+	/// silencio, «Gracias.»), sí se borra.
+	public static let keepMinWords = 4
 	/// Por debajo de este volumen (RMS) el audio nuevo es silencio.
 	public static let silenceRMS: Float = 0.004
 
@@ -128,6 +143,13 @@ public final class LiveSession {
 
 	private var windowStart: Double { Double(offset) / Double(Self.sampleRate) }
 
+	/// Desde qué muestra de la grabación se hace la pasada final de un dictado largo, para `finish(words:from:)`.
+	/// `nil`: la pasada final cubre toda la grabación y va a `finish(raw:)`.
+	public var finalStart: Int? {
+		guard Double(samples) / Double(Self.sampleRate) > Self.fullPassSeconds, offset > 0 else { return nil }
+		return max(0, offset - Int(Self.finalOverlapSeconds * Double(Self.sampleRate)))
+	}
+
 	/// La pasada que toca y el audio de la ventana para hacerla, o `nil` si no hace falta:
 	/// si sólo llegó silencio, la pasada anterior no cambió nada y no quedan palabras por confirmar,
 	/// otra pasada tampoco cambiaría nada.
@@ -136,6 +158,7 @@ public final class LiveSession {
 		let fresh = window.suffix(samples - passedAt)
 		passedAt = samples
 		if settled, !fresh.isEmpty, Self.rms(fresh) < Self.silenceRMS { return nil }
+		if Double(window.count) / Double(Self.sampleRate) > Self.maxWindowSeconds { return nil }
 		if samples - refinedAt >= Int(Self.refineSeconds * Double(Self.sampleRate)), !agreement.committed.isEmpty {
 			refinedAt = samples
 			return (window, .careful)
@@ -162,9 +185,41 @@ public final class LiveSession {
 		return (values.reduce(0) { $0 + $1 * $1 } / Float(values.count)).squareRoot()
 	}
 
+	/// Si algún tramo de 0.1 s pasa de `silenceRMS`. El promedio de toda la grabación no sirve:
+	/// las pausas de un dictado largo lo bajan y se tomaba como silencio.
+	public static func hasVoice(_ samples: [Float]) -> Bool {
+		let frame = sampleRate / 10
+		return stride(from: 0, to: samples.count, by: frame).contains { start in
+			rms(samples[start..<min(start + frame, samples.count)]) > silenceRMS
+		}
+	}
+
 	/// El texto de la pasada final sobre toda la grabación. Regresa lo que hay que cambiar en pantalla y si se envía.
 	public func finish(raw: String) -> (back: Int, text: String, send: Bool) {
-		var text = clean(raw)
+		settle(frozen: [], tail: raw)
+	}
+
+	/// La pasada final de un dictado largo: palabras con tiempos desde `start` (`finalStart`). Lo que ya salió
+	/// de la ventana se queda como está y sólo se reemplaza lo que sigue.
+	public func finish(words: [Word], from start: Int) -> (back: Int, text: String, send: Bool) {
+		let shift = Double(start) / Double(Self.sampleRate)
+		var frozen = LocalAgreement()
+		frozen.committed = agreement.committed.filter { $0.start < windowStart }
+		// En el traslape, Whisper puede ubicar una frase entera más tarde que las pasadas en vivo: se compara texto
+		// hasta `finalOverlapWords` palabras (en una prueba real se repitió una frase de 11).
+		let tail = frozen.fresh(words.map { Word($0.start + shift, $0.end + shift, $0.text) }, overlap: Self.finalOverlapWords)
+		return settle(frozen: frozen.committed, tail: tail.map(\.text).joined())
+	}
+
+	private func settle(frozen: [Word], tail raw: String) -> (back: Int, text: String, send: Bool) {
+		let heard = agreement.committed.dropFirst(frozen.count)
+		var tail = raw
+		if !frozen.isEmpty || Self.wordCount(typed) >= Self.keepMinWords,
+			Double(Self.wordCount(clean(raw))) < Self.garbageRatio * Double(heard.count)
+		{
+			tail = heard.map(\.text).joined()
+		}
+		var text = clean(frozen.map(\.text).joined() + " " + tail)
 		var send = false
 		if preferences.sendOnKeyword {
 			(text, send) = SendKeyword.split(text, keywords: preferences.sendKeywords)
@@ -174,6 +229,10 @@ public final class LiveSession {
 		}
 		let (back, add) = apply(text)
 		return (back, add, send)
+	}
+
+	static func wordCount(_ text: String) -> Int {
+		text.split(whereSeparator: \.isWhitespace).count
 	}
 
 	/// Borra todo lo escrito (dictado cancelado).

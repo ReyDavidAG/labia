@@ -10,6 +10,8 @@ enum Pill: Equatable {
 	case locked
 	case transcribing
 	case done(words: Int, pasted: Bool)
+	/// No se pudo escribir: el dictado completo quedó en el portapapeles.
+	case unpasted(LiveDictation.Miss)
 	case short
 	case cancelled
 	case silent
@@ -26,7 +28,7 @@ enum Pill: Equatable {
 
 	var isWarning: Bool {
 		switch self {
-		case .short, .cancelled, .silent, .permission, .noModel, .failed: true
+		case .short, .cancelled, .silent, .permission, .noModel, .failed, .unpasted: true
 		default: false
 		}
 	}
@@ -48,8 +50,12 @@ enum SettingsTab: Hashable {
 @MainActor @Observable
 final class AppModel {
 	static let historyURL = Transcriber.base.appending(path: "history.json")
+	/// Con `defaults write io.github.reydavidag.labia saveLastRecording -bool true`, cada dictado se guarda aquí
+	/// (encima del anterior) para revisarlo con `Labia --simulate`.
+	static let lastRecordingURL = Transcriber.base.appending(path: "last.wav")
 	static let waveformBars = 24
-	static let silenceRMS = LiveSession.silenceRMS
+	/// Se sigue grabando esto después de soltar: casi siempre se suelta mientras suena la última sílaba.
+	static let tail: Duration = .milliseconds(300)
 
 	var settings: Preferences {
 		didSet {
@@ -89,6 +95,7 @@ final class AppModel {
 	private var live: LiveDictation?
 	/// La entrega del dictado anterior: el siguiente espera a que termine de escribir antes de escribir él.
 	private var delivery: Task<Void, Never>?
+	private var tailTask: Task<Void, Never>?
 	private var tickTimer: Timer?
 	private var permissionTimer: Timer?
 	private var hideTask: Task<Void, Never>?
@@ -114,15 +121,15 @@ final class AppModel {
 		hotkey.onEvent = { [weak self] event in
 			MainActor.assumeIsolated { self?.handle(event) ?? false }
 		}
-		recorder.onLevel = { [weak self] level in
-			Task { @MainActor in self?.push(level) }
+		NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { _ in
+			MainActor.assumeIsolated { LiveDictation.userInput += 1 }
 		}
 		refreshPermissions()
 		if modelStatus == .unloaded { preload() }
 		if needsSetup { startPermissionPolling() }
 		updater.isBusy = { [weak self] in
 			guard let self else { return false }
-			return machine.isRecording || live != nil || pill == .transcribing
+			return machine.isRecording || tailTask != nil || live != nil || pill == .transcribing
 		}
 		updater.lastActivity = { [weak self] in self?.lastDictation ?? .distantPast }
 		updater.start(settings: settings)
@@ -172,6 +179,7 @@ final class AppModel {
 	// MARK: Gestos
 
 	private func handle(_ event: GestureEvent) -> Bool {
+		if case .otherKey = event { LiveDictation.userInput += 1 }
 		let swallow = event == .escape && machine.swallowsEscape
 		guard let action = machine.handle(event) else { return swallow }
 		switch action {
@@ -186,6 +194,7 @@ final class AppModel {
 	}
 
 	private func begin() {
+		complete()
 		guard modelStatus != .missing, !isDownloading else {
 			machine.reset()
 			flash(.noModel)
@@ -228,12 +237,28 @@ final class AppModel {
 	private func finish() {
 		stopTicking()
 		lastDictation = .now
+		recordingStart = nil
+		tailTask = Task {
+			try? await Task.sleep(for: Self.tail)
+			guard !Task.isCancelled else { return }
+			complete()
+		}
+	}
+
+	/// Cierra la grabación después de la cola. Si empieza otro dictado antes, la cola se corta ahí.
+	private func complete() {
+		guard let tailTask else { return }
+		tailTask.cancel()
+		self.tailTask = nil
 		live?.stopListening()
 		let samples = recorder.stop()
-		recordingStart = nil
+		if UserDefaults.standard.bool(forKey: "saveLastRecording"), !samples.isEmpty {
+			let url = Self.lastRecordingURL
+			Task.detached(priority: .utility) { try? Recorder.write(samples, to: url) }
+		}
 		let seconds = Double(samples.count) / Recorder.sampleRate
 		guard seconds >= machine.minHold else { return discardLive(.short) }
-		guard Recorder.rms(samples) > Self.silenceRMS else { return discardLive(.silent) }
+		guard LiveSession.hasVoice(samples) else { return discardLive(.silent) }
 		show(.transcribing)
 		play("Pop")
 		let settings = settings
@@ -242,13 +267,18 @@ final class AppModel {
 			self.live = nil
 			delivery = Task {
 				do {
-					let (text, _) = try await live.finish(samples)
+					let (text, miss) = try await live.finish(samples)
 					modelStatus = .ready
 					guard !text.isEmpty else { return flash(.silent) }
 					history.add(HistoryEntry(text: text, seconds: seconds, app: target?.localizedName))
 					try? history.save(to: Self.historyURL)
-					show(.done(words: text.split(whereSeparator: \.isWhitespace).count, pasted: true))
-					hide(after: 0.9)
+					if let miss {
+						show(.unpasted(miss))
+						hide(after: 3)
+					} else {
+						show(.done(words: text.split(whereSeparator: \.isWhitespace).count, pasted: true))
+						hide(after: 0.9)
+					}
 				} catch {
 					flash(.failed("No se pudo transcribir"))
 				}
@@ -256,13 +286,15 @@ final class AppModel {
 			}
 			return
 		}
-		Task {
+		let previous = delivery
+		delivery = Task {
 			do {
 				let raw = try await transcriber.transcribe(samples, prompt: settings.prompt, language: settings.language)
 				modelStatus = .ready
 				let text = TextCleaner.clean(raw, replacements: settings.replacements, vocabulary: settings.vocabulary)
 				guard !text.isEmpty else { return flash(.silent) }
-				deliver(text, seconds: seconds, app: target?.localizedName, settings: settings)
+				await previous?.value
+				await deliver(text, seconds: seconds, app: target?.localizedName, settings: settings)
 			} catch {
 				flash(.failed("No se pudo transcribir"))
 			}
@@ -287,23 +319,27 @@ final class AppModel {
 		if let reason { flash(reason) } else { hide(after: 0) }
 	}
 
-	private func deliver(_ dictated: String, seconds: Double, app: String?, settings: Preferences) {
+	private func deliver(_ dictated: String, seconds: Double, app: String?, settings: Preferences) async {
 		refreshPermissions()
 		let canPaste = settings.autoPaste && accessibilityGranted
 		let (text, send) = settings.sendOnKeyword && canPaste
 			? SendKeyword.split(dictated, keywords: settings.sendKeywords)
 			: (dictated, false)
 		let output = settings.trailingSpace && !send && !text.hasSuffix("\n") ? text + " " : text
-		if canPaste {
-			Paster.paste(output, restore: settings.restoreClipboard, thenReturn: send)
-		} else {
-			Paster.copy(output)
-		}
 		if !text.isEmpty {
 			history.add(HistoryEntry(text: text, seconds: seconds, app: app))
 			try? history.save(to: Self.historyURL)
 		}
-		show(.done(words: text.split(whereSeparator: \.isWhitespace).count, pasted: canPaste))
+		guard canPaste else {
+			Paster.copy(output)
+			show(.done(words: text.split(whereSeparator: \.isWhitespace).count, pasted: false))
+			return hide(after: 0.9)
+		}
+		guard await Paster.paste(output, restore: settings.restoreClipboard, thenReturn: send) else {
+			show(.unpasted(.unread))
+			return hide(after: 3)
+		}
+		show(.done(words: text.split(whereSeparator: \.isWhitespace).count, pasted: true))
 		hide(after: 0.9)
 	}
 
@@ -320,6 +356,7 @@ final class AppModel {
 	}
 
 	private func tick() {
+		push(recorder.takeLevel())
 		if let action = machine.handle(.tick(ProcessInfo.processInfo.systemUptime)) {
 			if action == .tooShort { abort(.short) }
 			return

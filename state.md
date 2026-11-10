@@ -1,6 +1,6 @@
 # Labia · state
 
-Última actualización: 2026-11-08
+Última actualización: 2026-11-10
 
 | Fase | Estado |
 |---|---|
@@ -18,6 +18,7 @@
 | 11. Tiempo real en macOS | ✅ simulación con el modelo real y prueba en vivo del usuario en Claude Code (2026-11-08) |
 | 12. Release 1.0.0 | ✅ v1.0.0, con las pruebas manuales de «Antes de la 1.0» hechas por el usuario |
 | 13. Actualizaciones automáticas en las tres plataformas (`updates/`) | ✅ v1.1.0. Falta probar Linux en un equipo real y la prueba de punta a punta con 1.1.1. Ver `updates/state.md` |
+| 14. Dictados largos confiables en macOS (`feature/mac-dictation-reliability`) | ✅ v1.2.0, probado por el usuario con un dictado real de 2 min (abajo) |
 
 ## Antes de la 1.0 (pruebas manuales) · ✅ probadas por el usuario el 2026-11-08
 
@@ -52,6 +53,37 @@ Si algo falla, el arreglo va en `release/1.0.0` (o en un `fix/*` que salga de ah
 - La pasada cuidadosa no cambia palabras que sólo difieren en mayúsculas: «Revisa» → «revisa» borraba y reescribía todo lo que seguía.
 - Con silencio, la pasada se salta si la anterior no cambió nada y no quedan palabras por confirmar (`LocalAgreement.pending`): en una pausa de 4 s se ahorran 4 de 8 pasadas y nada se escribe más tarde.
 - Probado en vivo por el usuario dictando en Claude Code: funciona. Falta revisar VS Code y el navegador, esc a media frase y un dictado de más de 1 min.
+
+## Dictados largos confiables en macOS (2026-11-10)
+
+Rama `feature/mac-dictation-reliability`. Lo que reportó el usuario: en audios largos se cortaban frases, se perdía lo último, a veces se borraba todo lo dictado, y al cambiar de cursor el pegado fallaba.
+
+Causas encontradas y arreglo:
+
+| Síntoma | Causa | Arreglo |
+|---|---|---|
+| Se pierde lo último | Con el vocabulario como prompt, Whisper regresa vacío en un tramo corto (medido: los últimos 6.6 s de un dictado de 48 s salían vacíos; sin prompt, completos) | `Transcriber.pass` corta en tramos y repite sin prompt el que tenga menos de 0.5 palabras/s |
+| Se borra todo | Otra tecla en cualquier momento cancelaba; una pasada final vacía borraba lo escrito; el RMS promedio de una grabación con pausas largas contaba como silencio | `GestureMachine.chordWindow` (1 s); `LiveSession.settle` conserva lo oído en vivo si la final trae menos del 60 %; `LiveSession.hasVoice` por tramos de 0.1 s |
+| Se corta la última palabra | La grabación paraba al soltar | `AppModel.tail`: 300 ms más |
+| Falla al cambiar de cursor | Retrocesos y pegados suponían que el cursor no se movía; un pegado no leído bloqueaba todo sin avisar y restauraba el portapapeles viejo | `LiveDictation` deja de escribir si cambian la app al frente, un clic o una tecla del usuario (`userInput`); el dictado queda copiado y la cápsula dice «Cambiaste de lugar» o «No se pudo pegar» |
+| Final lento y reescribe todo | La pasada final rehacía toda la grabación | En más de 30 s, `finish(words:from:)` sólo cubre la ventana más 3 s de traslape, alineado por tiempos de palabra |
+| Procesador | Pasadas continuas (cada una tardaba más que el paso de 0.5 s) | `LiveDictation.rest` 250 ms; `maxWindowSeconds` 25; nivel de la onda leído en el tick |
+
+Simulación (`Labia --simulate`, voz de `say -v Paulina`, 48 s, 4 corridas): el texto llega completo hasta la última frase; la pasada final tarda 1.3–3.3 s (antes 4.5 s sobre todo el audio). En una corrida con pasadas lentas al arranque la ventana pasó de 25 s, se detuvo la escritura en vivo y la final escribió todo (13.8 s).
+
+Prueba real del usuario (2026-11-10, dictando en Claude Code dentro de VS Code, 2 min 3 s): llegó completo hasta la última frase, sin cortes ni borrados. Una frase de 11 palabras salió duplicada en la unión con la pasada final (Whisper la ubicó más tarde que las pasadas en vivo y el traslape por texto sólo veía 5 palabras): `finalOverlapWords` = 20 y la prueba `longFinalPassDropsAPhraseItPlacesLater`. La pasada única sobre todo el audio (lo de antes) inventó frases en ese mismo audio («Para grabar la transcripción…»); la nueva no.
+
+Costo aceptado: en dictados largos el texto que ya salió de la ventana viene de las pasadas en vivo (sin vocabulario como prompt); `TextCleaner` corrige las variantes con las mismas letras, no las palabras mal oídas.
+
+Falta probar en la Mac (`swift test && scripts/bundle.sh && open build/Labia.app`):
+
+1. Un dictado de 1–2 min manteniendo ⌥: llega completo, con la última frase.
+2. Rozar Shift o otra tecla a media frase: sigue grabando.
+3. A media escritura, hacer clic en otra ventana: deja de escribir ahí y la cápsula dice «Cambiaste de lugar · quedó copiado, ⌘V».
+4. Dictar sin campo de texto activo: «No se pudo pegar · quedó copiado, ⌘V».
+5. Si algo sale mal: `defaults write io.github.reydavidag.labia saveLastRecording -bool true`, repetir y pasar `last.wav` a `Labia --simulate`.
+
+Pendiente: llevar los mismos arreglos a `linux/labia/` (Windows y Linux).
 
 ## Hallazgos
 

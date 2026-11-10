@@ -117,6 +117,27 @@ import Testing
 		#expect(back == "Uno dos tres".count)
 	}
 
+	@Test func emptyFinalPassKeepsALongDraft() {
+		let s = LiveSession(preferences: preferences(send: false))
+		s.feed(second)
+		var screen = ""
+		let draft = words(" Revisa", " que", " el", " build", " pase", " ya")
+		step(s, draft, screen: &screen)
+		step(s, draft, screen: &screen)
+		#expect(screen == "Revisa que el build pase")
+		let (back, add, _) = s.finish(raw: "")
+		screen = String(screen.dropLast(back)) + add
+		#expect(screen == "Revisa que el build pase ya ")
+	}
+
+	@Test func voiceAmongLongPausesIsNotSilence() {
+		var audio = [Float](repeating: 0, count: 60 * LiveSession.sampleRate)
+		#expect(!LiveSession.hasVoice(audio))
+		for i in 0..<LiveSession.sampleRate { audio[i] = 0.02 }
+		#expect(LiveSession.rms(audio) < LiveSession.silenceRMS)
+		#expect(LiveSession.hasVoice(audio))
+	}
+
 	@Test func windowIsTrimmedPastTenSecondsKeepingCommittedText() {
 		let s = LiveSession(preferences: preferences(send: false))
 		var screen = ""
@@ -126,6 +147,73 @@ import Testing
 		step(s, hypothesis, screen: &screen)
 		#expect(s.nextPass()!.audio.count < 11 * LiveSession.sampleRate)
 		#expect(screen == "uno dos")
+	}
+
+	@Test func longFinalPassKeepsTextBeforeTheWindow() {
+		let s = LiveSession(preferences: preferences(send: false))
+		var screen = ""
+		for _ in 0..<11 { s.feed(second) }
+		let hypothesis = words(" uno", " dos", " tres")
+		step(s, hypothesis, screen: &screen)
+		step(s, hypothesis, screen: &screen)
+		for _ in 0..<20 { s.feed(second) }
+		#expect(s.finalStart == 0)
+		let final = [Word(0.5, 0.9, " dos"), Word(1.0, 1.4, " tres,"), Word(1.6, 1.9, " cuatro"), Word(2.0, 2.4, " cinco.")]
+		let (back, add, _) = s.finish(words: final, from: 0)
+		screen = String(screen.dropLast(back)) + add
+		#expect(back == 0)
+		#expect(screen == "uno dos tres cuatro cinco. ")
+	}
+
+	@Test func longFinalPassDropsAPhraseItPlacesLater() {
+		let s = LiveSession(preferences: preferences(send: false))
+		var screen = ""
+		for _ in 0..<11 { s.feed(second) }
+		let phrase = " que ya quede todo más sencillo y más fácil para ellos".split(separator: " ").map { " " + $0 }
+		let said = phrase.enumerated().map { i, w in Word(Double(i) * 0.3, Double(i) * 0.3 + 0.25, w) }
+		step(s, said + [Word(4, 4.3, " implementar")], screen: &screen)
+		step(s, said + [Word(4, 4.3, " implementar")], screen: &screen)
+		for _ in 0..<20 { s.feed(second) }
+		let late = phrase.enumerated().map { i, w in Word(Double(i) * 0.3 + 3.2, Double(i) * 0.3 + 3.45, w) }
+		let (back, add, _) = s.finish(words: late + [Word(7, 7.3, " implementar"), Word(7.4, 7.6, " ya.")], from: s.finalStart!)
+		screen = String(screen.dropLast(back)) + add
+		#expect(screen == "que ya quede todo más sencillo y más fácil para ellos implementar ya. ")
+	}
+
+	@Test func emptyLongFinalPassKeepsTheWordsHeardLive() {
+		let s = LiveSession(preferences: preferences(send: false))
+		var screen = ""
+		for _ in 0..<11 { s.feed(second) }
+		step(s, words(" uno", " dos", " tres"), screen: &screen)
+		step(s, words(" uno", " dos", " tres"), screen: &screen)
+		let late = [Word(1.6, 1.9, " cuatro"), Word(2.0, 2.4, " cinco"), Word(2.5, 2.9, " seis")]
+		let voice = [Float](repeating: 0.1, count: LiveSession.sampleRate)
+		for _ in 0..<3 {
+			s.feed(voice)
+			step(s, late, screen: &screen)
+		}
+		#expect(screen == "uno dos tres cuatro cinco")
+		for _ in 0..<20 { s.feed(second) }
+		let (back, add, _) = s.finish(words: [], from: s.finalStart!)
+		screen = String(screen.dropLast(back)) + add
+		#expect(screen == "uno dos tres cuatro cinco seis ")
+	}
+
+	@Test func shortRecordingsGetAFullFinalPass() {
+		let s = LiveSession(preferences: preferences(send: false))
+		for _ in 0..<11 { s.feed(second) }
+		var screen = ""
+		step(s, words(" uno", " dos", " tres"), screen: &screen)
+		step(s, words(" uno", " dos", " tres"), screen: &screen)
+		#expect(s.finalStart == nil)
+	}
+
+	@Test func aWindowWithNothingConfirmedStopsLivePasses() {
+		let s = LiveSession(preferences: preferences(send: false))
+		for _ in 0..<26 { s.feed(second) }
+		#expect(s.nextPass() == nil)
+		for _ in 0..<5 { s.feed(second) }
+		#expect(s.finalStart == nil)
 	}
 
 	@Test func discardErasesEverything() {
