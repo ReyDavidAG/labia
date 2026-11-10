@@ -78,6 +78,24 @@ final class Recorder {
 		}
 	}
 
+	/// WAV de 16 kHz para revisar un dictado con `Labia --simulate` o `--transcribe`.
+	static func write(_ samples: [Float], to url: URL) throws {
+		let settings: [String: Any] = [
+			AVFormatIDKey: kAudioFormatLinearPCM,
+			AVSampleRateKey: sampleRate,
+			AVNumberOfChannelsKey: 1,
+			AVLinearPCMBitDepthKey: 16,
+			AVLinearPCMIsFloatKey: false,
+		]
+		let file = try AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
+		guard let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(samples.count)),
+			let channel = buffer.floatChannelData?[0]
+		else { return }
+		buffer.frameLength = AVAudioFrameCount(samples.count)
+		samples.withUnsafeBufferPointer { channel.update(from: $0.baseAddress!, count: samples.count) }
+		try file.write(from: buffer)
+	}
+
 	static func rms<C: Collection>(_ values: C) -> Float where C.Element == Float {
 		guard !values.isEmpty else { return 0 }
 		return (values.reduce(0) { $0 + $1 * $1 } / Float(values.count)).squareRoot()

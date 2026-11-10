@@ -50,6 +50,9 @@ enum SettingsTab: Hashable {
 @MainActor @Observable
 final class AppModel {
 	static let historyURL = Transcriber.base.appending(path: "history.json")
+	/// Con `defaults write io.github.reydavidag.labia saveLastRecording -bool true`, cada dictado se guarda aquí
+	/// (encima del anterior) para revisarlo con `Labia --simulate`.
+	static let lastRecordingURL = Transcriber.base.appending(path: "last.wav")
 	static let waveformBars = 24
 	/// Se sigue grabando esto después de soltar: casi siempre se suelta mientras suena la última sílaba.
 	static let tail: Duration = .milliseconds(300)
@@ -249,6 +252,10 @@ final class AppModel {
 		self.tailTask = nil
 		live?.stopListening()
 		let samples = recorder.stop()
+		if UserDefaults.standard.bool(forKey: "saveLastRecording"), !samples.isEmpty {
+			let url = Self.lastRecordingURL
+			Task.detached(priority: .utility) { try? Recorder.write(samples, to: url) }
+		}
 		let seconds = Double(samples.count) / Recorder.sampleRate
 		guard seconds >= machine.minHold else { return discardLive(.short) }
 		guard LiveSession.hasVoice(samples) else { return discardLive(.silent) }
