@@ -121,7 +121,7 @@ Para lo demás están los **Reemplazos**, que traen `nueva línea` → salto de 
 
 ## Privacidad
 
-- El audio se procesa en memoria y se descarta al terminar. Sólo si tú lo activas (`defaults write io.github.reydavidag.labia saveLastRecording -bool true`), el último dictado se guarda en `~/Library/Application Support/Labia/last.wav`, encima del anterior, para revisar una falla con `--simulate`.
+- El audio se procesa en memoria y se descarta al terminar. Sólo si tú lo activas (`defaults write io.github.reydavidag.labia saveRecordings -bool true`), los últimos 20 dictados se guardan en `~/Library/Application Support/Labia/Recordings/`, con la fecha y hora en el nombre, para revisar una falla con `--simulate`. Se apaga con `defaults delete io.github.reydavidag.labia saveRecordings`.
 - El historial guarda sólo el texto de los últimos 50 dictados, en `~/Library/Application Support/Labia/history.json`. Se borra desde Ajustes.
 - La única conexión de red es la descarga del modelo desde Hugging Face.
 - Lo que pega marca el portapapeles como transitorio, y tu contenido anterior se restaura al terminar.
@@ -144,9 +144,9 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz
 
 ## Problemas comunes
 
-- **No hace nada al mantener ⌥.** Revisa Ajustes del Sistema → Privacidad y seguridad → Accesibilidad. Si actualizaste la app y Labia ya aparece activado, quítalo con `−` y vuelve a agregarlo.
+- **No hace nada al mantener ⌥.** Si el ícono tiene un **!**, falta un permiso: Labia abre la bienvenida y la cápsula avisa «Labia perdió el permiso de Accesibilidad». Toca «Abrir Ajustes» y activa Labia en la lista. Si cambió la firma de la app, ese botón borra el permiso viejo para que macOS lo pida de nuevo.
 - **Escribe "No te oí".** El micrófono no captó voz. Revisa la entrada en Ajustes del Sistema → Sonido.
-- **Un dictado largo sale incompleto.** Desde la 1.2, el tramo final que Whisper dejaba vacío se repite sin vocabulario y la pasada final no borra lo que ya se escribió (máximo 5 min). Si aun así falta texto, activa `saveLastRecording` (en Privacidad), repite el dictado y abre un issue con lo que imprime `Labia --simulate last.wav`.
+- **Un dictado largo sale incompleto.** Desde la 1.2, el tramo final que Whisper dejaba vacío se repite sin vocabulario y la pasada final no borra lo que ya se escribió (máximo 5 min). Si aun así falta texto, activa `saveRecordings` (en Privacidad), repite el dictado y abre un issue con lo que imprime `Labia --simulate` con el archivo de esa hora en `Recordings/`.
 - **«Cambiaste de lugar» o «No se pudo pegar».** El texto no se escribió completo para no tocar otro lugar; está en el portapapeles, pégalo con ⌘V.
 - **El primer dictado del día tarda.** El modelo se libera de la memoria tras 30 minutos sin uso. Puedes cambiarlo en Ajustes → Modelo.
 - **fn abre los emojis.** macOS usa esa tecla. Elige ⌥ o ⌘ derecho, o cambia en Ajustes del Sistema → Teclado qué hace la tecla 🌐.

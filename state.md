@@ -81,9 +81,19 @@ Falta probar en la Mac (`swift test && scripts/bundle.sh && open build/Labia.app
 2. Rozar Shift o otra tecla a media frase: sigue grabando.
 3. A media escritura, hacer clic en otra ventana: deja de escribir ahí y la cápsula dice «Cambiaste de lugar · quedó copiado, ⌘V».
 4. Dictar sin campo de texto activo: «No se pudo pegar · quedó copiado, ⌘V».
-5. Si algo sale mal: `defaults write io.github.reydavidag.labia saveLastRecording -bool true`, repetir y pasar `last.wav` a `Labia --simulate`.
+5. Si algo sale mal: `defaults write io.github.reydavidag.labia saveRecordings -bool true`, repetir y pasar el archivo de esa hora en `Recordings/` a `Labia --simulate`.
 
 Pendiente: llevar los mismos arreglos a `linux/labia/` (Windows y Linux).
+
+## 1.2.1 · permiso perdido (2026-11-10)
+
+Sparkle instaló la 1.2.0 (firmada con «Labia») sobre una compilación local firmada con Apple Development: macOS ató el permiso a la firma vieja y Labia dejó de oír el atajo con sólo un **!** en el ícono. «Abrir Ajustes» usaba `com.apple.preference.security`, que en macOS 26 no abre nada.
+
+- `openPrivacy` usa `com.apple.settings.PrivacySecurity.extension` y cae a la vieja si falla.
+- Revisión de permisos cada 5 s: al perder Accesibilidad suelta el tap (`HotkeyTap.stop`), cancela la grabación, avisa con la cápsula 8 s y abre la bienvenida. Al arrancar sin permiso, si ya lo tuvo (`hadAccessibility`), avisa igual.
+- `requestAccessibility` corre `tccutil reset Accessibility` si ya lo tuvo: la entrada de otra firma sale activada pero no vale.
+- `RecordingArchive`: últimos 20 dictados en `Recordings/` (`saveRecordings`, o el viejo `saveLastRecording`).
+- No compilar e instalar en `/Applications` con otra firma que «Labia»: vuelve a perder el permiso.
 
 ## Hallazgos
 

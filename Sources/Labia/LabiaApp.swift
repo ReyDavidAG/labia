@@ -28,11 +28,13 @@ private struct MenuLabel: View {
 
 	var body: some View {
 		Image(systemName: model.menuSymbol)
-			.task {
-				guard model.needsSetup else { return }
-				NSApp.activate()
-				openWindow(id: OnboardingView.windowID)
-			}
+			.task { if model.needsSetup { openSetup() } }
+			.onChange(of: model.accessibilityGranted) { _, granted in if !granted { openSetup() } }
+	}
+
+	private func openSetup() {
+		NSApp.activate()
+		openWindow(id: OnboardingView.windowID)
 	}
 }
 
