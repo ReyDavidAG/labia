@@ -19,7 +19,7 @@
 | 12. Release 1.0.0 | ✅ v1.0.0, con las pruebas manuales de «Antes de la 1.0» hechas por el usuario |
 | 13. Actualizaciones automáticas en las tres plataformas (`updates/`) | ✅ v1.1.0. Falta probar Linux en un equipo real y la prueba de punta a punta con 1.1.1. Ver `updates/state.md` |
 | 14. Dictados largos confiables en macOS (`feature/mac-dictation-reliability`) | ✅ v1.2.0, probado por el usuario con un dictado real de 2 min (abajo) |
-| 15. Labia 2.0 en macOS: diseño nuevo y ventanas que responden (`feature/mac-app-redesign`, ver `plan.md`) | 🚧 propuesta aprobada; en construcción |
+| 15. Labia 2.0 en macOS: diseño nuevo y ventanas que responden (`feature/mac-app-redesign`, ver `plan.md`) | 🚧 pasos 1–5 hechos y revisados con capturas; falta la prueba de clics del usuario, capturas del README y release |
 
 ## Antes de la 1.0 (pruebas manuales) · ✅ probadas por el usuario el 2026-11-08
 
@@ -95,6 +95,14 @@ Sparkle instaló la 1.2.0 (firmada con «Labia») sobre una compilación local f
 - `requestAccessibility` corre `tccutil reset Accessibility` si ya lo tuvo: la entrada de otra firma sale activada pero no vale.
 - `RecordingArchive`: últimos 20 dictados en `Recordings/` (`saveRecordings`, o el viejo `saveLastRecording`).
 - No compilar e instalar en `/Applications` con otra firma que «Labia»: vuelve a perder el permiso.
+
+## Labia 2.0 en macOS (2026-11-10)
+
+- `AppWindows`: con la bienvenida o Ajustes abiertos la app pasa a `.regular` (Dock, ⌘⇥, foco); comprobado con una copia: `lsappinfo` la reporta `Foreground` con la ventana abierta. Desde la terminal no se pueden generar clics reales: el clic lo prueba el usuario.
+- Bienvenida en cinco pasos, Ajustes con barra lateral propia (la de `NavigationSplitView` no sale en `--screenshots`), menú de barra con estilo ventana. Fechas en español con `Locale.labia`.
+- `--screenshots` genera los cinco pasos, las ocho secciones y el menú, en claro y oscuro.
+- Para probar sin tocar la app instalada: copia con `CFBundleIdentifier` `io.github.reydavidag.labia.prueba` y sin llaves de Sparkle (sus permisos y ajustes van aparte).
+- `hotfix/1.2.2` (sin publicar) queda reemplazado por `AppWindows`; se borra al cerrar esta rama.
 
 ## Hallazgos
 
