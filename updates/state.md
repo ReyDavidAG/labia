@@ -9,10 +9,10 @@
 | 3 | `updater.py` y sus pruebas | ✅ 10 pruebas con repos de git reales |
 | 4 | Ayudante `update.py` + integración en Windows | ✅ probado de punta a punta (abajo) |
 | 5 | Linux | ⏳ código listo (`systemd-run`, `notify-send`), falta probarlo en la laptop con Linux |
-| 6 | Certificado propio y firma en el CI | 🧪 `scripts/import-cert.sh` probado con un certificado desechable; falta que el autor corra `scripts/setup-signing.sh` |
-| 7 | Sparkle en la app de macOS | ✅ probado en local de punta a punta (abajo); falta la llave real (`setup-signing.sh`) |
-| 8 | `release.yml`, canal Desarrollo, `RELEASING.md` | 🧪 escritos; `scripts/appcast.sh` probado en local; los workflows corren hasta que existan los secretos |
-| 9 | Release 1.1.0 e instalarla a mano una vez | ⏳ |
+| 6 | Certificado propio y firma en el CI | ✅ `scripts/setup-signing.sh` corrido en la Mac; secretos en GitHub (2026-11-08) |
+| 7 | Sparkle en la app de macOS | ✅ probado en local de punta a punta; llave real en `Resources/SparklePublicKey` |
+| 8 | `release.yml`, canal Desarrollo, `RELEASING.md` | ✅ la 1.1.0 se publicó con `release.yml` |
+| 9 | Release 1.1.0 e instalarla a mano una vez | 🧪 publicada; falta instalarla a mano en cada equipo |
 | 10 | Prueba de punta a punta con 1.1.1 | ⏳ |
 
 Pruebas: 36 pasan, 1 saltada (evdev). `python -m pytest -q` en `linux/`.
