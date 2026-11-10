@@ -104,6 +104,17 @@ Sparkle instaló la 1.2.0 (firmada con «Labia») sobre una compilación local f
 - Para probar sin tocar la app instalada: copia con `CFBundleIdentifier` `io.github.reydavidag.labia.prueba` y sin llaves de Sparkle (sus permisos y ajustes van aparte).
 - `hotfix/1.2.2` (sin publicar) queda reemplazado por `AppWindows`; se borra al cerrar esta rama.
 
+### Pendiente al retomar (2026-11-10, el usuario reinicia la Mac)
+
+Prueba del usuario con la copia «Labia Prueba»: **sigue sin poder hacer clic ni escribir en las ventanas de Labia**, aunque la app ya sale como `Foreground`. Le pasa también a la app instalada (1.2.1). El proceso no está trabado (`sample`: hilo principal esperando eventos) y ninguna ventana de Labia tapa a otra (`CGWindowList`). «Permitir» sí funcionó con `AXPress` desde System Events: la app procesa acciones, lo que no llega es el mouse.
+
+Hipótesis, en orden:
+1. Algo del sistema quedó atorado (WindowServer o la entrada segura) tras cambiar firmas y permisos varias veces: el usuario reinicia para descartarlo.
+2. Si sigue igual tras reiniciar: probar una app SwiftUI mínima con `MenuBarExtra` + `Window` (sin `HotkeyTap`, sin `Overlay`, sin monitor global de mouse) para aislar si es el patrón de app o algo de Labia; luego ir agregando piezas.
+3. Revisar `NSEvent.addGlobalMonitorForEvents` de clics y el `Overlay` (`NSPanel` a nivel `.statusBar`) por si interceptan eventos.
+
+Nada se ha publicado: la rama `feature/mac-app-redesign` está sólo en esta Mac. La propuesta se ve con `cd propuesta/v2 && python3 -m http.server 5190`.
+
 ## Hallazgos
 
 - WhisperKit 0.18 (repo `WhisperKit`) devolvía texto vacío con `promptTokens`; `argmax-oss-swift` 1.1.1 lo corrige.
