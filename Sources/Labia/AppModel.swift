@@ -198,22 +198,6 @@ final class AppModel {
 		return "waveform"
 	}
 
-	var statusLine: String {
-		if paused { return "Labia está en pausa" }
-		if needsSetup { return "Falta terminar la configuración" }
-		switch modelStatus {
-		case .loading: return "Cargando el modelo…"
-		case .failed: return "El modelo no cargó"
-		default: return "Lista · mantén \(settings.hotkey.label) para dictar"
-		}
-	}
-
-	var promptCostLabel: String? {
-		guard let promptTokens else { return nil }
-		let ms = Int((Double(promptTokens) * 0.025 * 1000 / 10).rounded()) * 10
-		return ms == 0 ? "sin costo extra" : "≈ +\(ms) ms por dictado"
-	}
-
 	// MARK: Gestos
 
 	private func handle(_ event: GestureEvent) -> Bool {
