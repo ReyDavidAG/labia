@@ -12,10 +12,12 @@ struct LabiaApp: App {
 
 		Settings {
 			SettingsView(model: model)
+				.labiaWindow("settings")
 		}
 
 		Window("Bienvenida", id: OnboardingView.windowID) {
 			OnboardingView(model: model)
+				.labiaWindow(OnboardingView.windowID)
 		}
 		.windowResizability(.contentSize)
 		.windowStyle(.hiddenTitleBar)
