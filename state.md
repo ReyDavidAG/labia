@@ -19,6 +19,7 @@
 | 12. Release 1.0.0 | ✅ v1.0.0, con las pruebas manuales de «Antes de la 1.0» hechas por el usuario |
 | 13. Actualizaciones automáticas en las tres plataformas (`updates/`) | ✅ v1.1.0. Falta probar Linux en un equipo real y la prueba de punta a punta con 1.1.1. Ver `updates/state.md` |
 | 14. Dictados largos confiables en macOS (`feature/mac-dictation-reliability`) | ✅ v1.2.0, probado por el usuario con un dictado real de 2 min (abajo) |
+| 15. Labia 2.0 en macOS: diseño nuevo y ventanas que responden (`feature/mac-app-redesign`, ver `plan.md`) | 🚧 propuesta aprobada; en construcción |
 
 ## Antes de la 1.0 (pruebas manuales) · ✅ probadas por el usuario el 2026-11-08
 
