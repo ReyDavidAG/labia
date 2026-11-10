@@ -1,6 +1,8 @@
 # Cambios
 
-## Sin publicar
+## 1.2.0 · 2026-11-10
+
+Dictados largos confiables en macOS: llegan completos hasta la última palabra, ya no se borran y no se pegan donde no deben.
 
 ### macOS
 
