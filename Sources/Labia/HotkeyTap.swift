@@ -38,6 +38,15 @@ final class HotkeyTap {
 		return true
 	}
 
+	/// Sin permiso de Accesibilidad el tap queda muerto: se suelta para crearlo de nuevo cuando vuelva.
+	func stop() {
+		guard let tap else { return }
+		CGEvent.tapEnable(tap: tap, enable: false)
+		CFMachPortInvalidate(tap)
+		self.tap = nil
+		isDown = false
+	}
+
 	private func process(_ type: CGEventType, _ event: CGEvent) -> Unmanaged<CGEvent>? {
 		let pass = Unmanaged.passUnretained(event)
 		if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {

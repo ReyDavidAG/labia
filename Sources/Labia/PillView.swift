@@ -81,7 +81,7 @@ struct PillBody: View {
 		case .silent:
 			Label("No te oí", systemImage: "mic.slash").foregroundStyle(.white.opacity(0.75))
 		case .permission:
-			Warning(text: "Falta permiso de Accesibilidad")
+			Warning(text: "Labia perdió el permiso de Accesibilidad · actívalo de nuevo")
 		case .noModel:
 			Label("Falta descargar el modelo", systemImage: "arrow.down.circle")
 		case let .failed(message):

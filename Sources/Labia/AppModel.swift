@@ -50,9 +50,11 @@ enum SettingsTab: Hashable {
 @MainActor @Observable
 final class AppModel {
 	static let historyURL = Transcriber.base.appending(path: "history.json")
-	/// Con `defaults write io.github.reydavidag.labia saveLastRecording -bool true`, cada dictado se guarda aquí
-	/// (encima del anterior) para revisarlo con `Labia --simulate`.
-	static let lastRecordingURL = Transcriber.base.appending(path: "last.wav")
+	/// Con `defaults write io.github.reydavidag.labia saveRecordings -bool true`, los últimos dictados se guardan aquí
+	/// para revisarlos con `Labia --simulate`.
+	static let recordingsURL = Transcriber.base.appending(path: "Recordings")
+	/// Ya tuvo permiso de Accesibilidad alguna vez: si falta, se perdió (una actualización con otra firma, o se quitó).
+	static let hadAccessibilityKey = "hadAccessibility"
 	static let waveformBars = 24
 	/// Se sigue grabando esto después de soltar: casi siempre se suelta mientras suena la última sílaba.
 	static let tail: Duration = .milliseconds(300)
@@ -98,6 +100,7 @@ final class AppModel {
 	private var tailTask: Task<Void, Never>?
 	private var tickTimer: Timer?
 	private var permissionTimer: Timer?
+	private var permissionWatch: Timer?
 	private var hideTask: Task<Void, Never>?
 	private var unloadTask: Task<Void, Never>?
 
@@ -125,8 +128,15 @@ final class AppModel {
 			MainActor.assumeIsolated { LiveDictation.userInput += 1 }
 		}
 		refreshPermissions()
+		if !accessibilityGranted, UserDefaults.standard.bool(forKey: Self.hadAccessibilityKey) {
+			Task {
+				try? await Task.sleep(for: .seconds(1))
+				warnAccessibilityLost()
+			}
+		}
 		if modelStatus == .unloaded { preload() }
 		if needsSetup { startPermissionPolling() }
+		watchPermissions()
 		updater.isBusy = { [weak self] in
 			guard let self else { return false }
 			return machine.isRecording || tailTask != nil || live != nil || pill == .transcribing
@@ -252,9 +262,10 @@ final class AppModel {
 		self.tailTask = nil
 		live?.stopListening()
 		let samples = recorder.stop()
-		if UserDefaults.standard.bool(forKey: "saveLastRecording"), !samples.isEmpty {
-			let url = Self.lastRecordingURL
-			Task.detached(priority: .utility) { try? Recorder.write(samples, to: url) }
+		if Self.savesRecordings, !samples.isEmpty {
+			let folder = Self.recordingsURL
+			let name = RecordingArchive.name(for: .now)
+			Task.detached(priority: .utility) { Self.archive(samples, in: folder, as: name) }
 		}
 		let seconds = Double(samples.count) / Recorder.sampleRate
 		guard seconds >= machine.minHold else { return discardLive(.short) }
@@ -478,8 +489,34 @@ final class AppModel {
 	func refreshPermissions() {
 		guard !isSample else { return }
 		micGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
-		accessibilityGranted = AXIsProcessTrusted()
-		if accessibilityGranted, !hotkey.isRunning { hotkey.start() }
+		let trusted = AXIsProcessTrusted()
+		let lost = accessibilityGranted && !trusted
+		accessibilityGranted = trusted
+		if trusted {
+			UserDefaults.standard.set(true, forKey: Self.hadAccessibilityKey)
+			if !hotkey.isRunning { hotkey.start() }
+		} else if lost {
+			hotkey.stop()
+			if machine.isRecording { abort(nil) }
+			warnAccessibilityLost()
+			startPermissionPolling()
+		}
+	}
+
+	/// Sin el permiso Labia no oye el atajo: sin este aviso parecía que había dejado de funcionar sin más.
+	private func warnAccessibilityLost() {
+		show(.permission)
+		hide(after: 8)
+	}
+
+	/// Un permiso quitado con Labia abierta (o por una actualización) se nota en segundos, no hasta reiniciar.
+	private func watchPermissions() {
+		permissionWatch = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+			MainActor.assumeIsolated {
+				guard let self, self.permissionTimer == nil else { return }
+				self.refreshPermissions()
+			}
+		}
 	}
 
 	func requestMicrophone() {
@@ -488,15 +525,26 @@ final class AppModel {
 				Task { @MainActor [weak self] in self?.refreshPermissions() }
 			}
 		} else {
-			open("x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")
+			openPrivacy("Privacy_Microphone")
 		}
 	}
 
 	func requestAccessibility() {
+		guard !AXIsProcessTrusted() else { return refreshPermissions() }
+		// Una entrada de otra firma sale activada en Ajustes pero no vale; se borra para que macOS la pida de nuevo.
+		if UserDefaults.standard.bool(forKey: Self.hadAccessibilityKey) { Self.resetAccessibility() }
 		let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-		if !AXIsProcessTrustedWithOptions(options) {
-			open("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
-		}
+		if !AXIsProcessTrustedWithOptions(options) { openPrivacy("Privacy_Accessibility") }
+		startPermissionPolling()
+	}
+
+	private nonisolated static func resetAccessibility() {
+		guard let id = Bundle.main.bundleIdentifier else { return }
+		let reset = Process()
+		reset.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+		reset.arguments = ["reset", "Accessibility", id]
+		try? reset.run()
+		reset.waitUntilExit()
 	}
 
 	func startPermissionPolling() {
@@ -505,7 +553,10 @@ final class AppModel {
 			MainActor.assumeIsolated {
 				guard let self else { return timer.invalidate() }
 				self.refreshPermissions()
-				if !self.needsSetup { timer.invalidate() }
+				if !self.needsSetup {
+					timer.invalidate()
+					self.permissionTimer = nil
+				}
 			}
 		}
 	}
@@ -534,8 +585,26 @@ final class AppModel {
 		NSWorkspace.shared.activateFileViewerSelecting([Transcriber.modelFolder])
 	}
 
-	private func open(_ url: String) {
-		if let url = URL(string: url) { NSWorkspace.shared.open(url) }
+	/// macOS 13 en adelante usa la dirección nueva; en macOS 26 la vieja ya no abre nada.
+	private func openPrivacy(_ anchor: String) {
+		let current = "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?\(anchor)"
+		let legacy = "x-apple.systempreferences:com.apple.preference.security?\(anchor)"
+		NSApp.activate()
+		if let url = URL(string: current), NSWorkspace.shared.open(url) { return }
+		if let url = URL(string: legacy) { NSWorkspace.shared.open(url) }
+	}
+
+	private static var savesRecordings: Bool {
+		let defaults = UserDefaults.standard
+		return defaults.bool(forKey: "saveRecordings") || defaults.bool(forKey: "saveLastRecording")
+	}
+
+	private nonisolated static func archive(_ samples: [Float], in folder: URL, as name: String) {
+		let files = FileManager.default
+		try? files.createDirectory(at: folder, withIntermediateDirectories: true)
+		try? Recorder.write(samples, to: folder.appending(path: name))
+		let names = (try? files.contentsOfDirectory(atPath: folder.path)) ?? []
+		for old in RecordingArchive.stale(names) { try? files.removeItem(at: folder.appending(path: old)) }
 	}
 }
 
