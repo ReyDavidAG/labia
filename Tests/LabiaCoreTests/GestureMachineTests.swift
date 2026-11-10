@@ -56,14 +56,21 @@ import Testing
 	@Test func chordWithAnotherKeyIsNotDictation() {
 		var m = GestureMachine()
 		_ = m.handle(.keyDown(0))
-		#expect(m.handle(.otherKey) == .chord)
+		#expect(m.handle(.otherKey(0.2)) == .chord)
 		#expect(m.handle(.keyUp(0.5)) == nil)
+	}
+
+	@Test func anotherKeyLateInADictationKeepsRecording() {
+		var m = GestureMachine()
+		_ = m.handle(.keyDown(0))
+		#expect(m.handle(.otherKey(5)) == nil)
+		#expect(m.handle(.keyUp(8)) == .stop)
 	}
 
 	@Test func typingWhileLockedKeepsRecording() {
 		var m = GestureMachine()
 		_ = m.handle(.keyDown(0)); _ = m.handle(.keyUp(0.1)); _ = m.handle(.keyDown(0.2))
-		#expect(m.handle(.otherKey) == nil)
+		#expect(m.handle(.otherKey(0.5)) == nil)
 		#expect(m.phase == .locked)
 	}
 }

@@ -4,7 +4,7 @@ public enum GestureEvent: Equatable, Sendable {
 	case keyDown(TimeInterval)
 	case keyUp(TimeInterval)
 	case escape
-	case otherKey
+	case otherKey(TimeInterval)
 	case tick(TimeInterval)
 }
 
@@ -27,11 +27,15 @@ public struct GestureMachine: Sendable {
 
 	public var minHold: TimeInterval
 	public var doubleTapWindow: TimeInterval
+	/// Otra tecla antes de esto es una combinación (⌥ + tecla) y no un dictado. Después se ignora:
+	/// rozar una tecla a media frase borraba todo lo dictado.
+	public var chordWindow: TimeInterval
 	public private(set) var phase: Phase = .idle
 
-	public init(minHold: TimeInterval = 0.3, doubleTapWindow: TimeInterval = 0.35) {
+	public init(minHold: TimeInterval = 0.3, doubleTapWindow: TimeInterval = 0.35, chordWindow: TimeInterval = 1) {
 		self.minHold = minHold
 		self.doubleTapWindow = doubleTapWindow
+		self.chordWindow = chordWindow
 	}
 
 	public var isRecording: Bool { phase != .idle }
@@ -64,7 +68,10 @@ public struct GestureMachine: Sendable {
 		case (.holding, .escape), (.tapPending, .escape), (.locked, .escape):
 			phase = .idle
 			return .cancel
-		case (.holding, .otherKey), (.tapPending, .otherKey):
+		case let (.holding(since), .otherKey(t)) where t - since < chordWindow:
+			phase = .idle
+			return .chord
+		case (.tapPending, .otherKey):
 			phase = .idle
 			return .chord
 		default:
