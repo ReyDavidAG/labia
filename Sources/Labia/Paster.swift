@@ -21,33 +21,36 @@ enum Paster {
 		board.setString(text, forType: .string)
 	}
 
+	/// Pega y regresa si la app lo leyó. Si no, el texto se queda en el portapapeles para pegarlo a mano.
 	@MainActor
-	static func paste(_ text: String, restore: Bool, thenReturn: Bool = false) {
-		guard !text.isEmpty else { return pressReturn() }
+	static func paste(_ text: String, restore: Bool, thenReturn: Bool = false) async -> Bool {
+		guard !text.isEmpty else {
+			pressReturn()
+			return true
+		}
 		let saved = restore ? snapshot() : nil
-		Task { @MainActor in
-			let read = await pasteAndWait(text)
-			// La terminal descarta el Enter si llega mientras todavía procesa el pegado.
-			if thenReturn {
-				try? await Task.sleep(for: .milliseconds(150))
-				pressReturn()
-			}
-			guard let saved else {
-				// Sin restaurar, el texto se queda: que no dependa de que Labia siga abierta para entregarlo.
-				if !read, NSPasteboard.general.changeCount == pastedCount { copy(text) }
-				return
-			}
+		guard await pasteAndWait(text) else {
+			if NSPasteboard.general.changeCount == pastedCount { copy(text) }
+			return false
+		}
+		// La terminal descarta el Enter si llega mientras todavía procesa el pegado.
+		if thenReturn {
+			try? await Task.sleep(for: .milliseconds(150))
+			pressReturn()
+		}
+		if let saved {
 			try? await Task.sleep(for: .milliseconds(100))
 			restoreIfUntouched(saved)
 		}
+		return true
 	}
 
-	/// Pega con ⌘V y espera a que la app lea el texto (o a `readTimeout`). Regresa si lo leyó.
+	/// Pega con ⌘V y espera a que la app lea el texto (o a `timeout`). Regresa si lo leyó.
 	/// Datos diferidos: el texto se entrega cuando la app lo pide, y ese es el aviso de que ya pegó.
 	/// La app puede llegar tarde al ⌘V (todavía procesando retrocesos); cambiar el portapapeles antes pegaría otra cosa.
 	@MainActor
 	@discardableResult
-	static func pasteAndWait(_ text: String) async -> Bool {
+	static func pasteAndWait(_ text: String, timeout: Duration = readTimeout) async -> Bool {
 		let board = NSPasteboard.general
 		let lazy = LazyText(text)
 		pending = lazy
@@ -58,7 +61,7 @@ enum Paster {
 		board.writeObjects([item])
 		pastedCount = board.changeCount
 		press(kVK_ANSI_V, flags: .maskCommand)
-		let deadline = ContinuousClock.now + readTimeout
+		let deadline = ContinuousClock.now + timeout
 		while !lazy.read, ContinuousClock.now < deadline {
 			try? await Task.sleep(for: .milliseconds(15))
 		}

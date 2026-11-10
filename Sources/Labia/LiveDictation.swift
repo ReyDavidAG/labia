@@ -11,12 +11,37 @@ final class LiveDictation {
 	/// Claude Code dobla un pegado largo en «[Pasted text #1]»: el texto largo se pega por pedazos.
 	nonisolated static let chunk = 400
 
+	/// Por qué el texto final no quedó escrito y se dejó en el portapapeles.
+	enum Miss: Equatable {
+		/// La app no leyó el pegado (no hay campo de texto, o se tardó demasiado).
+		case unread
+		/// Cambiaste de app, hiciste clic o tecleaste: corregir ahí borraría otra cosa.
+		case moved
+	}
+
+	/// Clics y teclas del usuario; si cambia entre dos escrituras, el cursor pudo moverse.
+	static var userInput = 0
+
+	private struct Place: Equatable {
+		let app: pid_t?
+		let input: Int
+
+		@MainActor static var now: Place {
+			Place(app: NSWorkspace.shared.frontmostApplication?.processIdentifier, input: LiveDictation.userInput)
+		}
+	}
+
 	let session: LiveSession
 	private let transcriber: Transcriber
 	private let recorder: Recorder
 	private let settings: Preferences
 	private var listening = true
 	private var stalled = false
+	private var moved = false
+	/// Hubo un cambio que ya no se pudo escribir.
+	private var missed = false
+	/// Dónde se escribió la primera vez; si después el cursor está en otro lado, se deja de corregir.
+	private var place: Place?
 	private var pulled = 0
 	private var loop: Task<Void, Never>?
 	private var saved: [NSPasteboardItem]?
@@ -52,7 +77,8 @@ final class LiveDictation {
 	}
 
 	/// Pasada final sobre toda la grabación (con vocabulario y cortes en pausas) y corrección de lo escrito.
-	func finish(_ samples: [Float]) async throws -> (text: String, send: Bool) {
+	/// Si no se pudo escribir todo, el texto completo queda en el portapapeles y regresa por qué.
+	func finish(_ samples: [Float]) async throws -> (text: String, miss: Miss?) {
 		stopListening()
 		await loop?.value
 		if samples.count > pulled { session.feed(Array(samples[pulled...])) }
@@ -60,12 +86,18 @@ final class LiveDictation {
 			let raw = try await transcriber.transcribe(samples, prompt: settings.prompt, language: settings.language)
 			let (back, text, send) = session.finish(raw: raw)
 			await type(back, text)
-			if send, !stalled {
+			let final = session.typed.trimmingCharacters(in: .whitespacesAndNewlines)
+			if missed {
+				saved = nil
+				Paster.copy(final)
+				return (final, stalled ? .unread : .moved)
+			}
+			if send, !moved {
 				try? await Task.sleep(for: .milliseconds(150))
 				Paster.pressReturn()
 			}
 			await end()
-			return (session.typed.trimmingCharacters(in: .whitespacesAndNewlines), send)
+			return (final, nil)
 		} catch {
 			await end()
 			throw error
@@ -88,21 +120,31 @@ final class LiveDictation {
 	}
 
 	private func type(_ back: Int, _ text: String) async {
-		// Si la app no leyó un pegado (no hay campo de texto), no se sigue mandando nada a ciegas.
-		guard !stalled else { return }
+		guard back > 0 || !text.isEmpty else { return }
+		if let place, place != .now { moved = true }
+		// Si la app no leyó un pegado o el cursor se movió, no se sigue mandando nada a ciegas.
+		guard !stalled, !moved else {
+			if back > 0 || !text.trimmingCharacters(in: .whitespaces).isEmpty { missed = true }
+			return
+		}
 		Paster.deleteBackward(back)
+		// La app procesa los retrocesos antes de leer el pegado.
+		var timeout = Paster.readTimeout + .milliseconds(5 * back)
 		var rest = Substring(text)
 		while !rest.isEmpty {
 			let piece = rest.prefix(Self.chunk)
 			rest = rest.dropFirst(piece.count)
 			let body = piece.replacingOccurrences(of: #" +$"#, with: "", options: .regularExpression)
-			if !body.isEmpty, !(await Paster.pasteAndWait(body)) {
+			if !body.isEmpty, !(await Paster.pasteAndWait(body, timeout: timeout)) {
 				stalled = true
+				missed = true
 				return
 			}
+			timeout = Paster.readTimeout
 			// Algunas terminales recortan los espacios del final de un pegado: esos van como teclas.
 			Paster.typeSpaces(piece.count - body.count)
 		}
+		place = place ?? .now
 	}
 
 	private func end() async {
