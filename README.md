@@ -21,12 +21,14 @@ Labia vive en la barra de menú. Mantienes **⌥ derecho** y hablas: el texto ap
 
 | Gesto | Qué hace |
 |---|---|
-| Mantener ⌥ derecho | Escribe mientras lo sostienes; al soltar corrige con la pasada final |
+| Mantener ⌥ derecho | Escribe mientras lo sostienes; al soltar sigue grabando 0.3 s (para no cortar la última palabra) y corrige con la pasada final |
 | Doble toque ⌥ | Manos libres: sigue grabando hasta el siguiente toque (máximo 5 min) |
 | esc mientras grabas | Cancela y borra lo que ya había escrito |
-| ⌥ + otra tecla | Se ignora: puedes seguir usando ⌥ para acentos y atajos |
+| ⌥ + otra tecla | En el primer segundo es una combinación y no dicta: puedes seguir usando ⌥ para acentos y atajos. Después se ignora y el dictado sigue |
 
 Una cápsula abajo al centro de la pantalla te dice en qué va: escuchando (con el volumen real del micrófono), transcribiendo, pegado y cuántas palabras.
+
+Mientras Labia escribe, no muevas el cursor. Si cambias de app, haces clic o tecleas, deja de escribir ahí para no borrar ni pegar en otro lado: el dictado completo queda en el portapapeles y la cápsula dice **«Cambiaste de lugar · quedó copiado, ⌘V»**. Si la app no recibe el pegado (no había un campo de texto activo), dice **«No se pudo pegar · quedó copiado, ⌘V»**.
 
 <p align="center"><img src="docs/img/states.png" alt="Estados de la cápsula: escuchando, manos libres, transcribiendo, pegado, sin voz y cancelado"></p>
 
@@ -119,7 +121,7 @@ Para lo demás están los **Reemplazos**, que traen `nueva línea` → salto de 
 
 ## Privacidad
 
-- El audio se procesa en memoria y se descarta al terminar.
+- El audio se procesa en memoria y se descarta al terminar. Sólo si tú lo activas (`defaults write io.github.reydavidag.labia saveLastRecording -bool true`), el último dictado se guarda en `~/Library/Application Support/Labia/last.wav`, encima del anterior, para revisar una falla con `--simulate`.
 - El historial guarda sólo el texto de los últimos 50 dictados, en `~/Library/Application Support/Labia/history.json`. Se borra desde Ajustes.
 - La única conexión de red es la descarga del modelo desde Hugging Face.
 - Lo que pega marca el portapapeles como transitorio, y tu contenido anterior se restaura al terminar.
@@ -130,7 +132,9 @@ Para lo demás están los **Reemplazos**, que traen `nueva línea` → salto de 
 CGEventTap (atajo) → AVAudioEngine 16 kHz
   → cada 0.5 s: WhisperKit turbo sobre los últimos ≤10 s → LocalAgreement → retrocesos + ⌘V de lo nuevo
   → cada 3 s de audio: pasada cuidadosa que corrige lo ya escrito
-  → al soltar: WhisperKit + vocabulario sobre toda la grabación (cortada en pausas si pasa de 30 s)
+  → al soltar (+0.3 s): WhisperKit + vocabulario sobre toda la grabación; si pasa de 30 s, sólo sobre los últimos
+    segundos que todavía se corrigen (más 3 s de traslape, unido por el tiempo de cada palabra), cortada en pausas;
+    un tramo que sale vacío con el vocabulario se repite sin él
   → limpieza (alucinaciones de silencio, vocabulario, reemplazos) → corrección final → restaurar portapapeles → historial
 ```
 
@@ -142,7 +146,8 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz
 
 - **No hace nada al mantener ⌥.** Revisa Ajustes del Sistema → Privacidad y seguridad → Accesibilidad. Si actualizaste la app y Labia ya aparece activado, quítalo con `−` y vuelve a agregarlo.
 - **Escribe "No te oí".** El micrófono no captó voz. Revisa la entrada en Ajustes del Sistema → Sonido.
-- **Un dictado largo sale incompleto.** Desde la 1.0, los dictados de más de 30 s se cortan en las pausas y cada tramo se transcribe aparte (máximo 5 min). Si aun así falta texto, habla con pausas cortas entre ideas.
+- **Un dictado largo sale incompleto.** Desde la 1.2, el tramo final que Whisper dejaba vacío se repite sin vocabulario y la pasada final no borra lo que ya se escribió (máximo 5 min). Si aun así falta texto, activa `saveLastRecording` (en Privacidad), repite el dictado y abre un issue con lo que imprime `Labia --simulate last.wav`.
+- **«Cambiaste de lugar» o «No se pudo pegar».** El texto no se escribió completo para no tocar otro lugar; está en el portapapeles, pégalo con ⌘V.
 - **El primer dictado del día tarda.** El modelo se libera de la memoria tras 30 minutos sin uso. Puedes cambiarlo en Ajustes → Modelo.
 - **fn abre los emojis.** macOS usa esa tecla. Elige ⌥ o ⌘ derecho, o cambia en Ajustes del Sistema → Teclado qué hace la tecla 🌐.
 
@@ -158,6 +163,7 @@ CGEventTap (atajo) → AVAudioEngine 16 kHz
 
 - Fully local. It uses Whisper large-v3-turbo through WhisperKit on the Apple Neural Engine. Audio never leaves your Mac.
 - A custom vocabulary fixes code-switched terms. On an M2 a sentence takes about 1.5 s, plus ~25 ms per vocabulary token.
+- Long dictations (up to 5 min) arrive complete: on release it keeps recording 0.3 s, and for anything over 30 s the final pass only redoes the last seconds. If you switch apps, click or type while it is typing, it stops typing there and leaves the whole dictation on the clipboard.
 - Double-tap ⌥ for hands-free mode and press esc to cancel. It presses Enter only when you end the dictation with the send keyword («Claude» by default; change or turn it off in Settings).
 - Requires macOS 14+ on Apple Silicon. Download it from [Releases](../../releases), or build it with `scripts/bundle.sh`. The app is not notarized, so run `xattr -dr com.apple.quarantine /Applications/Labia.app` after installing. From 1.1.0 on it updates itself with Sparkle (EdDSA-signed updates from this repository's releases, installed when you are not dictating).
 - **Linux** (KDE Plasma on Wayland, NVIDIA GPU): see [`linux/`](linux/README.md). It types in real time while you speak and corrects itself every few seconds with a careful Whisper pass, like Apple's volatile and final results. The final pass covers the whole recording with VAD, so silence types nothing.
