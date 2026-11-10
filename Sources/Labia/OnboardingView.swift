@@ -41,6 +41,8 @@ struct OnboardingView: View {
 			.frame(maxWidth: .infinity, alignment: .leading)
 		}
 		.frame(width: 760, height: 500)
+		.tint(Brand.violet)
+		.environment(\.locale, .labia)
 		.animation(.spring(response: 0.35, dampingFraction: 0.85), value: step)
 		.onAppear {
 			step = initialStep ?? firstPending

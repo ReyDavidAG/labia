@@ -133,3 +133,8 @@ struct StatusBadge: View {
 		.background(Capsule().fill(color.opacity(0.13)))
 	}
 }
+
+extension Locale {
+	/// La interfaz va en español aunque macOS esté en otro idioma.
+	static let labia = Locale(identifier: "es_MX")
+}
