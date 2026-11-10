@@ -8,6 +8,8 @@ import LabiaCore
 final class LiveDictation {
 	/// Segundos entre pasadas. Si una pasada tarda más, la siguiente empieza en cuanto termina.
 	nonisolated static let step = 0.5
+	/// Pausa mínima entre pasadas: si cada una tarda más que `step`, el Neural Engine no paraba en todo el dictado.
+	nonisolated static let rest: Duration = .milliseconds(250)
 	/// Claude Code dobla un pegado largo en «[Pasted text #1]»: el texto largo se pega por pedazos.
 	nonisolated static let chunk = 400
 
@@ -59,14 +61,15 @@ final class LiveDictation {
 			saved = settings.restoreClipboard ? Paster.snapshot() : nil
 			while listening {
 				let started = ContinuousClock.now
+				var wait = Duration.seconds(Self.step)
 				if pull() > 0, let (audio, kind) = session.nextPass() {
 					if let words = try? await transcriber.words(audio, kind: kind, language: settings.language) {
 						let (back, text) = session.absorb(words, kind: kind)
 						await type(back, text)
 					}
+					wait = max(wait - (ContinuousClock.now - started), Self.rest)
 				}
-				let wait = Duration.seconds(Self.step) - (ContinuousClock.now - started)
-				if wait > .zero { try? await Task.sleep(for: wait) }
+				try? await Task.sleep(for: wait)
 			}
 		}
 	}

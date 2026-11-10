@@ -152,10 +152,11 @@ import Testing
 	@Test func longFinalPassKeepsTextBeforeTheWindow() {
 		let s = LiveSession(preferences: preferences(send: false))
 		var screen = ""
-		for _ in 0..<31 { s.feed(second) }
+		for _ in 0..<11 { s.feed(second) }
 		let hypothesis = words(" uno", " dos", " tres")
 		step(s, hypothesis, screen: &screen)
 		step(s, hypothesis, screen: &screen)
+		for _ in 0..<20 { s.feed(second) }
 		#expect(s.finalStart == Int(1.4 * Double(LiveSession.sampleRate)))
 		let (back, add, _) = s.finish(raw: " tres, cuatro cinco.", from: s.finalStart)
 		screen = String(screen.dropLast(back)) + add
@@ -169,6 +170,15 @@ import Testing
 		var screen = ""
 		step(s, words(" uno", " dos", " tres"), screen: &screen)
 		step(s, words(" uno", " dos", " tres"), screen: &screen)
+		#expect(s.finalStart == 0)
+	}
+
+	@Test func aWindowWithNothingConfirmedStopsLivePasses() {
+		let s = LiveSession(preferences: preferences(send: false))
+		for _ in 0..<26 { s.feed(second) }
+		#expect(s.nextPass() == nil)
+		#expect(s.finalStart == 0)
+		for _ in 0..<5 { s.feed(second) }
 		#expect(s.finalStart == 0)
 	}
 

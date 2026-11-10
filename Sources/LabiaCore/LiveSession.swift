@@ -104,6 +104,9 @@ public final class LiveSession {
 	public static let refineSeconds = 3.0
 	/// Una pasada cuidadosa con menos de esta parte de las palabras que reemplaza es basura y se ignora.
 	public static let garbageRatio = 0.6
+	/// Una ventana más larga (nada se confirmó en todo ese tiempo) ya no se transcribe en vivo: cada pasada costaría
+	/// cada vez más. Lo que falta lo escribe la pasada final, que en grabaciones largas empieza justo ahí.
+	public static let maxWindowSeconds = 25.0
 	/// Hasta esta duración la pasada final cubre toda la grabación. Más larga, sólo la ventana abierta:
 	/// lo que ya salió de ella se queda y la corrección final no borra medio dictado.
 	public static let fullPassSeconds = 30.0
@@ -148,6 +151,7 @@ public final class LiveSession {
 		let fresh = window.suffix(samples - passedAt)
 		passedAt = samples
 		if settled, !fresh.isEmpty, Self.rms(fresh) < Self.silenceRMS { return nil }
+		if Double(window.count) / Double(Self.sampleRate) > Self.maxWindowSeconds { return nil }
 		if samples - refinedAt >= Int(Self.refineSeconds * Double(Self.sampleRate)), !agreement.committed.isEmpty {
 			refinedAt = samples
 			return (window, .careful)

@@ -121,9 +121,6 @@ final class AppModel {
 		NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { _ in
 			MainActor.assumeIsolated { LiveDictation.userInput += 1 }
 		}
-		recorder.onLevel = { [weak self] level in
-			Task { @MainActor in self?.push(level) }
-		}
 		refreshPermissions()
 		if modelStatus == .unloaded { preload() }
 		if needsSetup { startPermissionPolling() }
@@ -352,6 +349,7 @@ final class AppModel {
 	}
 
 	private func tick() {
+		push(recorder.takeLevel())
 		if let action = machine.handle(.tick(ProcessInfo.processInfo.systemUptime)) {
 			if action == .tooShort { abort(.short) }
 			return
