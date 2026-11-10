@@ -51,19 +51,72 @@ actor Transcriber {
 		return tokenizer.encode(text: " " + prompt).count
 	}
 
+	/// Más de 30 s se corta en las pausas y cada tramo se transcribe por separado. Sin esto WhisperKit avanza
+	/// ventana por ventana guiado por los timestamps, y una ventana mala se salta el resto.
+	/// El vocabulario va como prompt, pero con él Whisper a veces deja un tramo corto vacío (casi siempre el último):
+	/// ese tramo se repite sin prompt y se queda la versión con más palabras.
 	func transcribe(_ samples: [Float], prompt: String?, language: String) async throws -> String {
+		try await pass(samples, prompt: prompt, language: language, timestamps: false).map(\.text).joined(separator: " ")
+	}
+
+	/// Como `transcribe`, con el tiempo de cada palabra en segundos desde el inicio de `samples`.
+	func transcribeWords(_ samples: [Float], prompt: String?, language: String) async throws -> [Word] {
+		try await pass(samples, prompt: prompt, language: language, timestamps: true).flatMap { piece in
+			piece.results.flatMap(\.segments).flatMap { $0.words ?? [] }.map {
+				Word(piece.offset + Double($0.start), piece.offset + Double($0.end), $0.word)
+			}
+		}
+	}
+
+	private struct Piece {
+		let offset: Double
+		var results: [TranscriptionResult]
+		var text: String { results.map(\.text).joined(separator: " ") }
+	}
+
+	private func pass(_ samples: [Float], prompt: String?, language: String, timestamps: Bool) async throws -> [Piece] {
 		try await load()
-		guard let kit else { return "" }
-		var options = DecodingOptions(task: .transcribe, language: language, temperature: 0, usePrefillPrompt: true, skipSpecialTokens: true)
-		// Más de 30 s: cortar en las pausas y transcribir cada tramo por separado. Sin esto WhisperKit avanza
-		// ventana por ventana guiado por los timestamps, y una ventana mala (el prompt la hace repetir o cortar)
-		// se salta el resto: en dictados de más de un minuto sólo llegaban las primeras frases.
-		options.chunkingStrategy = .vad
+		guard let kit else { return [] }
+		var options = DecodingOptions(
+			task: .transcribe,
+			language: language,
+			temperature: 0,
+			usePrefillPrompt: true,
+			skipSpecialTokens: true,
+			wordTimestamps: timestamps
+		)
+		let window = Self.windowSeconds * LiveSession.sampleRate
+		let chunks = samples.count > window
+			? try await VADAudioChunker().chunkAll(audioArray: samples, maxChunkLength: window, decodeOptions: options)
+			: [AudioChunk(seekOffsetIndex: 0, audioSamples: samples)]
 		if let prompt, let tokenizer = kit.tokenizer {
 			options.promptTokens = tokenizer.encode(text: " " + prompt).filter { $0 < tokenizer.specialTokens.specialTokenBegin }
 		}
-		let results: [TranscriptionResult] = try await kit.transcribe(audioArray: samples, decodeOptions: options)
-		return results.map(\.text).joined(separator: " ")
+		let results = await kit.transcribe(audioArrays: chunks.map(\.audioSamples), decodeOptions: options)
+		var pieces: [Piece] = []
+		for (chunk, result) in zip(chunks, results) {
+			let rate = Double(LiveSession.sampleRate)
+			var piece = Piece(offset: Double(chunk.seekOffsetIndex) / rate, results: result ?? [])
+			if options.promptTokens != nil,
+				Double(Self.wordCount(piece.text)) < Self.minWordsPerSecond * Double(chunk.audioSamples.count) / rate
+			{
+				var plain = options
+				plain.promptTokens = nil
+				let retry = Piece(offset: piece.offset, results: try await kit.transcribe(audioArray: chunk.audioSamples, decodeOptions: plain))
+				if Self.wordCount(retry.text) > Self.wordCount(piece.text) { piece = retry }
+			}
+			pieces.append(piece)
+		}
+		return pieces
+	}
+
+	/// La ventana de Whisper.
+	static let windowSeconds = 30
+	/// Un tramo con menos palabras por segundo que esto probablemente perdió frases (se habla a ~2.5 por segundo).
+	static let minWordsPerSecond = 0.5
+
+	static func wordCount(_ text: String) -> Int {
+		text.split(whereSeparator: \.isWhitespace).count
 	}
 
 	/// Una pasada del dictado en tiempo real, con el tiempo de cada palabra.

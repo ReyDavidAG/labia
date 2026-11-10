@@ -72,6 +72,8 @@ struct PillBody: View {
 			Checkmark()
 			Text(pasted ? "Pegado" : "Copiado")
 			Text("· \(words) \(words == 1 ? "palabra" : "palabras")").foregroundStyle(.white.opacity(0.6))
+		case let .unpasted(miss):
+			Warning(text: miss == .moved ? "Cambiaste de lugar · quedó copiado, ⌘V" : "No se pudo pegar · quedó copiado, ⌘V")
 		case .short:
 			Label("Muy corto", systemImage: "xmark").foregroundStyle(.white.opacity(0.75))
 		case .cancelled:
