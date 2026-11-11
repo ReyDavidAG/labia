@@ -5,20 +5,41 @@ struct LabiaApp: App {
 
 	var body: some Scene {
 		MenuBarExtra {
-			MenuContent(model: model)
+			MenuPanel(model: model)
 		} label: {
 			MenuLabel(model: model)
 		}
+		.menuBarExtraStyle(.window)
 
-		Settings {
+		Window("Ajustes de Labia", id: SettingsView.windowID) {
 			SettingsView(model: model)
+				.labiaWindow(SettingsView.windowID)
 		}
+		.defaultSize(width: 880, height: 620)
+		.commands { SettingsCommand(model: model) }
 
 		Window("Bienvenida", id: OnboardingView.windowID) {
 			OnboardingView(model: model)
+				.labiaWindow(OnboardingView.windowID)
 		}
 		.windowResizability(.contentSize)
 		.windowStyle(.hiddenTitleBar)
+	}
+}
+
+/// ⌘, abre los Ajustes nuevos en lugar de la ventana de Ajustes de SwiftUI.
+private struct SettingsCommand: Commands {
+	let model: AppModel
+	@Environment(\.openWindow) private var openWindow
+
+	var body: some Commands {
+		CommandGroup(replacing: .appSettings) {
+			Button("Ajustes…") {
+				openWindow(id: SettingsView.windowID)
+				AppWindows.bringForward()
+			}
+			.keyboardShortcut(",")
+		}
 	}
 }
 
@@ -33,46 +54,7 @@ private struct MenuLabel: View {
 	}
 
 	private func openSetup() {
-		NSApp.activate()
 		openWindow(id: OnboardingView.windowID)
-	}
-}
-
-private struct MenuContent: View {
-	@Bindable var model: AppModel
-	@Environment(\.openWindow) private var openWindow
-	@Environment(\.openSettings) private var openSettings
-
-	var body: some View {
-		Text(model.statusLine)
-		if let last = model.lastText {
-			Text("Último: \(last.count > 48 ? String(last.prefix(48)) + "…" : last)")
-		}
-		Divider()
-		Button("Copiar último dictado") { model.copyLast() }
-			.disabled(model.lastText == nil)
-		Button("Historial…") { showSettings(.history) }
-		if model.needsSetup {
-			Button("Terminar configuración…") {
-				NSApp.activate()
-				openWindow(id: OnboardingView.windowID)
-			}
-		}
-		Divider()
-		Toggle("Pausar Labia", isOn: $model.paused)
-		Button("Ajustes…") { showSettings(.general) }
-			.keyboardShortcut(",")
-		if model.updater.isRunning {
-			Button("Buscar actualizaciones…") { model.updater.checkNow() }
-		}
-		Divider()
-		Button("Salir de Labia") { NSApp.terminate(nil) }
-			.keyboardShortcut("q")
-	}
-
-	private func showSettings(_ tab: SettingsTab) {
-		model.settingsTab = tab
-		NSApp.activate()
-		openSettings()
+		AppWindows.bringForward()
 	}
 }

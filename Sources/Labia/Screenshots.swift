@@ -21,11 +21,21 @@ enum Screenshots {
 
 		save(Hero(model: model), size: CGSize(width: 1280, height: 720), dark: true, to: folder.appending(path: "hero.png"))
 		save(States(model: model), size: CGSize(width: 1280, height: 560), dark: true, to: folder.appending(path: "states.png"))
-		for (tab, name) in [(SettingsTab.general, "settings-general"), (.vocabulary, "settings-vocabulary"), (.history, "settings-history")] {
+		for tab in SettingsTab.allCases {
 			model.settingsTab = tab
-			save(SettingsView(model: model), size: CGSize(width: 580, height: 480), dark: false, to: folder.appending(path: "\(name).png"))
+			for dark in [false, true] {
+				let name = "settings-\(tab.rawValue)\(dark ? "-dark" : "").png"
+				save(SettingsView(model: model), size: CGSize(width: 880, height: 620), dark: dark, to: folder.appending(path: name))
+			}
 		}
-		save(OnboardingView(model: model), size: CGSize(width: 520, height: 600), dark: false, to: folder.appending(path: "welcome.png"))
+		save(MenuPanel(model: model), size: CGSize(width: 300, height: 330), dark: false, to: folder.appending(path: "menu.png"))
+		save(MenuPanel(model: model), size: CGSize(width: 300, height: 330), dark: true, to: folder.appending(path: "menu-dark.png"))
+		for step in OnboardingView.Step.allCases {
+			for dark in [false, true] {
+				let name = "welcome-\(step.rawValue + 1)\(dark ? "-dark" : "").png"
+				save(OnboardingView(model: model, initialStep: step), size: CGSize(width: 760, height: 500), dark: dark, to: folder.appending(path: name))
+			}
+		}
 	}
 
 	private static func sampleLevel(_ i: Int) -> Float {

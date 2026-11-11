@@ -63,8 +63,8 @@ final class Updater: NSObject {
 
 	/// «Buscar actualizaciones»: con la ventana de Sparkle, que dice si estás al día o qué trae la nueva.
 	func checkNow() {
-		NSApp.activate()
 		controller?.checkForUpdates(nil)
+		AppWindows.bringForward()
 	}
 
 	/// La versión nueva arranca y avisa una sola vez.

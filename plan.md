@@ -44,3 +44,20 @@ Rama `feature/send-keyword`.
 - `Paster.paste(…, thenReturn:)` presiona Return 150 ms después de ⌘V; la terminal descarta el Enter si llega mientras procesa el pegado.
 - Con envío no se agrega el espacio final. Sin pegado automático o sin Accesibilidad nunca envía.
 - Ajustes › General: interruptor y la lista de palabras separadas por comas. Activo por defecto.
+
+## Labia 2.0 en macOS: diseño nuevo y ventanas que responden (2026-11-10)
+
+Rama `feature/mac-app-redesign`. Propuesta aprobada por el usuario en su totalidad: `propuesta/v2/index.html`.
+
+Problema de fondo: las ventanas no recibían clics ni teclas. Se pensó que era por ser app sólo de barra de menú (`LSUIElement`) en macOS 26; la causa real fue el monitor global de clics instalado antes de `NSApplication` (ver `state.md`). `AppWindows` se queda para que la app aparezca en el Dock y en ⌘⇥ con una ventana abierta.
+
+Pasos, cada uno se prueba solo antes del siguiente:
+
+1. **Ventanas que responden.** `AppWindows`: con la bienvenida o Ajustes abiertos, política de activación `.regular` (Dock, ⌘⇥, foco y clics); al cerrar la última, `.accessory`. Prueba: la ventana queda al frente y como app activa.
+2. **Marca.** `Theme`: violeta `#7560f3 → #3e2ccc`, lima `#dcff5f`, índigo `#21106a`; mosaicos de icono por sección y la burbuja con la onda.
+3. **Bienvenida en cinco pasos.** Marca a la izquierda, un paso a la vez: cómo se usa, micrófono, Accesibilidad, modelo, prueba. Arranca en el primer paso pendiente.
+4. **Ajustes con barra lateral.** Ventana propia (`NavigationSplitView`): Resumen, Atajo y escritura, Vocabulario (medidor de costo), Reemplazos (tabla), Historial (búsqueda), Modelo, Permisos, Actualizaciones. ⌘, la abre.
+5. **Menú de la barra.** Estado con el icono, último dictado para copiar, Historial, Pausar, Ajustes, Actualizaciones, Salir.
+6. **Capturas, README y release 2.0.0** por git flow.
+
+Los contadores del Resumen salen del historial real (últimos 50), sin números inventados.

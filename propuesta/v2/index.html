@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labia 2.0 · Propuesta</title>
+<link rel="icon" href="img/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+	<symbol id="i-home" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.5 1.5 7v7.5h4.5V10h4v4.5h4.5V7z"/></symbol>
+	<symbol id="i-mic" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1a2.5 2.5 0 0 0-2.5 2.5v4a2.5 2.5 0 0 0 5 0v-4A2.5 2.5 0 0 0 8 1Zm-5 6.5h1.5a3.5 3.5 0 0 0 7 0H13a5 5 0 0 1-4.25 4.94V15h-1.5v-2.56A5 5 0 0 1 3 7.5Z"/></symbol>
+	<symbol id="i-book" viewBox="0 0 16 16"><path fill="currentColor" d="M2 2.5h4.5A2.5 2.5 0 0 1 8 3.3a2.5 2.5 0 0 1 1.5-.8H14v10.5H9.5A1.5 1.5 0 0 0 8 14.5a1.5 1.5 0 0 0-1.5-1.5H2z"/></symbol>
+	<symbol id="i-swap" viewBox="0 0 16 16"><path fill="currentColor" d="M11 1.5 14.5 5 11 8.5V6H3V4h8zM5 7.5V10h8v2H5v2.5L1.5 11z"/></symbol>
+	<symbol id="i-clock" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Zm.75 3v3.7l2.6 1.5-.75 1.3-3.35-1.95V4z"/></symbol>
+	<symbol id="i-chip" viewBox="0 0 16 16"><path fill="currentColor" d="M5 1h1.5v2h3V1H11v2h2v2h2v1.5h-2v3h2V11h-2v2h-2v2H9.5v-2h-3v2H5v-2H3v-2H1V9.5h2v-3H1V5h2V3h2zm0 4v6h6V5z"/></symbol>
+	<symbol id="i-lock" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V7H3v8h10V7h-1.5V4.5A3.5 3.5 0 0 0 8 1Zm-2 6V4.5a2 2 0 1 1 4 0V7z"/></symbol>
+	<symbol id="i-arrow" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1 3 6h3.25v5h3.5V6H13zM2 13h12v2H2z"/></symbol>
+	<symbol id="i-hand" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.5a1 1 0 0 1 1 1V7h.5V3a1 1 0 0 1 2 0v4.5h.5V5a1 1 0 0 1 2 0v5a5 5 0 0 1-5 5H8a5 5 0 0 1-4.6-3L1.7 8.6a1 1 0 0 1 1.7-1L5 9.5V3.5a1 1 0 0 1 2 0V7h0V2.5a1 1 0 0 1 1-1Z"/></symbol>
+</svg>
+
+<header class="topbar">
+	<div class="brand"><img src="img/icon.png" alt="">Labia 2.0</div>
+	<nav aria-label="Secciones">
+		<a href="#hoy">Hoy</a>
+		<a href="#bienvenida">Bienvenida</a>
+		<a href="#ajustes">Ajustes</a>
+		<a href="#menu">Barra de menú</a>
+		<a href="#dock">Dock</a>
+		<a href="#arreglos">Arreglos</a>
+		<a href="#plan">Plan</a>
+	</nav>
+	<button class="theme-toggle" type="button" data-theme-toggle>Tema</button>
+</header>
+
+<section class="hero">
+	<div class="hero-inner">
+		<div>
+			<span class="eyebrow">Propuesta de diseño · macOS</span>
+			<h1>Labia, como una app de Mac bien hecha</h1>
+			<p>Una bienvenida que te guía paso a paso, unos Ajustes con barra lateral como los de macOS, un menú con lo importante a la vista y ventanas que siempre responden y aparecen en el Dock.</p>
+		</div>
+		<img class="hero-icon" src="img/icon.png" alt="Icono de Labia: una burbuja lima con una onda de voz y un cursor de texto">
+	</div>
+</section>
+
+<section class="section" id="hoy">
+	<header>
+		<span class="eyebrow">Hoy · versión 1.2.1</span>
+		<h2>Lo que tiene Labia ahora</h2>
+		<p class="lead">Capturas reales de la app actual. Funciona, pero se ve como un panel de configuración genérico y sus ventanas fallan en macOS 26.</p>
+	</header>
+	<div class="today">
+		<figure class="shot"><img src="img/actual/welcome.png" alt="Bienvenida actual: tres tarjetas grises con permisos"><figcaption><strong>Bienvenida</strong>Tres tarjetas iguales en una sola pantalla, sin identidad de marca.</figcaption></figure>
+		<figure class="shot"><img src="img/actual/settings-general.png" alt="Ajustes generales actuales con pestañas arriba"><figcaption><strong>Ajustes · General</strong>Pestañas arriba y una lista larga de interruptores sin explicación.</figcaption></figure>
+		<figure class="shot"><img src="img/actual/settings-vocabulary.png" alt="Vocabulario actual con fichas azules"><figcaption><strong>Ajustes · Vocabulario</strong>El costo de cada palabra es sólo un número en gris.</figcaption></figure>
+		<figure class="shot"><img src="img/actual/settings-history.png" alt="Historial actual"><figcaption><strong>Ajustes · Historial</strong>Lista plana, sin búsqueda ni el nombre de la app con su icono.</figcaption></figure>
+	</div>
+	<div class="issues">
+		<article class="issue"><span class="tag">1</span><div><h3>Las ventanas no responden al clic</h3><p>Ajustes y la bienvenida se abren detrás de todo y no reciben el mouse; sólo se pudo presionar «Permitir» desde Accesibilidad.</p></div></article>
+		<article class="issue"><span class="tag">2</span><div><h3>No aparece en el Dock ni en ⌘⇥</h3><p>Labia vive sólo en la barra de menú; con una ventana abierta no hay forma de volver a ella.</p></div></article>
+		<article class="issue"><span class="tag">3</span><div><h3>Un permiso perdido la deja muda</h3><p>Tras una actualización con otra firma el atajo dejaba de funcionar con sólo un «!» en el icono.</p></div></article>
+		<article class="issue design"><span class="tag">4</span><div><h3>Se ve como un formulario</h3><p>Sin estado a la vista, sin la marca violeta y lima, sin iconos por sección; todo pesa igual.</p></div></article>
+	</div>
+</section>
+
+<section class="section" id="bienvenida">
+	<header>
+		<span class="eyebrow">Propuesta · Bienvenida</span>
+		<h2>Cinco pasos cortos, uno a la vez</h2>
+		<p class="lead">A la izquierda la marca con la onda que habla; a la derecha un solo paso con lo que hace falta y por qué. Usa «Continuar» para recorrerla.</p>
+	</header>
+	<div class="stage">
+		<div class="mac welcome" data-welcome>
+			<aside class="welcome-art">
+				<div class="lights"><i></i><i></i><i></i></div>
+				<div class="bubble" aria-hidden="true"><div class="bars"><span></span><span></span><span></span><span></span></div><div class="caret"></div></div>
+				<div class="progress" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+			</aside>
+			<div class="welcome-body">
+				<div class="welcome-step on">
+					<span class="step-label">Paso 1 de 5</span>
+					<h3>Habla y Labia escribe</h3>
+					<p>Donde esté el cursor: Slack, VS Code, la terminal, el correo. Todo se transcribe en esta Mac.</p>
+					<div class="gestures">
+						<div class="gesture"><span class="keycap">mantén ⌥</span>Habla mientras lo sostienes y suelta para pegar.</div>
+						<div class="gesture"><span class="keycap">⌥ ⌥</span>Doble toque: manos libres hasta que lo toques otra vez.</div>
+						<div class="gesture"><span class="keycap">esc</span>Cancela sin escribir nada.</div>
+					</div>
+				</div>
+				<div class="welcome-step">
+					<span class="step-label">Paso 2 de 5</span>
+					<h3>Deja que Labia te oiga</h3>
+					<p>El audio se procesa en memoria y se descarta al terminar. Nunca sale de esta Mac.</p>
+					<div class="permission-card"><span class="glyph"><svg width="20" height="20"><use href="#i-mic"/></svg></span><div class="grow"><strong>Micrófono</strong><span>macOS te mostrará su propio aviso</span></div><button class="btn primary" type="button">Permitir</button></div>
+				</div>
+				<div class="welcome-step">
+					<span class="step-label">Paso 3 de 5</span>
+					<h3>Deja que Labia escriba por ti</h3>
+					<p>Accesibilidad le permite oír el atajo en cualquier app y pegar con ⌘V.</p>
+					<div class="permission-card"><span class="glyph"><svg width="20" height="20"><use href="#i-hand"/></svg></span><div class="grow"><strong>Accesibilidad</strong><span>Esperando el permiso…</span></div><button class="btn primary" type="button">Abrir Ajustes</button></div>
+					<ol class="how"><li>Se abre Privacidad y seguridad › Accesibilidad.</li><li>Activa Labia en la lista.</li><li>Vuelve aquí: el paso se marca solo.</li></ol>
+				</div>
+				<div class="welcome-step">
+					<span class="step-label">Paso 4 de 5</span>
+					<h3>Descarga el modelo de voz</h3>
+					<p>Whisper large-v3-turbo, una sola vez. La primera carga tarda cerca de un minuto mientras se prepara para tu chip.</p>
+					<div class="download"><strong>Whisper large-v3-turbo</strong><div class="meter"><i></i></div><div class="row"><span>0.96 de 1.5 GB</span><span>quedan ~2 min <em class="sample">(ejemplo)</em></span></div></div>
+				</div>
+				<div class="welcome-step">
+					<span class="step-label">Paso 5 de 5</span>
+					<h3>Pruébalo aquí</h3>
+					<p>Mantén <span class="keycap">⌥ derecho</span>, di una frase y suelta.</p>
+					<div class="tryout"><span class="typed">Revisa el pull request y si pasa el lint, haz el merge a develop.</span></div>
+				</div>
+				<footer>
+					<button class="btn big" type="button" data-welcome-back>Atrás</button>
+					<span class="grow"></span>
+					<button class="btn big primary" type="button" data-welcome-next>Continuar</button>
+				</footer>
+			</div>
+		</div>
+	</div>
+	<p class="stage-note">La ventana aparece en el Dock y al frente mientras está abierta; al terminar, Labia vuelve a vivir sólo en la barra de menú.</p>
+</section>
+
+<section class="section" id="ajustes">
+	<header>
+		<span class="eyebrow">Propuesta · Ajustes</span>
+		<h2>Una barra lateral, como los Ajustes de macOS</h2>
+		<p class="lead">Cada sección con su icono y color. Arriba, un Resumen con el estado de Labia y tus últimos dictados. Haz clic en la barra lateral.</p>
+	</header>
+	<div class="stage">
+		<div class="mac settings" data-settings>
+			<nav class="sidebar" aria-label="Secciones de Ajustes" role="tablist">
+				<div class="lights"><i></i><i></i><i></i></div>
+				<div class="search">⌕ Buscar</div>
+				<button class="side-item" role="tab" aria-selected="true" data-pane="resumen"><span class="ico" style="--c:#5a43e2"><svg><use href="#i-home"/></svg></span>Resumen</button>
+				<div class="side-title">Dictado</div>
+				<button class="side-item" role="tab" aria-selected="false" data-pane="general"><span class="ico" style="--c:#ff7a45"><svg><use href="#i-mic"/></svg></span>Atajo y escritura</button>
+				<button class="side-item" role="tab" aria-selected="false" data-pane="vocabulario"><span class="ico" style="--c:#2f9bff"><svg><use href="#i-book"/></svg></span>Vocabulario<span class="count">9</span></button>
+				<button class="side-item" role="tab" aria-selected="false" data-pane="reemplazos"><span class="ico" style="--c:#14b8a6"><svg><use href="#i-swap"/></svg></span>Reemplazos<span class="count">3</span></button>
+				<button class="side-item" role="tab" aria-selected="false" data-pane="historial"><span class="ico" style="--c:#8b5cf6"><svg><use href="#i-clock"/></svg></span>Historial</button>
+				<div class="side-title">Sistema</div>
+				<button class="side-item" role="tab" aria-selected="false" data-pane="modelo"><span class="ico" style="--c:#64748b"><svg><use href="#i-chip"/></svg></span>Modelo</button>
+				<button class="side-item" role="tab" aria-selected="false" data-pane="permisos"><span class="ico" style="--c:#22a861"><svg><use href="#i-lock"/></svg></span>Permisos</button>
+				<button class="side-item" role="tab" aria-selected="false" data-pane="actualizaciones"><span class="ico" style="--c:#e0457b"><svg><use href="#i-arrow"/></svg></span>Actualizaciones</button>
+			</nav>
+			<div class="content">
+				<div class="toolbar" data-title>Resumen</div>
+
+				<div class="pane on" data-pane-id="resumen">
+					<div class="status-card">
+						<div class="mini"><div class="bars"><span></span><span></span><span></span><span></span></div></div>
+						<div><h4>Labia está lista</h4><p>Mantén <span class="keycap">⌥ derecho</span> en cualquier app y habla.</p></div>
+					</div>
+					<div class="tiles">
+						<div class="tile"><b>23</b><span>dictados hoy <em class="sample">(ejemplo)</em></span></div>
+						<div class="tile"><b>1,184</b><span>palabras hoy <em class="sample">(ejemplo)</em></span></div>
+						<div class="tile"><b>En memoria</b><span>modelo listo</span></div>
+					</div>
+					<p class="group-title">Últimos dictados <em class="sample">(ejemplo)</em></p>
+					<div class="group">
+						<div class="row history-item"><span class="app" style="--c:#1f1f1f">T</span><div class="grow"><p>Revisa el pull request y si pasa el lint, haz el merge a develop.</p><time>Terminal · hace 3 min</time></div><button class="btn" type="button">Copiar</button></div>
+						<div class="row history-item"><span class="app" style="--c:#2f80ed">C</span><div class="grow"><p>Usa el hook useApiQuery con enabled y un staleTime de 5 minutos.</p><time>VS Code · hace 18 min</time></div><button class="btn" type="button">Copiar</button></div>
+					</div>
+				</div>
+
+				<div class="pane" data-pane-id="general">
+					<p class="group-title">Atajo</p>
+					<div class="group">
+						<div class="row"><div class="grow">Tecla para dictar<small>Mantén para hablar · doble toque para manos libres · esc cancela</small></div><span class="keycap">⌥ derecho</span><button class="btn" type="button">Cambiar</button></div>
+					</div>
+					<p class="group-title">Escritura</p>
+					<div class="group">
+						<div class="row"><div class="grow">Escribir mientras hablas<small>El texto aparece en vivo y se corrige al soltar</small></div><button class="switch" role="switch" aria-checked="true" aria-label="Escribir mientras hablas"></button></div>
+						<div class="row"><div class="grow">Pegar automáticamente<small>Si lo apagas, el dictado sólo se copia</small></div><button class="switch" role="switch" aria-checked="true" aria-label="Pegar automáticamente"></button></div>
+						<div class="row"><div class="grow">Restaurar el portapapeles<small>Lo que tenías copiado vuelve al terminar</small></div><button class="switch" role="switch" aria-checked="true" aria-label="Restaurar el portapapeles"></button></div>
+						<div class="row"><div class="grow">Agregar un espacio al final</div><button class="switch" role="switch" aria-checked="false" aria-label="Agregar un espacio al final"></button></div>
+					</div>
+					<p class="group-title">Enviar con una palabra</p>
+					<div class="group">
+						<div class="row"><div class="grow">Presionar Enter si terminas con…</div><button class="switch" role="switch" aria-checked="true" aria-label="Enviar con una palabra"></button></div>
+						<div class="chips"><span class="chip">Claude<button type="button" aria-label="Quitar">×</button></span><span class="chip">cloud<button type="button" aria-label="Quitar">×</button></span><span class="chip">clod<button type="button" aria-label="Quitar">×</button></span></div>
+					</div>
+					<p class="group-title">Aviso y sonido</p>
+					<div class="group">
+						<div class="row"><div class="grow">Mostrar la cápsula mientras dictas</div><button class="switch" role="switch" aria-checked="true" aria-label="Mostrar la cápsula"></button></div>
+						<div class="row"><div class="grow">Sonido al empezar y terminar</div><button class="switch" role="switch" aria-checked="true" aria-label="Sonido"></button></div>
+						<div class="row"><div class="grow">Abrir al iniciar sesión</div><button class="switch" role="switch" aria-checked="true" aria-label="Abrir al iniciar sesión"></button></div>
+					</div>
+				</div>
+
+				<div class="pane" data-pane-id="vocabulario">
+					<p class="group-title">Palabras que dices en inglés o con mayúsculas especiales</p>
+					<div class="group">
+						<div class="chips">
+							<span class="chip">develop<button type="button" aria-label="Quitar">×</button></span><span class="chip">pull request<button type="button" aria-label="Quitar">×</button></span><span class="chip">deploy<button type="button" aria-label="Quitar">×</button></span><span class="chip">endpoint<button type="button" aria-label="Quitar">×</button></span><span class="chip">lint<button type="button" aria-label="Quitar">×</button></span><span class="chip">cron<button type="button" aria-label="Quitar">×</button></span><span class="chip">GitHub<button type="button" aria-label="Quitar">×</button></span><span class="chip">Vercel<button type="button" aria-label="Quitar">×</button></span><span class="chip">Supabase<button type="button" aria-label="Quitar">×</button></span>
+						</div>
+						<div class="add"><input class="field" placeholder="p. ej. useApiQuery" aria-label="Palabra nueva"><button class="btn primary" type="button">Agregar</button></div>
+						<div class="cost"><div class="row" style="padding:0"><span class="grow">Costo por dictado</span><strong>≈ +450 ms</strong></div><div class="meter"><i></i></div><small class="sample">Verde: rápido · ámbar: se nota · rojo: pon sólo las que te fallan</small></div>
+					</div>
+					<p class="footnote">Whisper usa esta lista como contexto: escribe bien esas palabras y respeta sus mayúsculas.</p>
+				</div>
+
+				<div class="pane" data-pane-id="reemplazos">
+					<p class="group-title">Se aplican después de transcribir, en orden</p>
+					<div class="group">
+						<div class="table-head"><span>Si dices</span><span></span><span>Escribe</span><span></span></div>
+						<div class="table-row"><span>nueva línea</span><span class="arrow">→</span><span>⏎ salto de línea</span><button class="btn" type="button" aria-label="Quitar">−</button></div>
+						<div class="table-row"><span>punto y coma</span><span class="arrow">→</span><span>;</span><button class="btn" type="button" aria-label="Quitar">−</button></div>
+						<div class="table-row"><span>de velo</span><span class="arrow">→</span><span>develop</span><button class="btn" type="button" aria-label="Quitar">−</button></div>
+						<div class="add"><input class="field" placeholder="Si dices…" aria-label="Si dices"><input class="field" placeholder="Escribe…" aria-label="Escribe"><button class="btn primary" type="button">Agregar</button></div>
+					</div>
+				</div>
+
+				<div class="pane" data-pane-id="historial">
+					<div class="add" style="border:0;padding:0 0 14px"><input class="field" placeholder="⌕ Buscar en el historial" aria-label="Buscar"><button class="btn" type="button">Borrar todo</button></div>
+					<p class="group-title">Hoy <em class="sample">(ejemplo)</em></p>
+					<div class="group">
+						<div class="row history-item"><span class="app" style="--c:#1f1f1f">T</span><div class="grow"><p>Revisa el pull request y si pasa el lint, haz el merge a develop y sube el release a Vercel.</p><time>Terminal · 15:52 · 6 s</time></div><button class="btn" type="button">Copiar</button></div>
+						<div class="row history-item"><span class="app" style="--c:#2f80ed">C</span><div class="grow"><p>Usa el hook useApiQuery con enabled y un staleTime de 5 minutos.</p><time>VS Code · 15:38 · 5 s</time></div><button class="btn" type="button">Copiar</button></div>
+						<div class="row history-item"><span class="app" style="--c:#4a154b">S</span><div class="grow"><p>Agenda la revisión del deploy para el jueves a las 10.</p><time>Slack · 14:47 · 4 s</time></div><button class="btn" type="button">Copiar</button></div>
+					</div>
+					<p class="footnote">Últimos 50, sólo el texto y sólo en esta Mac.</p>
+				</div>
+
+				<div class="pane" data-pane-id="modelo">
+					<div class="group"><div class="model-card"><span class="ring"></span><div class="grow"><strong>Whisper large-v3-turbo</strong><br><span class="pill-status ok">Listo en memoria</span><small style="display:block;margin-top:4px;color:var(--mac-dim)">1.5 GB en disco · ~1.6 GB de memoria cargado</small></div><button class="btn" type="button">Liberar memoria</button></div></div>
+					<div class="group">
+						<div class="row"><div class="grow">Idioma</div><div class="segmented"><button type="button" aria-pressed="true">Español</button><button type="button" aria-pressed="false">English</button></div></div>
+						<div class="row"><div class="grow">Liberar memoria<small>El primer dictado después tarda unos segundos más</small></div><div class="segmented"><button type="button" aria-pressed="false">5 min</button><button type="button" aria-pressed="true">30 min</button><button type="button" aria-pressed="false">2 h</button><button type="button" aria-pressed="false">Nunca</button></div></div>
+						<div class="row"><div class="grow">Carpeta del modelo</div><button class="btn" type="button">Mostrar en Finder</button></div>
+					</div>
+				</div>
+
+				<div class="pane" data-pane-id="permisos">
+					<div class="group">
+						<div class="row"><span class="ico" style="--c:#ff7a45"><svg><use href="#i-mic"/></svg></span><div class="grow">Micrófono<small>Para oírte</small></div><span class="pill-status ok">Concedido</span></div>
+						<div class="row"><span class="ico" style="--c:#22a861"><svg><use href="#i-hand"/></svg></span><div class="grow">Accesibilidad<small>Para oír el atajo y pegar</small></div><span class="pill-status warn">Falta</span><button class="btn primary" type="button">Abrir Ajustes</button></div>
+					</div>
+					<p class="footnote">Si un permiso se pierde (por ejemplo, tras una actualización), Labia te lo dice en segundos y abre esta sección.</p>
+				</div>
+
+				<div class="pane" data-pane-id="actualizaciones">
+					<div class="group"><div class="row"><img src="img/icon.png" alt="" width="44" height="44"><div class="grow"><strong>Labia 2.0.0</strong><small>Estás al día · revisado hace 2 h <em class="sample">(ejemplo)</em></small></div><button class="btn" type="button">Buscar ahora</button></div></div>
+					<div class="group">
+						<div class="row"><div class="grow">Actualizar automáticamente<small>Sólo cuando no estás dictando</small></div><button class="switch" role="switch" aria-checked="true" aria-label="Actualizar automáticamente"></button></div>
+						<div class="row"><div class="grow">Canal</div><div class="segmented"><button type="button" aria-pressed="true">Estable</button><button type="button" aria-pressed="false">Desarrollo</button></div></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="section" id="menu">
+	<header>
+		<span class="eyebrow">Propuesta · Barra de menú</span>
+		<h2>Lo importante, a un clic</h2>
+		<p class="lead">El estado con la marca, tu último dictado para copiarlo y los atajos de siempre. El icono cambia: onda normal, punto rojo grabando, «!» si falta algo.</p>
+	</header>
+	<div class="stage">
+		<div class="menubar-demo">
+			<div class="menubar"><span class="labia-icon">ılı</span><span>Wi‑Fi</span><span>mar 10 nov 16:20</span></div>
+			<div class="dropdown">
+				<div class="head"><img src="img/icon.png" alt=""><div><strong>Labia está lista</strong><small>Mantén ⌥ derecho para dictar</small></div></div>
+				<div class="last"><small>Último dictado · Terminal <em class="sample">(ejemplo)</em></small><br>Revisa el pull request y si pasa el lint…</div>
+				<div class="menu-item">Copiar último dictado<kbd>⌘C</kbd></div>
+				<div class="menu-item">Historial…</div>
+				<hr>
+				<div class="menu-item">Pausar Labia<button class="switch" role="switch" aria-checked="false" aria-label="Pausar"></button></div>
+				<div class="menu-item">Ajustes…<kbd>⌘,</kbd></div>
+				<div class="menu-item">Buscar actualizaciones…</div>
+				<hr>
+				<div class="menu-item">Salir de Labia<kbd>⌘Q</kbd></div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="section" id="dock">
+	<header>
+		<span class="eyebrow">Propuesta · Dock y cápsula</span>
+		<h2>Siempre sabes dónde está</h2>
+		<p class="lead">Con Ajustes o la bienvenida abiertos, Labia aparece en el Dock y en ⌘⇥ y su ventana responde al primer clic. Al cerrarlas, se va del Dock y sigue en la barra de menú.</p>
+	</header>
+	<div class="stage">
+		<div class="dock-demo">
+			<div class="capsule"><span class="dot"></span><div class="bars"><span></span><span></span><span></span><span></span></div>0:04</div>
+			<div class="capsule warn">⚠ Labia perdió el permiso de Accesibilidad · actívalo de nuevo</div>
+			<div class="dock" aria-label="Dock de ejemplo"><span></span><span></span><span></span><span class="active"><img src="img/icon.png" alt="Labia en el Dock"></span><span></span></div>
+		</div>
+	</div>
+</section>
+
+<section class="section" id="arreglos">
+	<header>
+		<span class="eyebrow">Arreglos que van con el diseño</span>
+		<h2>Que funcione antes de que se vea bien</h2>
+		<p class="lead">Lo que falló esta semana se corrige en la misma versión.</p>
+	</header>
+	<div class="fixes">
+		<article class="fix"><span class="before">Hoy: ventanas detrás y sin clic</span><h3>Labia se vuelve app normal mientras hay ventana</h3><p>Al abrir Ajustes o la bienvenida cambia a política «regular» (Dock, ⌘⇥, foco real) y al cerrarlas regresa a «accesorio». Así macOS 26 le da el foco y los clics.</p></article>
+		<article class="fix"><span class="before">Hoy: «!» silencioso</span><h3>Permisos vigilados</h3><p>Se revisan cada 5 s; si se pierden, aviso en la cápsula y se abre Permisos. El botón borra el permiso viejo de otra firma para que macOS lo pida de nuevo.</p></article>
+		<article class="fix"><span class="before">Hoy: botones que no abren nada</span><h3>Enlaces correctos a Ajustes del Sistema</h3><p>Privacidad y seguridad con la dirección de macOS 13 en adelante, y la vieja sólo como respaldo.</p></article>
+		<article class="fix"><span class="before">Hoy: probado a mano y tarde</span><h3>Probado parte por parte</h3><p>Cada pantalla se construye y se prueba sola: capturas con <code>--screenshots</code>, prueba de foco y clic, y la app instalada sólo con la firma «Labia».</p></article>
+	</div>
+</section>
+
+<section class="section" id="plan">
+	<header>
+		<span class="eyebrow">Después de tu aprobación</span>
+		<h2>Cómo se construye</h2>
+		<p class="lead">Al aprobar esta propuesta se escribe <code>plan.md</code> y se registra el avance en <code>state.md</code>, en una rama <code>feature</code> de gitflow.</p>
+	</header>
+	<ol class="steps">
+		<li><div><strong>Ventanas que responden</strong><span>Política de activación, Dock y foco. Se prueba primero, solo, en macOS 26.</span></div></li>
+		<li><div><strong>Bienvenida en cinco pasos</strong><span>Marca a la izquierda, un paso a la vez, permisos en vivo y prueba final.</span></div></li>
+		<li><div><strong>Ajustes con barra lateral</strong><span>Resumen, Atajo y escritura, Vocabulario, Reemplazos, Historial con búsqueda, Modelo, Permisos y Actualizaciones.</span></div></li>
+		<li><div><strong>Menú de la barra</strong><span>Estado con la marca y el último dictado.</span></div></li>
+		<li><div><strong>Capturas, README y versión 2.0</strong><span>Capturas nuevas, documentación y release por gitflow.</span></div></li>
+	</ol>
+</section>
+
+<footer class="page-footer">Propuesta de diseño para Labia en macOS. Los números marcados «ejemplo» son ilustrativos, no datos reales.</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

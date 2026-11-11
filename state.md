@@ -19,6 +19,7 @@
 | 12. Release 1.0.0 | ✅ v1.0.0, con las pruebas manuales de «Antes de la 1.0» hechas por el usuario |
 | 13. Actualizaciones automáticas en las tres plataformas (`updates/`) | ✅ v1.1.0. Falta probar Linux en un equipo real y la prueba de punta a punta con 1.1.1. Ver `updates/state.md` |
 | 14. Dictados largos confiables en macOS (`feature/mac-dictation-reliability`) | ✅ v1.2.0, probado por el usuario con un dictado real de 2 min (abajo) |
+| 15. Labia 2.0 en macOS: diseño nuevo y ventanas que responden (ver `plan.md`) | ✅ v2.0.0; clics y tecleo probados con XCUITest. Falta que el usuario pruebe el dictado y el arranque al iniciar sesión con la app instalada |
 
 ## Antes de la 1.0 (pruebas manuales) · ✅ probadas por el usuario el 2026-11-08
 
@@ -94,6 +95,28 @@ Sparkle instaló la 1.2.0 (firmada con «Labia») sobre una compilación local f
 - `requestAccessibility` corre `tccutil reset Accessibility` si ya lo tuvo: la entrada de otra firma sale activada pero no vale.
 - `RecordingArchive`: últimos 20 dictados en `Recordings/` (`saveRecordings`, o el viejo `saveLastRecording`).
 - No compilar e instalar en `/Applications` con otra firma que «Labia»: vuelve a perder el permiso.
+
+## Labia 2.0 en macOS (2026-11-10)
+
+- `AppWindows`: con la bienvenida o Ajustes abiertos la app pasa a `.regular` (Dock, ⌘⇥, foco); comprobado con una copia: `lsappinfo` la reporta `Foreground` con la ventana abierta. Desde la terminal no se pueden generar clics reales: el clic lo prueba el usuario.
+- Bienvenida en cinco pasos, Ajustes con barra lateral propia (la de `NavigationSplitView` no sale en `--screenshots`), menú de barra con estilo ventana. Fechas en español con `Locale.labia`.
+- `--screenshots` genera los cinco pasos, las ocho secciones y el menú, en claro y oscuro.
+- Para probar sin tocar la app instalada: copia con `CFBundleIdentifier` `io.github.reydavidag.labia.prueba` y sin llaves de Sparkle (sus permisos y ajustes van aparte).
+- `hotfix/1.2.2` (sin publicar) queda reemplazado por `AppWindows`; se borra al cerrar esta rama.
+
+### Clics y teclas que no llegaban · causa y arreglo (2026-11-10)
+
+Desde la 1.2.0 las ventanas de Labia no recibían clics ni teclas, y el menú de la barra tampoco abría. Reiniciar no cambió nada.
+
+- Causa: `NSEvent.addGlobalMonitorForEvents` se llamaba en `AppModel.init`, que corre antes de que arranque `NSApplication`. Con eso el proceso deja de recibir eventos del sistema: ni clics ni teclas, ni el aviso de activación (`NSApp.isActive` seguía en falso con Labia al frente). Los timers y Accesibilidad seguían vivos, por eso `AXPress` sí funcionaba y `sample` no mostraba nada trabado.
+- Arreglo: el monitor se instala en `DispatchQueue.main.async`, ya con la app corriendo. Una línea en `AppModel.init`.
+- No era el patrón de app de barra de menú en macOS 26: `AppWindows` se queda por el Dock y ⌘⇥, no porque haga falta para los clics.
+- Cómo se probó: los clics reales sí se pueden generar desde la terminal con XCUITest (`xcodebuild test` con un target `bundle.ui-testing` que abre la app por `bundleIdentifier`; no pide permiso de Accesibilidad). Bisección con el monitor, la precarga y Sparkle apagados uno por uno; sólo el monitor rompía. Con el arreglo: «Continuar» avanza, el ícono de la barra abre el panel, «Ajustes…» abre la ventana y se puede escribir en Vocabulario.
+- El proyecto de la prueba quedó en `build/uitest` (fuera de git).
+
+Publicado en la 2.0.0; las Macs con la 1.2.0 o la 1.2.1 lo reciben por Sparkle. Falta que el usuario pruebe el dictado con ⌥ y el arranque al iniciar sesión.
+
+En la Mac del autor se desinstaló todo y se instaló limpio el `.zip` del release 2.0.0 (firma «Labia»), con el modelo y los ajustes de antes.
 
 ## Hallazgos
 
