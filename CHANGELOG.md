@@ -1,6 +1,6 @@
 # Cambios
 
-## Sin publicar
+## 2.0.0 · 2026-11-10
 
 Labia 2.0 en macOS: diseño nuevo, y las ventanas vuelven a responder.
 
