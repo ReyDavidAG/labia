@@ -1,8 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// Labia vive en la barra de menú (`LSUIElement`). En macOS 26 una app así no recibe el foco ni los clics en sus
-/// ventanas y no sale en el Dock: mientras haya una ventana abierta se vuelve app normal, y al cerrar la última regresa.
+/// Labia vive en la barra de menú (`LSUIElement`): no sale en el Dock ni en ⌘⇥ y sus ventanas se pierden detrás de
+/// las demás. Mientras haya una ventana abierta se vuelve app normal, y al cerrar la última regresa.
 @MainActor
 enum AppWindows {
 	private static var open: Set<String> = []

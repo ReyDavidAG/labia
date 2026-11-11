@@ -49,7 +49,7 @@ Rama `feature/send-keyword`.
 
 Rama `feature/mac-app-redesign`. Propuesta aprobada por el usuario en su totalidad: `propuesta/v2/index.html`.
 
-Problema de fondo: en macOS 26 una app sólo de barra de menú (`LSUIElement`) no recibe el foco ni los clics en sus ventanas, y no aparece en el Dock ni en ⌘⇥.
+Problema de fondo: las ventanas no recibían clics ni teclas. Se pensó que era por ser app sólo de barra de menú (`LSUIElement`) en macOS 26; la causa real fue el monitor global de clics instalado antes de `NSApplication` (ver `state.md`). `AppWindows` se queda para que la app aparezca en el Dock y en ⌘⇥ con una ventana abierta.
 
 Pasos, cada uno se prueba solo antes del siguiente:
 

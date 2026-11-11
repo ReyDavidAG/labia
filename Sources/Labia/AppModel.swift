@@ -152,8 +152,12 @@ final class AppModel {
 		hotkey.onEvent = { [weak self] event in
 			MainActor.assumeIsolated { self?.handle(event) ?? false }
 		}
-		NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { _ in
-			MainActor.assumeIsolated { LiveDictation.userInput += 1 }
+		// Instalado antes de que arranque NSApplication, el monitor global deja a la app sin recibir eventos:
+		// ni clics ni teclas en sus ventanas, ni el aviso de que está activa.
+		DispatchQueue.main.async {
+			NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { _ in
+				MainActor.assumeIsolated { LiveDictation.userInput += 1 }
+			}
 		}
 		refreshPermissions()
 		if !accessibilityGranted, UserDefaults.standard.bool(forKey: Self.hadAccessibilityKey) {
