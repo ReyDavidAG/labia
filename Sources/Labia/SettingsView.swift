@@ -1,308 +1,152 @@
+import AppKit
 import LabiaCore
 import SwiftUI
 
+/// Ajustes con barra lateral, como los de macOS (`propuesta/v2`). La barra es propia: la de `NavigationSplitView`
+/// no se dibuja en las capturas de `--screenshots`.
 struct SettingsView: View {
+	static let windowID = "settings"
+
 	@Bindable var model: AppModel
 
 	var body: some View {
-		TabView(selection: $model.settingsTab) {
-			GeneralTab(model: model)
-				.tabItem { Label("General", systemImage: "gearshape") }
-				.tag(SettingsTab.general)
-			VocabularyTab(model: model)
-				.tabItem { Label("Vocabulario", systemImage: "text.book.closed") }
-				.tag(SettingsTab.vocabulary)
-			ReplacementsTab(model: model)
-				.tabItem { Label("Reemplazos", systemImage: "arrow.left.arrow.right") }
-				.tag(SettingsTab.replacements)
-			HistoryTab(model: model)
-				.tabItem { Label("Historial", systemImage: "clock") }
-				.tag(SettingsTab.history)
-			ModelTab(model: model)
-				.tabItem { Label("Modelo", systemImage: "cpu") }
-				.tag(SettingsTab.model)
+		HStack(spacing: 0) {
+			sidebar
+			Divider()
+			detail
+				.id(model.settingsTab)
+				.frame(maxWidth: .infinity, maxHeight: .infinity)
 		}
-		.frame(width: 580, height: 480)
-	}
-}
-
-private struct GeneralTab: View {
-	@Bindable var model: AppModel
-
-	var body: some View {
-		Form {
-			Section {
-				Picker("Atajo", selection: $model.settings.hotkey) {
-					ForEach(Hotkey.allCases) { Text($0.label).tag($0) }
-				}
-				Text("Mantén para hablar · doble toque para manos libres · esc cancela.")
-					.font(.callout).foregroundStyle(.secondary)
-			}
-			Section {
-				Toggle("Pegar automáticamente", isOn: $model.settings.autoPaste)
-				Toggle("Escribir mientras hablas", isOn: $model.settings.liveTyping)
-					.disabled(!model.settings.autoPaste)
-				Toggle("Restaurar el portapapeles después de pegar", isOn: $model.settings.restoreClipboard)
-				Toggle("Agregar un espacio al final", isOn: $model.settings.trailingSpace)
-			}
-			Section {
-				Toggle("Enviar al terminar con una palabra", isOn: $model.settings.sendOnKeyword)
-				TextField("Palabras", text: Binding(
-					get: { model.settings.sendKeywords.joined(separator: ", ") },
-					set: { model.settings.sendKeywords = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
-				))
-				.disabled(!model.settings.sendOnKeyword)
-			} footer: {
-				Text(model.settings.sendOnKeyword
-					? "Si la última palabra que dices es una de éstas, Labia la quita, pega el texto y presiona Enter. Dila sola para enviar lo que ya escribiste."
-					: "Labia nunca presiona Enter por ti: revisas y envías tú.")
-			}
-			Section {
-				Toggle("Mostrar la cápsula mientras dictas", isOn: $model.settings.showPill)
-				Toggle("Sonido al empezar y terminar", isOn: $model.settings.sounds)
-				Toggle("Abrir al iniciar sesión", isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
-			}
-			Section {
-				Toggle("Actualizar automáticamente", isOn: $model.settings.autoUpdate)
-				Picker("Canal", selection: $model.settings.updateChannel) {
-					ForEach(UpdateChannel.allCases) { Text($0.label).tag($0) }
-				}
-			} footer: {
-				Text(model.settings.autoUpdate
-					? "Las versiones nuevas se bajan solas y se instalan cuando no estás dictando: Labia se reinicia y te avisa."
-					: "Labia te avisa cuando haya una versión nueva y tú decides cuándo instalarla.")
-			}
-			Section("Permisos") {
-				PermissionRow(title: "Micrófono", granted: model.micGranted, action: model.requestMicrophone)
-				PermissionRow(title: "Accesibilidad", granted: model.accessibilityGranted, action: model.requestAccessibility)
-			}
-		}
-		.formStyle(.grouped)
+		.navigationTitle(model.settingsTab.title)
+		.frame(minWidth: 820, minHeight: 560)
+		.tint(Brand.violet)
+		.environment(\.locale, .labia)
 		.onAppear { model.refreshPermissions() }
 	}
-}
 
-struct PermissionRow: View {
-	let title: String
-	let granted: Bool
-	let action: () -> Void
-
-	var body: some View {
-		LabeledContent(title) {
-			if granted {
-				Label("Concedido", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-			} else {
-				Button("Conceder…", action: action)
+	private var sidebar: some View {
+		ScrollView {
+			VStack(alignment: .leading, spacing: 2) {
+				SidebarRow(tab: .summary, selection: $model.settingsTab)
+				SidebarTitle("Dictado")
+				SidebarRow(tab: .general, selection: $model.settingsTab)
+				SidebarRow(tab: .vocabulary, selection: $model.settingsTab, count: model.settings.vocabulary.count)
+				SidebarRow(tab: .replacements, selection: $model.settingsTab, count: model.settings.replacements.count)
+				SidebarRow(tab: .history, selection: $model.settingsTab)
+				SidebarTitle("Sistema")
+				SidebarRow(tab: .model, selection: $model.settingsTab)
+				SidebarRow(tab: .permissions, selection: $model.settingsTab, warning: !model.micGranted || !model.accessibilityGranted)
+				SidebarRow(tab: .updates, selection: $model.settingsTab)
 			}
+			.padding(10)
+		}
+		.frame(width: 216)
+		.background(Color.primary.opacity(0.035))
+	}
+
+	@ViewBuilder private var detail: some View {
+		switch model.settingsTab {
+		case .summary: SummaryPane(model: model)
+		case .general: GeneralPane(model: model)
+		case .vocabulary: VocabularyPane(model: model)
+		case .replacements: ReplacementsPane(model: model)
+		case .history: HistoryPane(model: model)
+		case .model: ModelPane(model: model)
+		case .permissions: PermissionsPane(model: model)
+		case .updates: UpdatesPane(model: model)
 		}
 	}
 }
 
-private struct VocabularyTab: View {
-	@Bindable var model: AppModel
-	@State private var draft = ""
-
-	var body: some View {
-		Form {
-			Section {
-				FlowLayout(spacing: 6) {
-					ForEach(model.settings.vocabulary, id: \.self) { word in
-						Chip(text: word) { model.settings.vocabulary.removeAll { $0 == word } }
-					}
-				}
-				.animation(.spring(response: 0.3, dampingFraction: 0.75), value: model.settings.vocabulary)
-				HStack {
-					TextField("Agregar palabra", text: $draft, prompt: Text("p. ej. useApiQuery"))
-						.onSubmit(add)
-					Button("Agregar", action: add).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
-				}
-			} header: {
-				Text("Palabras que dices en inglés o con mayúsculas especiales")
-			} footer: {
-				HStack {
-					Text("\(model.settings.vocabulary.count) palabras · \(model.promptCostLabel ?? "carga el modelo para medir el costo")")
-					Spacer()
-					Button("Restaurar lista inicial") { model.settings.vocabulary = Preferences.defaultVocabulary }
-						.buttonStyle(.link)
-				}
-			}
-			Section {
-				Text("Whisper usa esta lista como contexto: escribe bien esas palabras y respeta sus mayúsculas. Cada palabra agrega unos milisegundos, así que pon sólo las que te fallan.")
-					.font(.callout).foregroundStyle(.secondary)
-			}
-		}
-		.formStyle(.grouped)
-	}
-
-	private func add() {
-		let words = draft.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-		for word in words where !model.settings.vocabulary.contains(word) {
-			model.settings.vocabulary.append(word)
-		}
-		draft = ""
-	}
-}
-
-private struct Chip: View {
+private struct SidebarTitle: View {
 	let text: String
-	let remove: () -> Void
+	init(_ text: String) { self.text = text }
 
 	var body: some View {
-		HStack(spacing: 4) {
-			Text(text).font(.system(.callout, design: .monospaced))
-			Button(action: remove) {
-				Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
-			}
-			.buttonStyle(.plain)
-			.foregroundStyle(.secondary)
-			.accessibilityLabel("Quitar \(text)")
-		}
-		.padding(.leading, 10).padding(.trailing, 7).padding(.vertical, 4)
-		.background(Capsule().fill(Color.accentColor.opacity(0.14)))
-		.transition(.scale(scale: 0.8).combined(with: .opacity))
+		Text(text).font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary).padding(.horizontal, 8).padding(.top, 12).padding(.bottom, 2)
 	}
 }
 
-private struct ReplacementsTab: View {
-	@Bindable var model: AppModel
+private struct SidebarRow: View {
+	let tab: SettingsTab
+	@Binding var selection: SettingsTab
+	var count: Int?
+	var warning = false
+	@State private var hovering = false
 
 	var body: some View {
-		Form {
-			Section {
-				ForEach($model.settings.replacements) { $rule in
-					HStack {
-						TextField("Cuando escuche", text: $rule.from).labelsHidden()
-						Image(systemName: "arrow.right").foregroundStyle(.secondary)
-						TextField("Escribe", text: $rule.to).labelsHidden()
-						Button {
-							model.settings.replacements.removeAll { $0.id == rule.id }
-						} label: {
-							Image(systemName: "minus.circle.fill")
-						}
-						.buttonStyle(.plain).foregroundStyle(.secondary)
-						.accessibilityLabel("Quitar reemplazo")
-					}
+		Button { selection = tab } label: {
+			HStack(spacing: 9) {
+				IconTile(symbol: tab.symbol, color: tab.color)
+				Text(tab.title).font(.system(size: 13))
+				Spacer(minLength: 4)
+				if warning {
+					Image(systemName: "exclamationmark.circle.fill").foregroundStyle(selected ? .white : .orange)
+				} else if let count {
+					Text("\(count)").font(.system(size: 11)).monospacedDigit().opacity(0.65)
 				}
-				Button("Agregar reemplazo") { model.settings.replacements.append(Replacement(from: "", to: "")) }
-			} header: {
-				Text("Se aplican después de transcribir, en orden y sin distinguir mayúsculas")
-			} footer: {
-				Text("Escribe \\n para un salto de línea. Sirven para comandos dictados como \"nueva línea\" o para lo que el vocabulario no alcance.")
 			}
+			.foregroundStyle(selected ? .white : .primary)
+			.padding(.horizontal, 8).padding(.vertical, 5)
+			.background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(selected ? AnyShapeStyle(Brand.violet.gradient) : AnyShapeStyle(Color.primary.opacity(hovering ? 0.06 : 0))))
+			.contentShape(Rectangle())
 		}
-		.formStyle(.grouped)
+		.buttonStyle(.plain)
+		.onHover { hovering = $0 }
+		.accessibilityAddTraits(selected ? .isSelected : [])
+	}
+
+	private var selected: Bool { selection == tab }
+}
+
+extension SettingsTab {
+	var color: Color {
+		switch self {
+		case .summary: Brand.violet
+		case .general: Color(red: 1, green: 0.48, blue: 0.27)
+		case .vocabulary: Color(red: 0.18, green: 0.61, blue: 1)
+		case .replacements: Color(red: 0.08, green: 0.72, blue: 0.65)
+		case .history: Color(red: 0.55, green: 0.36, blue: 0.96)
+		case .model: Color(red: 0.39, green: 0.45, blue: 0.55)
+		case .permissions: Color(red: 0.13, green: 0.66, blue: 0.38)
+		case .updates: Color(red: 0.88, green: 0.27, blue: 0.48)
+		}
 	}
 }
 
-private struct HistoryTab: View {
-	let model: AppModel
+/// Interruptor con una línea de explicación abajo.
+struct DetailToggle: View {
+	let title: String
+	var detail: String?
+	@Binding var isOn: Bool
 
 	var body: some View {
-		VStack(spacing: 0) {
-			if model.history.entries.isEmpty {
-				ContentUnavailableView("Sin dictados todavía", systemImage: "waveform", description: Text("Mantén \(model.settings.hotkey.label) en cualquier app y habla."))
-			} else {
-				List(model.history.entries) { entry in
-					VStack(alignment: .leading, spacing: 4) {
-						Text(entry.text).textSelection(.enabled)
-						Text(caption(entry)).font(.caption).foregroundStyle(.secondary)
-					}
-					.padding(.vertical, 2)
-					.contextMenu { Button("Copiar") { model.copy(entry) } }
-				}
-			}
-			Divider()
-			HStack {
-				Text("Últimos \(History.limit), sólo el texto y sólo en esta Mac.").font(.caption).foregroundStyle(.secondary)
-				Spacer()
-				Button("Borrar historial", role: .destructive) { model.clearHistory() }
-					.disabled(model.history.entries.isEmpty)
-			}
-			.padding(12)
+		Toggle(isOn: $isOn) {
+			Text(title)
+			if let detail { Text(detail) }
 		}
-	}
-
-	private func caption(_ entry: HistoryEntry) -> String {
-		var parts = [entry.date.formatted(.relative(presentation: .named))]
-		if let app = entry.app { parts.append(app) }
-		parts.append("\(entry.words) palabras")
-		parts.append(String(format: "%.0f s de audio", entry.seconds))
-		return parts.joined(separator: " · ")
 	}
 }
 
-private struct ModelTab: View {
-	@Bindable var model: AppModel
+/// El icono real de la app si está abierta; si no, su inicial en un mosaico.
+struct AppBadge: View {
+	let name: String?
 
 	var body: some View {
-		Form {
-			Section {
-				LabeledContent("Whisper large-v3-turbo") { ModelStatusLabel(status: model.modelStatus) }
-				Text("1.5 GB en disco y cerca de 1.6 GB de memoria mientras está cargado. Todo se procesa en esta Mac.")
-					.font(.callout).foregroundStyle(.secondary)
-				HStack {
-					if model.modelStatus == .missing || model.modelStatus.isFailure {
-						Button("Descargar modelo", action: model.download)
-					}
-					if model.modelStatus == .ready {
-						Button("Liberar memoria ahora", action: model.unloadNow)
-					}
-					if model.modelStatus == .unloaded {
-						Button("Cargar ahora", action: model.preload)
-					}
-					Spacer()
-					Button("Mostrar en Finder", action: model.revealModel).disabled(model.modelStatus == .missing)
-				}
-			}
-			Section {
-				Picker("Liberar memoria", selection: $model.settings.unloadAfterMinutes) {
-					Text("Nunca").tag(0)
-					Text("Después de 5 min sin dictar").tag(5)
-					Text("Después de 30 min sin dictar").tag(30)
-					Text("Después de 2 h sin dictar").tag(120)
-				}
-				Picker("Idioma", selection: $model.settings.language) {
-					Text("Español").tag("es")
-					Text("English").tag("en")
-				}
-			} footer: {
-				Text("Cuando el modelo está liberado, el primer dictado tarda unos segundos más mientras vuelve a cargar.")
-			}
-			Section {
-				LabeledContent("Labia") {
-					Text("Versión \(Updater.version)" + (Updater.commit.map { " (\($0))" } ?? "")).textSelection(.enabled)
-				}
-				HStack {
-					Button("Buscar actualizaciones", action: model.updater.checkNow)
-						.disabled(!model.updater.isRunning)
-					Spacer()
-					if let last = model.updater.lastCheck {
-						Text("Última revisión: \(last.formatted(.relative(presentation: .named)))")
-							.font(.callout).foregroundStyle(.secondary)
-					}
-				}
-			} footer: {
-				Text(model.updater.isRunning
-					? "Las actualizaciones vienen de github.com/ReyDavidAG/labia. No se envía nada de esta Mac."
-					: "Esta compilación no se actualiza sola (no trae la llave de Sparkle). Instala Labia desde los releases de GitHub.")
-			}
+		if let icon {
+			Image(nsImage: icon).resizable().frame(width: 28, height: 28)
+		} else {
+			Text(String((name ?? "?").prefix(1)).uppercased())
+				.font(.system(size: 12, weight: .bold))
+				.foregroundStyle(.white)
+				.frame(width: 28, height: 28)
+				.background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Color.secondary.gradient))
 		}
-		.formStyle(.grouped)
 	}
-}
 
-struct ModelStatusLabel: View {
-	let status: ModelStatus
-
-	var body: some View {
-		switch status {
-		case .missing: Label("Sin descargar", systemImage: "arrow.down.circle").foregroundStyle(.secondary)
-		case let .downloading(p): ProgressView(value: p) { Text("Descargando \(Int(p * 100)) %") }.frame(width: 180)
-		case .unloaded: Label("Descargado, en reposo", systemImage: "moon.zzz").foregroundStyle(.secondary)
-		case .loading: HStack { ProgressView().controlSize(.small); Text("Cargando…") }
-		case .ready: Label("Listo en memoria", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-		case let .failed(message): Label(message, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-		}
+	private var icon: NSImage? {
+		guard let name else { return nil }
+		return NSWorkspace.shared.runningApplications.first { $0.localizedName == name }?.icon
 	}
 }
 

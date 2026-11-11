@@ -1,5 +1,18 @@
 # Cambios
 
+## 2.0.0 · 2026-11-10
+
+Labia 2.0 en macOS: diseño nuevo, y las ventanas vuelven a responder.
+
+### macOS
+
+- Corregido: desde la 1.2.0 las ventanas de Labia y el menú de la barra no recibían clics ni teclas. El monitor de clics que detecta si cambiaste de lugar se instalaba antes de que la app arrancara y la dejaba sin eventos.
+- Bienvenida en cinco pasos, uno a la vez: cómo se usa, micrófono, Accesibilidad, modelo y una prueba. Empieza en el primer paso pendiente.
+- Ajustes en ventana propia con barra lateral: Resumen, Atajo y escritura, Vocabulario, Reemplazos, Historial (con búsqueda), Modelo, Permisos y Actualizaciones. ⌘, la abre.
+- Menú de la barra nuevo: estado, último dictado para copiar, Historial, Pausar, Ajustes, Actualizaciones y Salir.
+- Con la bienvenida o Ajustes abiertos, Labia aparece en el Dock y en ⌘⇥; al cerrar la última ventana vuelve a la barra de menú.
+- Marca nueva: violeta, lima y la burbuja con la onda.
+
 ## 1.2.1 · 2026-11-10
 
 Labia ya no se queda callada cuando pierde el permiso de Accesibilidad.

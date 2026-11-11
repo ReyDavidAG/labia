@@ -43,8 +43,36 @@ enum ModelStatus: Equatable {
 	case failed(String)
 }
 
-enum SettingsTab: Hashable {
-	case general, vocabulary, replacements, history, model
+enum SettingsTab: String, Hashable, CaseIterable, Identifiable {
+	case summary, general, vocabulary, replacements, history, model, permissions, updates
+
+	var id: String { rawValue }
+
+	var title: String {
+		switch self {
+		case .summary: "Resumen"
+		case .general: "Atajo y escritura"
+		case .vocabulary: "Vocabulario"
+		case .replacements: "Reemplazos"
+		case .history: "Historial"
+		case .model: "Modelo"
+		case .permissions: "Permisos"
+		case .updates: "Actualizaciones"
+		}
+	}
+
+	var symbol: String {
+		switch self {
+		case .summary: "house.fill"
+		case .general: "mic.fill"
+		case .vocabulary: "book.closed.fill"
+		case .replacements: "arrow.left.arrow.right"
+		case .history: "clock.fill"
+		case .model: "cpu.fill"
+		case .permissions: "lock.fill"
+		case .updates: "arrow.down.circle.fill"
+		}
+	}
 }
 
 @MainActor @Observable
@@ -80,7 +108,7 @@ final class AppModel {
 	var accessibilityGranted = false
 	var launchAtLogin = SMAppService.mainApp.status == .enabled
 	var promptTokens: Int?
-	var settingsTab: SettingsTab = .general
+	var settingsTab: SettingsTab = .summary
 	var paused = false {
 		didSet { hotkey.isEnabled = !paused }
 	}
@@ -124,8 +152,12 @@ final class AppModel {
 		hotkey.onEvent = { [weak self] event in
 			MainActor.assumeIsolated { self?.handle(event) ?? false }
 		}
-		NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { _ in
-			MainActor.assumeIsolated { LiveDictation.userInput += 1 }
+		// Instalado antes de que arranque NSApplication, el monitor global deja a la app sin recibir eventos:
+		// ni clics ni teclas en sus ventanas, ni el aviso de que está activa.
+		DispatchQueue.main.async {
+			NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { _ in
+				MainActor.assumeIsolated { LiveDictation.userInput += 1 }
+			}
 		}
 		refreshPermissions()
 		if !accessibilityGranted, UserDefaults.standard.bool(forKey: Self.hadAccessibilityKey) {
@@ -168,22 +200,6 @@ final class AppModel {
 		if needsSetup { return "waveform.badge.exclamationmark" }
 		if isRecording { return "waveform.circle.fill" }
 		return "waveform"
-	}
-
-	var statusLine: String {
-		if paused { return "Labia está en pausa" }
-		if needsSetup { return "Falta terminar la configuración" }
-		switch modelStatus {
-		case .loading: return "Cargando el modelo…"
-		case .failed: return "El modelo no cargó"
-		default: return "Lista · mantén \(settings.hotkey.label) para dictar"
-		}
-	}
-
-	var promptCostLabel: String? {
-		guard let promptTokens else { return nil }
-		let ms = Int((Double(promptTokens) * 0.025 * 1000 / 10).rounded()) * 10
-		return ms == 0 ? "sin costo extra" : "≈ +\(ms) ms por dictado"
 	}
 
 	// MARK: Gestos

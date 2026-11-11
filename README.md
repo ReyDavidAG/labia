@@ -41,12 +41,17 @@ Requiere macOS 14 o posterior y una Mac con Apple Silicon (M1 o más nueva).
    ```bash
    xattr -dr com.apple.quarantine /Applications/Labia.app
    ```
-3. La ventana de bienvenida te pide tres cosas:
+3. La ventana de bienvenida te lleva en cinco pasos: cómo se usa, y luego lo que Labia necesita:
    - **Micrófono**, para oírte.
    - **Accesibilidad**, para detectar el atajo en cualquier app y pegar con ⌘V.
    - **Descargar el modelo**: 1.5 GB, una sola vez. La primera carga tarda alrededor de un minuto mientras macOS lo prepara para tu chip.
+   - Al final, un cuadro para probar tu primer dictado.
 
-<p align="center"><img src="docs/img/welcome.png" width="420" alt="Ventana de bienvenida con los tres pasos completos y un cuadro para probar"></p>
+<p align="center"><img src="docs/img/welcome.png" width="520" alt="Ventana de bienvenida en el paso 1 de 5: mantén ⌥ para hablar, doble toque para manos libres y esc para cancelar"></p>
+
+Con una ventana abierta Labia aparece en el Dock y en ⌘⇥; al cerrarla vuelve a vivir sólo en la barra de menú. **Ajustes** (⌘,) tiene una barra lateral con Resumen, Atajo y escritura, Vocabulario, Reemplazos, Historial, Modelo, Permisos y Actualizaciones.
+
+<p align="center"><img src="docs/img/settings-summary.png" width="560" alt="Ajustes de Labia en Resumen: Labia está lista, dictados y palabras de hoy y los últimos dictados con botón Copiar"> <img src="docs/img/menu.png" width="240" alt="Menú de la barra: estado, último dictado para copiar, Historial, Pausar, Ajustes y Salir"></p>
 
 **Se actualiza sola** (desde la 1.1.0, con [Sparkle](https://sparkle-project.org)). Busca versiones nuevas cada 6 horas en los releases de este repositorio, baja la nueva en segundo plano, comprueba su firma y la instala cuando no estás dictando: Labia se reinicia y la cápsula dice «Labia se actualizó a…». Una versión que sólo cambia Windows o Linux no reinstala la Mac. En Ajustes › General se apaga o se cambia de canal (Estable o Desarrollo); en Ajustes › Modelo están la versión y «Buscar actualizaciones». Sólo se consulta github.com/ReyDavidAG/labia: no se envía nada de tu Mac.
 
